@@ -1,0 +1,31 @@
+targets:
+  - platform: win32
+    arch: x64
+    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-x86_64-windows.zip
+  - platform: linux
+    arch: x64
+    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-x86_64-linux.tar.xz
+  - platform: darwin
+    arch: x64
+    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-x86_64-macos.tar.xz
+  - platform: darwin
+    arch: arm64
+    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-aarch64-macos.tar.xz
+
+brew:
+  name: rustle
+  publish: true
+  tap: rustle
+  recipe_fname: rustle.rb
+  recipe_template: |
+    class RustleFormula < Formula
+      desc "desc"
+      homepage "http://github.com/rustle-rs/rustle-rs"
+      url "__URL__"
+      version "__VERSION__"
+      sha256 "__SHA__"
+
+      def install
+        bin.install "rustle"
+      end
+    end

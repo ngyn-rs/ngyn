@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "rustle_cli",
+  "xtask",
+]
