@@ -3,17 +3,6 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-/// `Module` is a procedural macro that generates a struct and its implementation.
-/// The struct `Module` contains a vector of boxed dynamic components.
-///
-/// # Examples
-///
-/// ```
-/// #[module]
-/// struct MyModule;
-/// let module = MyModule::new();
-/// let my_component: Option<&MyComponent> = module.get();
-/// ```
 pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
