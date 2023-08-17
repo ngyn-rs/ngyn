@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 nject = "0.3.0"
-rustle_core = { path = "../../rustle_core" }
+rustle_core = { path = "../../packages/core" }

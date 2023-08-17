@@ -1,8 +1,6 @@
 [workspace]
 members = [
   "examples/*",
-  "rustle_cli",
-  "rustle_core",
-  "rustle_macros",
+  "packages/*",
   "xtask",
 ]
