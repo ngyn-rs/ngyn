@@ -7,14 +7,14 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let expanded = quote! {
-        use rustle_core::provider;
+        use rustle_core::{provider, RustleModule};
 
         #[provider]
         pub struct #name {
             components: Vec<Box<dyn std::any::Any>>,
         }
 
-        impl #name {
+        impl RustleModule for #name {
             /// Creates a new `#name` with the specified components.
             ///
             /// # Examples
@@ -22,12 +22,14 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             /// ```
             /// let module = #name::new();
             /// ```
-            pub fn new() -> Self {
+            fn new() -> Self {
                 #name {
                     components: vec![],
                 }
             }
+        }
 
+        impl #name {
             /// Returns a reference to a component of type `T` if it exists in the module.
             ///
             /// # Examples

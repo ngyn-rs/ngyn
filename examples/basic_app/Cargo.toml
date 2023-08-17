@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-std = { version = "1.6.0", features = ["attributes"] }
 nject = "0.3.0"
 rustle_core = { path = "../../packages/core" }
+tide = "0.16.0"
