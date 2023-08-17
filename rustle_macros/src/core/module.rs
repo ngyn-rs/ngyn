@@ -7,6 +7,8 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let expanded = quote! {
+        use nject::provider;
+
         #[provider]
         pub struct #name {
             components: Vec<Box<dyn std::any::Any>>,
