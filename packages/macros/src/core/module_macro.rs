@@ -1,20 +1,13 @@
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Ident, Type};
+use syn::{parse_macro_input, DeriveInput};
+
+use crate::utils::handle_macro::handle_macro;
 
 pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
-    let DeriveInput { ident, data, .. } = parse_macro_input!(input as DeriveInput);
-    let raw_fields = match &data {
-        syn::Data::Struct(d) => &d.fields,
-        _ => panic!("Only structs are supported"),
-    };
-    let types = raw_fields.iter().map(|f| &f.ty).collect::<Vec<&Type>>();
-    let keys = raw_fields
-        .iter()
-        .map(|f| f.ident.as_ref())
-        .filter_map(|i| i)
-        .collect::<Vec<&Ident>>();
+    let input = parse_macro_input!(input as DeriveInput);
+    let (ident, types, keys) = handle_macro(input);
 
     let expanded = quote! {
         use rustle_core::{injectable, RustleModule};
