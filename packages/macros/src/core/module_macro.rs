@@ -1,35 +1,47 @@
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{parse_macro_input, DeriveInput, Ident, Type};
 
 pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = &input.ident;
-    let expanded = quote! {
-        use rustle_core::{provider, RustleModule};
+    let DeriveInput { ident, data, .. } = parse_macro_input!(input as DeriveInput);
+    let raw_fields = match &data {
+        syn::Data::Struct(d) => &d.fields,
+        _ => panic!("Only structs are supported"),
+    };
+    let types = raw_fields.iter().map(|f| &f.ty).collect::<Vec<&Type>>();
+    let keys = raw_fields
+        .iter()
+        .map(|f| f.ident.as_ref())
+        .filter_map(|i| i)
+        .collect::<Vec<&Ident>>();
 
-        #[provider]
-        pub struct #name {
+    let expanded = quote! {
+        use rustle_core::{injectable, RustleModule};
+
+        #[injectable]
+        pub struct #ident {
             components: Vec<Box<dyn std::any::Any>>,
+            #(#keys: #types),*
         }
 
-        impl RustleModule for #name {
-            /// Creates a new `#name` with the specified components.
+        impl RustleModule for #ident {
+            /// Creates a new `#ident` with the specified components.
             ///
             /// # Examples
             ///
             /// ```
-            /// let module = #name::new();
+            /// let module = #ident::new();
             /// ```
             fn new() -> Self {
-                #name {
+                #ident {
                     components: vec![],
+                    #(#keys: Default::default()),*
                 }
             }
         }
 
-        impl #name {
+        impl #ident {
             /// Returns a reference to a component of type `T` if it exists in the module.
             ///
             /// # Examples
