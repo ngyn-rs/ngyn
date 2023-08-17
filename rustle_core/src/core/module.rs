@@ -1,37 +1,45 @@
-/// `Module` is a macro that generates a struct and its implementation.
+use nject::provider;
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput};
+
+/// `Module` is a procedural macro that generates a struct and its implementation.
 /// The struct `Module` contains a vector of boxed dynamic components.
-/// 
+///
 /// # Examples
 ///
 /// ```
-/// module!(MyComponent, MyOtherComponent);
-/// let module = Module::new();
+/// #[module]
+/// struct MyModule;
+/// let module = MyModule::new();
 /// let my_component: Option<&MyComponent> = module.get();
 /// ```
-#[macro_export]
-macro_rules! module {
-    ($($t:ty),+ $(,)?) => {
-        /// Struct `Module` contains a vector of boxed dynamic components.
-        pub struct Module {
+#[proc_macro_attribute]
+pub fn module(_attrs: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let expanded = quote! {
+        #[provider]
+        pub struct #name {
             components: Vec<Box<dyn std::any::Any>>,
         }
 
-        impl Module {
-            /// Creates a new `Module` with the specified components.
-            /// 
+        impl #name {
+            /// Creates a new `#name` with the specified components.
+            ///
             /// # Examples
             ///
             /// ```
-            /// let module = Module::new();
+            /// let module = #name::new();
             /// ```
             pub fn new() -> Self {
-                Module {
-                    components: vec![$(Box::new(<$t>::new())),+],
+                #name {
+                    components: vec![],
                 }
             }
 
             /// Returns a reference to a component of type `T` if it exists in the module.
-            /// 
+            ///
             /// # Examples
             ///
             /// ```
@@ -47,7 +55,7 @@ macro_rules! module {
             }
 
             /// Adds a component to the module.
-            /// 
+            ///
             /// # Examples
             ///
             /// ```
@@ -58,7 +66,7 @@ macro_rules! module {
             }
 
             /// Removes a component from the module.
-            /// 
+            ///
             /// # Examples
             ///
             /// ```
@@ -69,4 +77,5 @@ macro_rules! module {
             }
         }
     };
+    TokenStream::from(expanded)
 }

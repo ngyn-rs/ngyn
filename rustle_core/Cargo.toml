@@ -9,4 +9,6 @@ lib = { path = "src/lib.rs" }
 [dependencies]
 nject = "0.3.0"
 tide = "0.16.0"
-
+syn = "2.0.29"
+quote = "1.0.33"
+proc-macro2 = "1.0.66"
