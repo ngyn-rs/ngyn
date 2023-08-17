@@ -7,4 +7,5 @@ lib = { path = "src/lib.rs" }
 [dependencies]
 nject = "0.3.0"
 rustle_macros = { path = "../macros" }
+rustle_shared = { path = "../shared" }
 tide = "0.16.0"
