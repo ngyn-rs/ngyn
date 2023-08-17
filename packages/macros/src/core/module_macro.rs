@@ -10,7 +10,8 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let (ident, types, keys) = handle_macro(input);
 
     let expanded = quote! {
-        use rustle_core::{injectable, RustleModule};
+        use nject::injectable;
+        use rustle_core::RustleModule;
 
         #[injectable]
         pub struct #ident {

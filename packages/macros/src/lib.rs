@@ -1,8 +1,10 @@
 extern crate proc_macro;
 
+mod common;
 mod core;
 mod utils;
 
+use crate::common::injectable_macro::*;
 use crate::core::{interceptor_macro::*, module_macro::*};
 use proc_macro::TokenStream;
 
@@ -37,4 +39,9 @@ pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 pub fn interceptor(args: TokenStream, input: TokenStream) -> TokenStream {
     interceptor_macro(args, input)
+}
+
+#[proc_macro_attribute]
+pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
+    injectable_macro(args, input)
 }
