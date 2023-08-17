@@ -7,7 +7,7 @@ pub fn interceptor_macro(_args: TokenStream, input: TokenStream) -> TokenStream 
     let name = &input.ident;
 
     let expanded = quote! {
-        use nject::injectable;
+        use rustle_core::injectable;
 
         #[injectable]
         impl #name {
