@@ -14,6 +14,9 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
+        use nject::injectable as nject_injectable;
+
+        #[nject_injectable]
         pub struct #ident {
             #(#fields),*
         }
