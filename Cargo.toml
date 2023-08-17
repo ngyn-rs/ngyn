@@ -3,5 +3,6 @@ members = [
   "examples/basic_app",
   "rustle_cli",
   "rustle_core",
+  "rustle_macros",
   "xtask",
 ]

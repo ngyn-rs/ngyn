@@ -1,0 +1,13 @@
+[package]
+name = "rustle_macros"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nject = "0.3.0"
+syn = "2.0.29"
+quote = "1.0.33"
+
+[lib]
+path = "src/lib.rs"
+proc-macro = true

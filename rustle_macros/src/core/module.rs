@@ -1,4 +1,4 @@
-use nject::provider;
+extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
@@ -14,8 +14,7 @@ use syn::{parse_macro_input, DeriveInput};
 /// let module = MyModule::new();
 /// let my_component: Option<&MyComponent> = module.get();
 /// ```
-#[proc_macro_attribute]
-pub fn module(_attrs: TokenStream, input: TokenStream) -> TokenStream {
+pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     let expanded = quote! {
