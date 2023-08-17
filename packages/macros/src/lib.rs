@@ -1,6 +1,7 @@
 extern crate proc_macro;
 
 mod core;
+mod utils;
 
 use crate::core::{interceptor_macro::*, module_macro::*};
 use proc_macro::TokenStream;
