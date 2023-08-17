@@ -3,14 +3,12 @@ use rustle_core::module;
 #[module]
 struct Sample;
 
-pub trait SampleNew {
+pub trait SampleModule {
     fn new() -> Self;
 }
 
-impl SampleNew for Sample {
+impl SampleModule for Sample {
     fn new() -> Self {
-        Sample {
-            components: todo!(),
-        }
+        Sample { components: vec![] }
     }
 }
