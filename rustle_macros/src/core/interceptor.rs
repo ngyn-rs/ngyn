@@ -7,6 +7,9 @@ pub fn interceptor_macro(_args: TokenStream, input: TokenStream) -> TokenStream 
     let name = &input.ident;
 
     let expanded = quote! {
+        use nject::injectable;
+
+        #[injectable]
         impl #name {
             /// The `intercept` function takes a mutable reference to any type.
             /// It is intended to be overridden with logic to intercept and potentially alter the execution of a function.
