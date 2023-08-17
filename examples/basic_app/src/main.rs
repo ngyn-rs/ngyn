@@ -1,7 +1,7 @@
 mod modules;
 
 use modules::sample::sample_module::Sample;
-use rustle_core::core::factory::RustleFactory;
+use rustle_core::RustleFactory;
 
 fn main() {
     let app = RustleFactory::create::<Sample>();
