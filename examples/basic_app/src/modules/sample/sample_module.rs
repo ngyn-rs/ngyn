@@ -4,5 +4,5 @@ use super::sample_service::SampleService;
 
 #[module]
 pub struct SampleModule {
-    sample_service: SampleService,
+    controllers: Vec<Box<SampleService>>,
 }
