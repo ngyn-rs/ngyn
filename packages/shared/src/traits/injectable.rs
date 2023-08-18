@@ -1,3 +1,3 @@
 pub trait RustleInjectable: Send + Sync {
-    fn new(&self) -> Box<dyn RustleInjectable>;
+    fn new(&self) -> Box<dyn RustleInjectable + Send + Sync>;
 }
