@@ -9,13 +9,34 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let (ident, types, keys) = handle_macro(input);
 
+    let mut fields: Vec<_> = types
+        .iter()
+        .zip(keys.iter())
+        .map(|(ty, key)| quote! { #key: #ty })
+        .collect();
+
+    if !fields
+        .iter()
+        .any(|field| field.to_string().contains("controllers"))
+    {
+        fields.push(quote! { controllers: Vec::<Box<dyn std::any::Any>>::new() });
+    }
+
+    if !fields
+        .iter()
+        .any(|field| field.to_string().contains("providers"))
+    {
+        fields.push(quote! { providers: Vec::<Box<dyn std::any::Any>>::new() });
+    }
+
     let expanded = quote! {
         use nject::injectable;
         use rustle_core::{RustleInjectable, RustleModule};
 
         #[injectable]
         pub struct #ident {
-            components: Vec<Box<dyn std::any::Any>>,
+            controllers: Vec<Box<dyn std::any::Any>>,
+            providers: Vec<Box<dyn std::any::Any>>,
             #(#keys: #types),*
         }
 
@@ -29,49 +50,88 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             /// ```
             fn new() -> Self {
                 #ident {
-                    components: vec![],
+                    controllers: vec![],
+                    providers: vec![],
                     #(#keys: RustleInjectable::new()),*
                 }
             }
         }
 
         impl #ident {
-            /// Returns a reference to a component of type `T` if it exists in the module.
+            /// Returns a reference to a controller of type `T` if it exists in the module.
             ///
             /// # Examples
             ///
             /// ```
-            /// let my_component: Option<&MyComponent> = module.get();
+            /// let my_controller: Option<&MyController> = module.get_controller();
             /// ```
-            pub fn get<T: 'static>(&self) -> Option<&T> {
-                for component in &self.components {
-                    if let Some(c) = component.downcast_ref::<T>() {
+            pub fn get_controller<T: 'static>(&self) -> Option<&T> {
+                for controller in &self.controllers {
+                    if let Some(c) = controller.downcast_ref::<T>() {
                         return Some(c);
                     }
                 }
                 None
             }
 
-            /// Adds a component to the module.
+            /// Returns a reference to a provider of type `T` if it exists in the module.
             ///
             /// # Examples
             ///
             /// ```
-            /// module.add(MyComponent::new());
+            /// let my_provider: Option<&MyProvider> = module.get_provider();
             /// ```
-            pub fn add<T: 'static>(&mut self, component: T) {
-                self.components.push(Box::new(component));
+            pub fn get_provider<T: 'static>(&self) -> Option<&T> {
+                for provider in &self.providers {
+                    if let Some(p) = provider.downcast_ref::<T>() {
+                        return Some(p);
+                    }
+                }
+                None
             }
 
-            /// Removes a component from the module.
+            /// Adds a controller to the module.
             ///
             /// # Examples
             ///
             /// ```
-            /// module.remove::<MyComponent>();
+            /// module.add_controller(MyController::new());
             /// ```
-            pub fn remove<T: 'static>(&mut self) {
-                self.components.retain(|component| component.downcast_ref::<T>().is_none());
+            pub fn add_controller<T: 'static>(&mut self, controller: T) {
+                self.controllers.push(Box::new(controller));
+            }
+
+            /// Adds a provider to the module.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// module.add_provider(MyProvider::new());
+            /// ```
+            pub fn add_provider<T: 'static>(&mut self, provider: T) {
+                self.providers.push(Box::new(provider));
+            }
+
+            /// Removes a controller from the module.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// module.remove_controller::<MyController>();
+            /// ```
+            pub fn remove_controller<T: 'static>(&mut self) {
+                self.controllers.retain(|controller| controller.downcast_ref::<T>().is_none());
+            }
+
+            /// Removes a provider from the module.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// module.remove_provider::<MyProvider>();
+            /// ```
+            pub fn remove_provider<T: 'static>(&mut self) {
+                self.providers.retain(|provider| provider.downcast_ref::<T>().is_none());
             }
         }
     };
