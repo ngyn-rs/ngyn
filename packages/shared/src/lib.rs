@@ -7,4 +7,6 @@ pub mod common {
     pub mod provider;
 }
 
+pub use crate::common::provider::*;
+pub use crate::traits::injectable::*;
 pub use crate::traits::module::*;

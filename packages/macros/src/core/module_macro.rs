@@ -11,7 +11,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use nject::injectable;
-        use rustle_core::RustleModule;
+        use rustle_core::{RustleInjectable, RustleModule};
 
         #[injectable]
         pub struct #ident {
@@ -30,7 +30,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             fn new() -> Self {
                 #ident {
                     components: vec![],
-                    #(#keys: Default::default()),*
+                    #(#keys: RustleInjectable::new()),*
                 }
             }
         }

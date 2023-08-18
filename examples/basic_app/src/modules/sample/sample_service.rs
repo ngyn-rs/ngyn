@@ -1,15 +1,21 @@
-use rustle_core::injectable;
+use rustle_core::{injectable, RustleInjectable};
 
 #[injectable]
 pub struct SampleService {
-    #[allow(dead_code)]
     pub name: String,
 }
 
-impl Default for SampleService {
-    fn default() -> Self {
+impl RustleInjectable for SampleService {
+    fn new() -> Self {
         SampleService {
             name: "default".to_string(),
         }
+    }
+}
+
+impl SampleService {
+    #[allow(dead_code)]
+    pub fn say_hello(&self) {
+        println!("Hello, {}!", self.name);
     }
 }
