@@ -9,26 +9,44 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let (ident, types, keys) = handle_macro(input);
 
-    let default_fields = vec![
-        quote! {
-            controllers: Vec<Box<dyn std::any::Any>>
-        },
-        quote! {
-            providers: Vec<Box<dyn std::any::Any>>
-        },
-    ];
+    let controllers = quote! {
+        controllers: Vec<Box<dyn std::any::Any>>
+    };
+
+    let providers = quote! {
+        providers: Vec<Box<dyn std::any::Any>>
+    };
+
+    let default_fields = vec![controllers.clone(), providers.clone()];
 
     let fields: Vec<_> = if keys.is_empty() {
         default_fields
     } else {
-        keys.iter()
+        let mut fields = keys
+            .iter()
             .zip(types.iter())
             .map(|(key, ty)| {
                 quote! {
                     #key: #ty
                 }
             })
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+
+        if !fields
+            .iter()
+            .any(|field| field.to_string().contains("controllers"))
+        {
+            fields.push(controllers);
+        }
+
+        if !fields
+            .iter()
+            .any(|field| field.to_string().contains("providers"))
+        {
+            fields.push(providers);
+        }
+
+        fields
     };
 
     let expanded = quote! {
