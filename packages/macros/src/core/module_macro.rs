@@ -24,7 +24,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
                 .filter(|default| {
                     !keys
                         .iter()
-                        .any(|key| format!("{:?}", default).contains(&key.to_string()))
+                        .any(|key| default.to_string().contains(&key.to_string()))
                 })
                 .cloned(),
         )
