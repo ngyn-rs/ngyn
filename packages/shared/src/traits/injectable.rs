@@ -1,3 +1,3 @@
 pub trait RustleInjectable {
-    fn new() -> Self;
+    fn new(&self) -> Box<dyn RustleInjectable>;
 }

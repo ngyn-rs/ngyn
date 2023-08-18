@@ -1,11 +1,9 @@
-use std::any::Any;
-
 use rustle_shared::RustleModule;
 
 pub struct RustleFactory {}
 
 impl RustleFactory {
-    pub fn create<T: RustleModule<C, P>, C: Any, P: Any>() -> tide::Server<()> {
+    pub fn create<T: RustleModule>() -> tide::Server<()> {
         let app = tide::new();
         let module = T::new();
         module.get_controllers();
