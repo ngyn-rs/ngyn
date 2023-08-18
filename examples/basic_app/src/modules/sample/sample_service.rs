@@ -1,16 +1,8 @@
-use rustle_core::{injectable, RustleInjectable};
+use rustle_core::injectable;
 
 #[injectable]
 pub struct SampleService {
     pub name: String,
-}
-
-impl RustleInjectable for SampleService {
-    fn new() -> Self {
-        SampleService {
-            name: "default".to_string(),
-        }
-    }
 }
 
 impl SampleService {
