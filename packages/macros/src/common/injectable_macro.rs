@@ -15,10 +15,25 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use nject::injectable as nject_injectable;
+        use rustle_core::RustleInjectable;
 
         #[nject_injectable]
         pub struct #ident {
             #(#fields),*
+        }
+
+        impl #ident {
+            pub fn create_new() -> Self {
+                #ident {
+                    #(#keys: RustleInjectable::new()),*
+                }
+            }
+        }
+
+        impl RustleInjectable for #ident {
+            fn new(&self) -> Box<dyn RustleInjectable + Send + Sync> {
+                Box::new(Self::create_new())
+            }
         }
     };
     expanded.into()
