@@ -9,25 +9,27 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let (ident, types, keys) = handle_macro(input);
 
-    let mut fields: Vec<_> = types
-        .iter()
-        .zip(keys.iter())
-        .map(|(ty, key)| quote! { #key: #ty })
-        .collect();
+    let default_fields = vec![
+        quote! {
+            controllers: Vec<Box<dyn std::any::Any>>
+        },
+        quote! {
+            providers: Vec<Box<dyn std::any::Any>>
+        },
+    ];
 
-    if !fields
-        .iter()
-        .any(|field| field.to_string().contains("controllers"))
-    {
-        fields.push(quote! { controllers: Vec::<Box<dyn std::any::Any>>::new() });
-    }
-
-    if !fields
-        .iter()
-        .any(|field| field.to_string().contains("providers"))
-    {
-        fields.push(quote! { providers: Vec::<Box<dyn std::any::Any>>::new() });
-    }
+    let fields: Vec<_> = if keys.is_empty() {
+        default_fields
+    } else {
+        keys.iter()
+            .zip(types.iter())
+            .map(|(key, ty)| {
+                quote! {
+                    #key: #ty
+                }
+            })
+            .collect::<Vec<_>>()
+    };
 
     let expanded = quote! {
         use nject::injectable;
@@ -35,9 +37,9 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
 
         #[injectable]
         pub struct #ident {
-            controllers: Vec<Box<dyn std::any::Any>>,
-            providers: Vec<Box<dyn std::any::Any>>,
-            #(#keys: #types),*
+            // controllers: Vec<Box<dyn std::any::Any>>,
+            // providers: Vec<Box<dyn std::any::Any>>,
+            #(#fields),*
         }
 
         impl RustleModule for #ident {
