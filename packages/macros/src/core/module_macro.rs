@@ -10,8 +10,8 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let (ident, types, keys) = handle_macro(input);
 
     let default_fields = vec![
-        quote! { controllers: Vec<Box<dyn std::any::Any>> },
-        quote! { providers: Vec<Box<dyn std::any::Any>> },
+        quote! { controllers: Vec<std::sync::Arc<dyn RustleController>> },
+        quote! { providers: Vec<std::sync::Arc<dyn RustleInjectable>> },
     ];
 
     let fields: Vec<_> = keys
@@ -32,7 +32,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use nject::injectable;
-        use rustle_core::{RustleInjectable, RustleModule};
+        use rustle_core::{RustleController, RustleInjectable, RustleModule};
 
         #[injectable]
         pub struct #ident {
@@ -53,6 +53,42 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
                     providers: vec![],
                     // #(#keys: RustleInjectable::new()),*
                 }
+            }
+
+            /// Returns the controllers of the module.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// let module = #ident::new();
+            /// let controllers = module.get_controllers();
+            /// ```
+            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn RustleController>> {
+                self.controllers
+                    .clone()
+                    .into_iter()
+                    .filter_map(|controller| {
+                        std::sync::Arc::downcast::<dyn RustleController>(controller).ok()
+                    })
+                    .collect::<Vec<std::sync::Arc<dyn RustleController>>>()
+            }
+
+            /// Returns the providers of the module.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// let module = #ident::new();
+            /// let providers = module.get_providers();
+            /// ```
+            fn get_providers(&self) -> Vec<std::sync::Arc<dyn RustleInjectable>> {
+                self.providers
+                    .clone()
+                    .into_iter()
+                    .filter_map(|provider| {
+                        std::sync::Arc::downcast::<dyn RustleInjectable>(provider).ok()
+                    })
+                    .collect::<Vec<std::sync::Arc<dyn RustleInjectable>>>()
             }
         }
     };
