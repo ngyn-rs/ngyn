@@ -67,6 +67,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
                 self.controllers
                     .clone()
                     .into_iter()
+                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn RustleController>)
                     .collect::<Vec<std::sync::Arc<dyn RustleController>>>()
             }
 
@@ -82,6 +83,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
                 self.providers
                     .clone()
                     .into_iter()
+                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn RustleInjectable>)
                     .collect::<Vec<std::sync::Arc<dyn RustleInjectable>>>()
             }
         }
