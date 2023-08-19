@@ -10,8 +10,8 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let (ident, types, keys) = handle_macro(input);
 
     let default_fields = vec![
-        quote! { controllers: Vec<std::sync::Arc<dyn RustleController>> },
-        quote! { providers: Vec<std::sync::Arc<dyn RustleInjectable>> },
+        quote! { controllers: Vec<std::sync::Arc<dyn rustle_core::RustleController>> },
+        quote! { providers: Vec<std::sync::Arc<dyn rustle_core::RustleInjectable>> },
     ];
 
     let fields: Vec<_> = keys
@@ -31,15 +31,12 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        use nject::injectable;
-        use rustle_core::{RustleController, RustleInjectable, RustleModule};
-
-        #[injectable]
+        #[nject::injectable]
         pub struct #ident {
             #(#fields),*
         }
 
-        impl RustleModule for #ident {
+        impl rustle_core::RustleModule for #ident {
             /// Creates a new `#ident` with the specified components.
             ///
             /// # Examples
@@ -63,12 +60,12 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             /// let module = #ident::new();
             /// let controllers = module.get_controllers();
             /// ```
-            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn RustleController>> {
+            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn rustle_core::RustleController>> {
                 self.controllers
                     .clone()
                     .into_iter()
-                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn RustleController>)
-                    .collect::<Vec<std::sync::Arc<dyn RustleController>>>()
+                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn rustle_core::RustleController>)
+                    .collect::<Vec<std::sync::Arc<dyn rustle_core::RustleController>>>()
             }
 
             /// Returns the providers of the module.
@@ -79,12 +76,12 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             /// let module = #ident::new();
             /// let providers = module.get_providers();
             /// ```
-            fn get_providers(&self) -> Vec<std::sync::Arc<dyn RustleInjectable>> {
+            fn get_providers(&self) -> Vec<std::sync::Arc<dyn rustle_core::RustleInjectable>> {
                 self.providers
                     .clone()
                     .into_iter()
-                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn RustleInjectable>)
-                    .collect::<Vec<std::sync::Arc<dyn RustleInjectable>>>()
+                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn rustle_core::RustleInjectable>)
+                    .collect::<Vec<std::sync::Arc<dyn rustle_core::RustleInjectable>>>()
             }
         }
     };
