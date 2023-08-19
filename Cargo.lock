@@ -340,7 +340,6 @@ dependencies = [
  "async-std",
  "nject",
  "rustle_core",
- "tide",
 ]
 
 [[package]]
