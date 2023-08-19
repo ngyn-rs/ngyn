@@ -15,7 +15,7 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use nject::injectable as nject_injectable;
-        use rustle_core::RustleController;
+        use rustle_core::{RustleController, RustleControllerInit, RustleInjectableInit, RustleProvider};
 
         #[nject_injectable]
         pub struct #ident {
@@ -25,13 +25,19 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         impl #ident {
             pub fn create_new() -> Self {
                 #ident {
-                    #(#keys: RustleController::new()),*
+                    #(#keys: RustleProvider.provide()),*
                 }
             }
         }
 
         impl RustleController for #ident {
-            fn new(&self) -> Box<dyn RustleController + Send + Sync> {
+            fn routes(&self) -> Vec<(&str, &str, Box<dyn Fn() + Send + Sync>)> {
+                vec![]
+            }
+        }
+
+        impl RustleControllerInit for #ident {
+            fn new() -> Box<dyn RustleController> {
                 Box::new(Self::create_new())
             }
         }

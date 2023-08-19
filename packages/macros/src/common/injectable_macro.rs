@@ -15,7 +15,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         use nject::injectable as nject_injectable;
-        use rustle_core::{RustleInjectable, RustleInjectableInit};
+        use rustle_core::{RustleInjectable, RustleInjectableInit, RustleProvider};
 
         #[nject_injectable]
         pub struct #ident {
@@ -25,7 +25,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         impl #ident {
             pub fn create_new() -> Self {
                 #ident {
-                    #(#keys: RustleInjectableInit::new()),*
+                    #(#keys: RustleProvider.provide()),*
                 }
             }
         }
