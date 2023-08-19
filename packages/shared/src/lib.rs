@@ -1,7 +1,7 @@
 pub mod traits {
-    pub mod controller;
-    pub mod injectable;
-    pub mod module;
+    pub mod controller_trait;
+    pub mod injectable_trait;
+    pub mod module_trait;
 }
 
 pub mod common {
@@ -9,6 +9,6 @@ pub mod common {
 }
 
 pub use crate::common::provider::*;
-pub use crate::traits::controller::*;
-pub use crate::traits::injectable::*;
-pub use crate::traits::module::*;
+pub use crate::traits::controller_trait::*;
+pub use crate::traits::injectable_trait::*;
+pub use crate::traits::module_trait::*;
