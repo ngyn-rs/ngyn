@@ -1,6 +1,4 @@
-use crate::RustleInjectable;
-
-use super::controller_trait::RustleController;
+use crate::{RustleController, RustleInjectable};
 
 /// `RustleModule` is a trait that defines the basic structure of a module in Rustle.
 /// It requires two generic parameters: `C` for the controller type, and `P` for the provider type.
