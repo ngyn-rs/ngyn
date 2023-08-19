@@ -4,7 +4,7 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::injectable_macro::*;
+use crate::common::{controller_macro::*, injectable_macro::*};
 use crate::core::{interceptor_macro::*, module_macro::*};
 use proc_macro::TokenStream;
 
@@ -42,6 +42,33 @@ pub fn interceptor(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
+/// The `injectable` attribute is used to mark a struct as injectable.
+/// This means that the struct can be automatically provided as a dependency where needed.
+///
+/// ### Examples
+///
+/// ```
+/// #[injectable]
+/// struct MyService;
+///
+/// let my_service = MyService::new();
+/// ```
 pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
     injectable_macro(args, input)
+}
+
+#[proc_macro_attribute]
+/// The `controller` attribute is used to mark a struct as a controller.
+/// This means that the struct can handle HTTP requests and responses.
+///
+/// ### Examples
+///
+/// ```
+/// #[controller]
+/// struct MyController;
+///
+/// let my_controller = MyController::new();
+/// ```
+pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
+    controller_macro(args, input)
 }
