@@ -31,7 +31,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        #[nject::injectable]
+        #[rustle_core::dependency]
         pub struct #ident {
             #(#fields),*
         }
