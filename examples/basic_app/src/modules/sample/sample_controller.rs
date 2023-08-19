@@ -10,6 +10,6 @@ pub struct SampleController {
 impl SampleController {
     #[allow(dead_code)]
     pub fn say_hello(&self) {
-        println!("Hello, !");
+        self.sample_service.say_hello();
     }
 }
