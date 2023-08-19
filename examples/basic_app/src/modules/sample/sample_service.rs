@@ -1,14 +1,6 @@
 use rustle_core::injectable;
 
-#[injectable]
-pub struct SampleRepository;
-
-impl SampleRepository {
-    #[allow(dead_code)]
-    pub fn name(&self) -> String {
-        "SampleRepository".to_string()
-    }
-}
+use super::sample_repository::SampleRepository;
 
 #[injectable]
 pub struct SampleService {
