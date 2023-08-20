@@ -7,6 +7,7 @@ edition = "2021"
 nject = "0.3.0"
 syn = "2.0.29"
 quote = "1.0.33"
+rustle_shared = { path = "../shared" }
 
 [lib]
 path = "src/lib.rs"

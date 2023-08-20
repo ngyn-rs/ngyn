@@ -1409,6 +1409,7 @@ version = "0.1.0"
 dependencies = [
  "nject",
  "quote",
+ "rustle_shared",
  "syn 2.0.29",
 ]
 
