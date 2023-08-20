@@ -69,11 +69,7 @@ pub fn route_get_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
     let args = parse_macro_input!(args as Args);
 
-    let path = match args.path {
-        Some(Path::Single(p)) => p,
-        Some(Path::Multiple(p)) => p.join("/"),
-        None => "".to_string(),
-    };
+    let path = args.path;
     let mut guards = args.guards;
 
     let ident = &input.sig.ident;
@@ -82,9 +78,6 @@ pub fn route_get_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         pub fn #ident(#inputs) -> #output {
-            if #path == "" {
-                #path = #ident.to_string().to_lowercase();
-            }
             #input
         }
     };
