@@ -1,4 +1,4 @@
-use rustle_core::controller;
+use rustle_core::{controller, get};
 
 use super::sample_service::SampleService;
 
@@ -8,6 +8,7 @@ pub struct SampleController {
 }
 
 impl SampleController {
+    #[get("/hello")]
     #[allow(dead_code)]
     pub fn say_hello(&self) {
         self.sample_service.say_hello();
