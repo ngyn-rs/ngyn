@@ -1,9 +1,10 @@
 use proc_macro::TokenStream;
 use quote::quote;
+use rustle_shared::path_enum::Path;
 use syn::{parse::Parse, parse_macro_input, Attribute, ItemFn, Meta};
 
 struct Args {
-    path: Option<String>,
+    path: Option<Path>,
     guards: Vec<String>,
 }
 
@@ -20,7 +21,15 @@ impl Parse for Args {
                 None => {
                     let input_str = input.fork().to_string();
                     if input_str.starts_with("\"") && input_str.ends_with("\"") {
-                        path = Some(input_str.trim_matches('"').to_string().to_lowercase());
+                        path = Some(Path::Single(
+                            input_str.trim_matches('"').to_string().to_lowercase(),
+                        ));
+                    } else if input_str.starts_with('[') && input_str.ends_with(']') {
+                        let paths: Vec<String> = input_str[1..input_str.len() - 1]
+                            .split(',')
+                            .map(|s| s.trim().to_string())
+                            .collect();
+                        path = Some(Path::Multiple(paths));
                     } else {
                         panic!("expected an attribute or a string, found `{}`", input_str)
                     }
@@ -34,7 +43,8 @@ impl Parse for Args {
                             if nv.path.is_ident("path") {
                                 if let syn::Expr::Lit(expr_lit) = &nv.value {
                                     if let syn::Lit::Str(lit) = &expr_lit.lit {
-                                        path = Some(lit.value());
+                                        let lit_value = lit.value();
+                                        path = Some(Path::Single(lit_value));
                                     }
                                 }
                             } else if nv.path.is_ident("guards") {
@@ -59,7 +69,11 @@ pub fn route_get_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
     let args = parse_macro_input!(args as Args);
 
-    let path = args.path.unwrap_or("".to_string());
+    let path = match args.path {
+        Some(Path::Single(p)) => p,
+        Some(Path::Multiple(p)) => p.join("/"),
+        None => "".to_string(),
+    };
     let mut guards = args.guards;
 
     let ident = &input.sig.ident;
