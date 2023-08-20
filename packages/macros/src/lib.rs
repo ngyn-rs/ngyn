@@ -4,7 +4,7 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::{controller_macro::*, injectable_macro::*};
+use crate::common::{controller_macro::*, injectable_macro::*, route_get_macro::*};
 use crate::core::{interceptor_macro::*, module_macro::*};
 use proc_macro::TokenStream;
 
@@ -71,4 +71,19 @@ pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
     controller_macro(args, input)
+}
+
+#[proc_macro_attribute]
+/// The `get` attribute is used to mark a function as a GET route.
+///
+/// ### Examples
+///
+/// ```
+/// #[get(path = "/")]
+/// fn index() -> String {
+///    "Hello, world!".to_string()
+/// }
+/// ```
+pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
+    route_get_macro(args, input)
 }
