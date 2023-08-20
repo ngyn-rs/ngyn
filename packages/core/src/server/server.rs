@@ -6,7 +6,7 @@ use super::{request::RustleRequest, response::RustleResponse};
 /// `RustleServer` is a struct that represents a server instance in the Rustle framework.
 /// It contains a `Server` from the Tide framework and an optional `Route`.
 pub struct RustleServer {
-    server: Server<RustleRequest>,
+    server: Server,
     route: Option<Route>,
 }
 
