@@ -1,6 +1,6 @@
 /// RustleResponse is a struct that represents a server response.
 pub struct RustleResponse {
-    response: tide::Result,
+    response: tide::Response,
 }
 
 impl RustleResponse {
@@ -22,12 +22,12 @@ impl RustleResponse {
     /// * A mutable reference to the `RustleResponse`.
     pub fn status(mut self, status: u16) -> Self {
         self.response
-            .set_status(tide::StatusCode::from_u16(status).unwrap());
+            .set_status(tide::StatusCode::try_from(status).unwrap());
         self
     }
 
     /// Builds the `RustleResponse`.
     pub fn build(self) -> tide::Result {
-        self.response
+        Ok(self.response)
     }
 }

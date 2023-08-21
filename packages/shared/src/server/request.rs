@@ -1,20 +1,22 @@
-use rustle_shared::enums::http_method_enum::HttpMethod
+use super::state::State;
+use std::collections::HashMap;
+
+use crate::enums::HttpMethod;
 
 pub struct RustleRequest {
-    request: tide::Request,
+    request: tide::Request<State>,
 }
 
 impl RustleRequest {
     /// Constructs a new `RustleRequest`.
-    pub fn new() -> Self {
-        Self {
-            request: tide::Request::new(),
-        }
+    pub fn new(request: tide::Request<State>) -> Self {
+        Self { request: request }
     }
 
     /// Gets the method of the `RustleRequest`.
-    pub fn method(&self) -> &HttpMethod {
-        &HttpMethod::from_str(self.request.method().to_string())
+    pub fn method(&self) -> HttpMethod {
+        let method = self.request.method().to_string();
+        HttpMethod::from_str(method.as_str()).unwrap()
     }
 
     /// Gets the url of the `RustleRequest`.
@@ -24,11 +26,13 @@ impl RustleRequest {
 
     /// Gets the headers of the `RustleRequest`.
     pub fn headers(&self) -> HashMap<String, String> {
-        self.request
-            .headers()
-            .iter()
-            .map(|(name, value)| (name.to_string(), value.to_string()))
-            .collect()
+        let mut headers_map = HashMap::new();
+        for name in self.request.header_names() {
+            if let Some(value) = self.request.header(name.as_str()) {
+                headers_map.insert(name.to_string(), value.last().to_string());
+            }
+        }
+        headers_map
     }
 
     /// Gets the body of the `RustleRequest`.

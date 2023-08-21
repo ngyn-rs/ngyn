@@ -1418,6 +1418,7 @@ name = "rustle_shared"
 version = "0.1.0"
 dependencies = [
  "nject",
+ "tide",
 ]
 
 [[package]]

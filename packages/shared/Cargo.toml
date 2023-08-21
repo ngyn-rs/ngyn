@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 nject = "0.3.0"
+tide = "0.16.0"
