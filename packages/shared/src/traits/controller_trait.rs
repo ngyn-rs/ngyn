@@ -10,5 +10,15 @@ pub trait RustleControllerInit: Send + Sync {
 pub trait RustleController: Send + Sync {
     /// Returns a vector of routes associated with the controller.
     /// Each route is represented as a tuple of (method, path, handler).
-    fn routes(&self) -> Vec<(&str, &str, Box<dyn Fn() + Send + Sync>)>;
+    fn routes(
+        &self,
+    ) -> Vec<(
+        &str,
+        &str,
+        Box<
+            dyn Fn(crate::RustleRequest, crate::RustleResponse) -> crate::RustleResponse
+                + Send
+                + Sync,
+        >,
+    )>;
 }

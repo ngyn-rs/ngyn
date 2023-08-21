@@ -1,15 +1,14 @@
-use super::state::State;
 use std::collections::HashMap;
 
 use crate::enums::HttpMethod;
 
 pub struct RustleRequest {
-    request: tide::Request<State>,
+    request: tide::Request<()>,
 }
 
 impl RustleRequest {
     /// Constructs a new `RustleRequest`.
-    pub fn new(request: tide::Request<State>) -> Self {
+    pub fn new(request: tide::Request<()>) -> Self {
         Self { request: request }
     }
 
