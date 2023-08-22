@@ -79,7 +79,7 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ### Examples
 ///
 /// ```
-/// #[get(path = "/")]
+/// #[get("/")]
 /// fn index() -> String {
 ///    "Hello, world!".to_string()
 /// }
