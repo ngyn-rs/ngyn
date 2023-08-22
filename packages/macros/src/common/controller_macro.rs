@@ -12,6 +12,7 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         .zip(keys.iter())
         .map(|(ty, key)| {
             quote! {
+                #[allow(dead_code)]
                 #key: #ty
             }
         })
