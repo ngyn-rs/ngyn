@@ -7,6 +7,8 @@ use rustle_core::{Result, RustleFactory};
 async fn main() -> Result<()> {
     let app = RustleFactory::create::<SampleModule>();
 
+    println!("Starting server at http://127.0.0.1:8080");
+
     app.listen("127.0.0.1:8080").await?;
 
     Ok(())
