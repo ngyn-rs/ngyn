@@ -10,7 +10,11 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
     let fields: Vec<_> = types
         .iter()
         .zip(keys.iter())
-        .map(|(ty, key)| quote! { #key: #ty })
+        .map(|(ty, key)| {
+            quote! {
+                #key: #ty
+            }
+        })
         .collect();
 
     let expanded = quote! {
@@ -28,7 +32,15 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl rustle_core::RustleController for #ident {
-            fn routes(&self) -> Vec<(&str, &str, Box<dyn Fn() + Send + Sync>)> {
+            fn routes(&self) -> Vec<(
+                &str,
+                &str,
+                Box<
+                    dyn Fn(rustle_core::RustleRequest, rustle_core::RustleResponse) -> rustle_core::RustleResponse
+                        + Send
+                        + Sync,
+                >,
+            )> {
                 vec![]
             }
         }
