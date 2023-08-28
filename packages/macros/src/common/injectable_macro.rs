@@ -15,6 +15,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #[rustle_core::dependency]
+        #[derive(Clone)]
         pub struct #ident {
             #(#fields),*
         }
