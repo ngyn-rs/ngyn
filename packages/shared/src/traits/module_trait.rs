@@ -1,4 +1,4 @@
-use crate::{RustleController, RustleInjectable};
+use crate::RustleController;
 
 /// `RustleModule` is a trait that defines the basic structure of a module in Rustle.
 pub trait RustleModule {
@@ -8,7 +8,4 @@ pub trait RustleModule {
 
     /// Returns the controllers of the module.
     fn get_controllers(&self) -> Vec<std::sync::Arc<dyn RustleController>>;
-
-    /// Returns the providers of the module.
-    fn get_providers(&self) -> Vec<std::sync::Arc<dyn RustleInjectable>>;
 }

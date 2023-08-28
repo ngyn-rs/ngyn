@@ -5,29 +5,67 @@ use syn::{parse_macro_input, DeriveInput};
 
 use crate::utils::handle_macro::handle_macro;
 
-pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let (ident, types, keys) = handle_macro(input);
+struct ModuleArgs {
+    controllers: Vec<syn::Path>,
+}
 
-    let default_fields = vec![
-        quote! { controllers: Vec<std::sync::Arc<dyn rustle_core::RustleController>> },
-        quote! { providers: Vec<std::sync::Arc<dyn rustle_core::RustleInjectable>> },
-    ];
+pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let (ident, _, _) = handle_macro(input);
+
+    // Parse the attributes to get the controller types
+    let args = {
+        let input_str = args.to_string();
+
+        let controllers = if input_str.starts_with('[') && input_str.ends_with(']') {
+            let controllers: Vec<syn::Path> =
+                if !input_str[1..input_str.len() - 1].trim().is_empty() {
+                    input_str[1..input_str.len() - 1]
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .map(|s| syn::parse_str(&s).unwrap())
+                        .collect()
+                } else {
+                    vec![]
+                };
+
+            Some(controllers)
+        } else if input_str.is_empty() {
+            Some(vec![])
+        } else {
+            panic!("invalid path")
+        };
+
+        ModuleArgs {
+            controllers: controllers.unwrap(),
+        }
+    };
+
+    let add_controllers: Vec<_> = args
+        .controllers
+        .iter()
+        .map(|controller| {
+            quote! {
+                let controller: #controller = rustle_core::RustleProvider.provide();
+                controllers.push(std::sync::Arc::new(controller));
+            }
+        })
+        .collect();
+
+    let keys = args.controllers.iter().map(|controller| {
+        let segments = &controller.segments;
+        let name = &segments.last().unwrap().ident;
+        quote! { #name }
+    });
 
     let fields: Vec<_> = keys
-        .iter()
-        .zip(types.iter())
-        .map(|(key, ty)| quote! { #key: #ty })
-        .chain(
-            default_fields
-                .iter()
-                .filter(|default| {
-                    !keys
-                        .iter()
-                        .any(|key| default.to_string().contains(&key.to_string()))
-                })
-                .cloned(),
-        )
+        .clone()
+        .zip(args.controllers.iter())
+        .map(|(key, controller)| {
+            quote! {
+                #key: #controller
+            }
+        })
         .collect();
 
     let expanded = quote! {
@@ -46,9 +84,7 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             /// ```
             fn new() -> Self {
                 #ident {
-                    controllers: vec![],
-                    providers: vec![],
-                    // #(#keys: RustleInjectable::new()),*
+                    #(#keys: rustle_core::RustleProvider.provide()),*
                 }
             }
 
@@ -61,27 +97,9 @@ pub fn module_macro(_attrs: TokenStream, input: TokenStream) -> TokenStream {
             /// let controllers = module.get_controllers();
             /// ```
             fn get_controllers(&self) -> Vec<std::sync::Arc<dyn rustle_core::RustleController>> {
-                self.controllers
-                    .clone()
-                    .into_iter()
-                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn rustle_core::RustleController>)
-                    .collect::<Vec<std::sync::Arc<dyn rustle_core::RustleController>>>()
-            }
-
-            /// Returns the providers of the module.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// let module = #ident::new();
-            /// let providers = module.get_providers();
-            /// ```
-            fn get_providers(&self) -> Vec<std::sync::Arc<dyn rustle_core::RustleInjectable>> {
-                self.providers
-                    .clone()
-                    .into_iter()
-                    .map(|provider| std::sync::Arc::clone(&provider) as std::sync::Arc<dyn rustle_core::RustleInjectable>)
-                    .collect::<Vec<std::sync::Arc<dyn rustle_core::RustleInjectable>>>()
+                let mut controllers: Vec<std::sync::Arc<dyn rustle_core::RustleController>> = vec![];
+                #(#add_controllers)*
+                controllers
             }
         }
     };

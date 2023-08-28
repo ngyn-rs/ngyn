@@ -1,8 +1,9 @@
-use rustle_core::module;
+use rustle_core::{controller, module};
 
-use super::sample_service::SampleService;
+use super::sample_controller::SampleController;
 
-#[module]
-pub struct SampleModule {
-    providers: Vec<std::sync::Arc<SampleService>>,
-}
+#[controller]
+pub struct SampleController2 {}
+
+#[module([SampleController, SampleController2])]
+pub struct SampleModule {}
