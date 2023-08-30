@@ -25,7 +25,7 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl #ident {
-            pub fn create_new() -> Self {
+            pub fn new() -> Self {
                 #ident {
                     #(#keys: rustle_core::RustleProvider.provide()),*
                 }
@@ -48,7 +48,7 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl rustle_core::RustleControllerInit for #ident {
             fn new() -> Box<dyn rustle_core::RustleController> {
-                Box::new(Self::create_new())
+                Box::new(Self::new())
             }
         }
     };

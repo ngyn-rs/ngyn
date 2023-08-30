@@ -21,7 +21,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl #ident {
-            pub fn create_new() -> Self {
+            pub fn new() -> Self {
                 #ident {
                     #(#keys: rustle_core::RustleProvider.provide()),*
                 }
@@ -32,7 +32,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl rustle_core::RustleInjectableInit for #ident {
             fn new() -> Box<dyn rustle_core::RustleInjectable> {
-                Box::new(Self::create_new())
+                Box::new(Self::new())
             }
         }
     };

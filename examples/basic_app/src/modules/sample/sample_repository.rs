@@ -4,7 +4,6 @@ use rustle_core::injectable;
 pub struct SampleRepository;
 
 impl SampleRepository {
-    #[allow(dead_code)]
     pub fn name(&self) -> String {
         "Rustle".to_string()
     }
