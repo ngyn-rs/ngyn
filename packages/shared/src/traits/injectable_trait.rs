@@ -8,4 +8,7 @@ pub trait RustleInjectableInit: Send + Sync {
 
 /// `RustleInjectable` is a trait that defines the basic structure of an injectable in Rustle.
 /// It is designed to be thread-safe.
-pub trait RustleInjectable: Send + Sync {}
+pub trait RustleInjectable: Send + Sync {
+    /// Returns the name of the injectable.
+    fn name(&self) -> &str;
+}

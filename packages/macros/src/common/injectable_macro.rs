@@ -28,7 +28,11 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
-        impl rustle_core::RustleInjectable for #ident {}
+        impl rustle_core::RustleInjectable for #ident {
+            fn name(&self) -> &str {
+                stringify!(#ident)
+            }
+        }
 
         impl rustle_core::RustleInjectableInit for #ident {
             fn new() -> Box<dyn rustle_core::RustleInjectable> {

@@ -84,6 +84,11 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl rustle_core::RustleController for #ident {
+
+            fn name(&self) -> &str {
+                stringify!(#ident)
+            }
+
             fn routes(&self) -> Vec<(
                 &str,
                 &str,
