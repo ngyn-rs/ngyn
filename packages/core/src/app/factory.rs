@@ -18,9 +18,12 @@ impl RustleFactory {
         let module = AppModule::new();
         let mut server = RustleServer::new();
         module.get_controllers().iter().for_each(|controller| {
+            println!("Registering controller: {}", controller.name());
+            // print count of routes
+            println!("Routes: {}", controller.routes().len());
             for (path, http_method, handler) in controller.routes() {
-                let http_method = HttpMethod::from_str(http_method).unwrap();
-                server.route(path, http_method, handler);
+                let http_method = HttpMethod::from_str(http_method.as_str()).unwrap();
+                server.route(path.as_str(), http_method, handler);
             }
         });
         server

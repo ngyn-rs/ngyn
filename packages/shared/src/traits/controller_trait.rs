@@ -12,13 +12,25 @@ pub trait RustleController: Send + Sync {
     ///
     fn name(&self) -> &str;
 
-    /// Returns a vector of routes associated with the controller.
-    /// Each route is represented as a tuple of (method, path, handler).
+    /// Add route to the controller.
+    /// This is for internal use only.
+    fn add_route(
+        &mut self,
+        path: String,
+        http_method: String,
+        handler: Box<
+            dyn Fn(crate::RustleRequest, crate::RustleResponse) -> crate::RustleResponse
+                + Send
+                + Sync,
+        >,
+    );
+
+    /// Returns a vector of routes for the controller.
     fn routes(
         &self,
     ) -> Vec<(
-        &str,
-        &str,
+        String,
+        String,
         Box<
             dyn Fn(crate::RustleRequest, crate::RustleResponse) -> crate::RustleResponse
                 + Send
