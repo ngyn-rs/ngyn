@@ -2,7 +2,7 @@ use rustle_core::{controller, get, RustleController, RustleRequest, RustleRespon
 
 use super::sample_service::SampleService;
 
-#[controller]
+#[controller("say_hello, say_goodbye")]
 pub struct SampleController {
     sample_service: SampleService,
 }

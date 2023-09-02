@@ -76,10 +76,6 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
         fn #ident(#inputs) -> #output {
             #block
         }
-
-        pub fn register(&mut self) {
-            #(#expanded_methods)*
-        }
     };
 
     expanded.into()
