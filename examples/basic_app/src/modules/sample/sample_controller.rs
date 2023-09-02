@@ -9,13 +9,13 @@ pub struct SampleController {
 
 impl SampleController {
     #[get("/")]
-    fn say_hello(self, _req: RustleRequest, res: RustleResponse) -> RustleResponse {
+    fn say_hello(self, _req: RustleRequest, res: RustleResponse) {
         self.sample_service.say_hello();
         res
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(self, _req: RustleRequest, res: RustleResponse) -> RustleResponse {
+    fn say_goodbye(self, _req: RustleRequest, res: RustleResponse) {
         println!("Goodbye!");
         res
     }

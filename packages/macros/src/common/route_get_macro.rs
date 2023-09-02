@@ -45,8 +45,8 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
     let ident = &input.sig.ident;
     let inputs = &input.sig.inputs;
     let output = match &input.sig.output {
-        syn::ReturnType::Default => panic!("expected a valid return type"),
-        syn::ReturnType::Type(_, ty) => ty,
+        syn::ReturnType::Default => quote! { rustle_core::RustleResponse },
+        syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
     let block = &input.block;
     let http_method = String::from("GET");
