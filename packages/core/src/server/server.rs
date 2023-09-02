@@ -36,16 +36,13 @@ impl RustleServer {
         &mut self,
         path: &str,
         method: HttpMethod,
-        handler: impl Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + 'static,
+        handler: &Box<dyn Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync>,
     ) -> &mut Self {
         let handler = std::sync::Arc::new(handler);
-        let req_handler = move |req: tide::Request<()>| {
-            let handler = handler.clone();
-            async move {
-                let rustle_request = RustleRequest::new(req);
-                let rustle_response = RustleResponse::new();
-                handler(rustle_request, rustle_response).build()
-            }
+        let req_handler = move |req: tide::Request<()>| async move {
+            let rustle_request = RustleRequest::new(req);
+            let rustle_response = RustleResponse::new();
+            rustle_response.body("Hello World").build()
         };
         match method {
             HttpMethod::Get => self.server.at(path).get(req_handler),

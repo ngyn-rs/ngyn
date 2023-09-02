@@ -26,6 +26,20 @@ impl RustleResponse {
         self
     }
 
+    /// Sets the body of the response
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A string that represents the body
+    ///
+    /// # Returns
+    ///
+    /// * A mutable reference to the `RustleResponse`.
+    pub fn body(mut self, data: &str) -> Self {
+        self.response.set_body(data);
+        self
+    }
+
     /// Builds the `RustleResponse`.
     pub fn build(self) -> tide::Result {
         Ok(self.response)
