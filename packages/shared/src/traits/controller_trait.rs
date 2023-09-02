@@ -31,7 +31,7 @@ pub trait RustleController: Send + Sync {
     ) -> Vec<(
         String,
         String,
-        Box<
+        &Box<
             dyn Fn(crate::RustleRequest, crate::RustleResponse) -> crate::RustleResponse
                 + Send
                 + Sync,

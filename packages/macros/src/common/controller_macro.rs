@@ -63,13 +63,15 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
             fn routes(&self) -> Vec<(
                 String,
                 String,
-                Box<
+                &Box<
                     dyn Fn(rustle_core::RustleRequest, rustle_core::RustleResponse) -> rustle_core::RustleResponse
                         + Send
                         + Sync,
                 >,
             )> {
-                self.all_routes.iter().cloned().collect()
+                self.all_routes.iter().map(|(path, http_method, handler)| {
+                    (path.clone(), http_method.clone(), handler.clone())
+                }).collect()
             }
         }
 
