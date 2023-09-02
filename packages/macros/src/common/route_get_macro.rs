@@ -3,6 +3,8 @@ use quote::quote;
 use rustle_shared::path_enum::Path;
 use syn::ItemFn;
 
+use crate::utils::str_to_ident;
+
 struct Args {
     path: Option<Path>,
 }
@@ -72,9 +74,15 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
         }
     }
 
+    let register_ident = str_to_ident(format!("register_{}", ident));
+
     let expanded = quote! {
         fn #ident(#inputs) -> #output {
             #block
+        }
+
+        fn #register_ident(&mut self) {
+            #(#expanded_methods)*
         }
     };
 

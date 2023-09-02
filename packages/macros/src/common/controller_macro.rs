@@ -1,11 +1,11 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::handle_macro::handle_macro;
+use crate::utils::{handle_macro, str_to_ident};
 
-pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
-    let (ident, types, keys) = handle_macro(input.clone());
+    let (ident, types, keys) = handle_macro(input);
 
     let fields: Vec<_> = types
         .iter()
@@ -18,7 +18,32 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
+    let arg: Option<String> = {
+        let input_str = args.to_string();
+
+        if input_str.starts_with("\"") && input_str.ends_with("\"") {
+            Some(input_str.trim_matches('"').to_lowercase())
+        } else {
+            None
+        }
+    };
+    let mut route_registry: Vec<_> = Vec::new();
+
+    match arg {
+        Some(routes) => routes.split(",").into_iter().for_each(|route| {
+            let path = str_to_ident(format!("register_{}", route.trim()));
+            route_registry.push(quote! {
+                self.#path();
+            })
+        }),
+        _ => {}
+    }
+
+    let rustle_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
+
     let expanded = quote! {
+        use rustle_core::RustleController as #rustle_controller_alias;
+
         #[rustle_core::dependency]
         pub struct #ident {
             all_routes: Vec<(
@@ -49,6 +74,10 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
                 stringify!(#ident)
             }
 
+            fn register(&mut self) {
+                #(#route_registry)*
+            }
+
             fn add_route(
                 &mut self,
                 path: String,
@@ -74,10 +103,6 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
                 self.all_routes.iter().map(|(path, http_method, handler)| {
                     (path.clone(), http_method.clone(), handler.clone())
                 }).collect()
-            }
-
-            fn register(&mut self) {
-                Self::register(self)
             }
         }
 
