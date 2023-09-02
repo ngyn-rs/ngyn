@@ -35,10 +35,12 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl #ident {
             pub fn new() -> Self {
-                #ident {
+                let mut controller = #ident {
                     all_routes: vec![],
                     #(#keys: rustle_core::RustleProvider.provide()),*
-                }
+                };
+                controller.register();
+                controller
             }
         }
 
@@ -72,6 +74,10 @@ pub fn controller_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
                 self.all_routes.iter().map(|(path, http_method, handler)| {
                     (path.clone(), http_method.clone(), handler.clone())
                 }).collect()
+            }
+
+            fn register(&mut self) {
+                Self::register(self)
             }
         }
 

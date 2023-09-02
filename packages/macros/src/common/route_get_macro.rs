@@ -38,7 +38,7 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
         Args { path }
     };
 
-    let _path = args.path.unwrap();
+    let path = args.path.unwrap();
 
     let ident = &input.sig.ident;
     let inputs = &input.sig.inputs;
@@ -47,10 +47,38 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
         syn::ReturnType::Type(_, ty) => ty,
     };
     let block = &input.block;
+    let http_method = String::from("GET");
+
+    let mut expanded_methods: Vec<_> = Vec::new();
+
+    match path {
+        Path::Multiple(paths) => {
+            for path in paths {
+                let route_code = quote! {
+                    self.add_route(#path.to_string(), #http_method.to_string(), Box::new(move |req: rustle_core::RustleRequest, res: rustle_core::RustleResponse| -> rustle_core::RustleResponse {
+                    res
+                }));
+                };
+                expanded_methods.push(route_code);
+            }
+        }
+        Path::Single(path) => {
+            let route_code = quote! {
+                self.add_route(#path.to_string(), #http_method.to_string(), Box::new(move |req: rustle_core::RustleRequest, res: rustle_core::RustleResponse| -> rustle_core::RustleResponse {
+                    res
+                }));
+            };
+            expanded_methods.push(route_code);
+        }
+    }
 
     let expanded = quote! {
-        pub fn #ident(#inputs) -> #output {
+        fn #ident(#inputs) -> #output {
             #block
+        }
+
+        pub fn register(&mut self) {
+            #(#expanded_methods)*
         }
     };
 

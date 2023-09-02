@@ -46,7 +46,7 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|controller| {
             quote! {
-                let controller: #controller = rustle_core::RustleProvider.provide();
+                let controller: #controller = #controller::new();
                 controllers.push(std::sync::Arc::new(controller));
             }
         })
