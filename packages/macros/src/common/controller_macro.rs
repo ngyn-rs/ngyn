@@ -20,7 +20,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let arg: Option<String> = {
         let input_str = args.to_string();
-
+        // TODO: catch invalid arguments
         if input_str.starts_with("\"") && input_str.ends_with("\"") {
             Some(input_str.trim_matches('"').to_lowercase())
         } else {
@@ -32,9 +32,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     match arg {
         Some(routes) => routes.split(",").into_iter().for_each(|route| {
             let path = str_to_ident(format!("register_{}", route.trim()));
-            route_registry.push(quote! {
-                self.#path();
-            })
+            route_registry.push(quote! { controller.#path(); })
         }),
         _ => {}
     }
@@ -64,7 +62,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                     all_routes: vec![],
                     #(#keys: rustle_core::RustleProvider.provide()),*
                 };
-                controller.register();
+                #(#route_registry)*
                 controller
             }
         }
@@ -72,10 +70,6 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         impl rustle_core::RustleController for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
-            }
-
-            fn register(&mut self) {
-                #(#route_registry)*
             }
 
             fn add_route(

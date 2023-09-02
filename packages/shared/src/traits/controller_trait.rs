@@ -8,7 +8,6 @@ pub trait RustleControllerInit: Send + Sync {
 /// `RustleController` is a trait that defines the basic structure of a controller in Rustle.
 /// It is designed to be thread-safe.
 pub trait RustleController: Send + Sync {
-    fn register(&mut self);
     /// Returns the name of the controller.
     ///
     fn name(&self) -> &str;
