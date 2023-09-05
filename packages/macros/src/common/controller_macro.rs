@@ -85,7 +85,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 http_method: String,
                 handler: String,
             ) {
-                self.all_routes.push((path, http_method, Box::new(|req, res| res)));
+                self.all_routes.push((path, handler, Box::new(|req, res| res)));
             }
 
             fn routes(&self) -> Vec<(
@@ -94,7 +94,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 String,
             )> {
                 self.all_routes.iter().map(|(path, http_method, handler)| {
-                    (path.clone(), http_method.clone(), path.clone())
+                    (path.clone(), String::from("GET"), http_method.clone())
                 }).collect()
             }
 
