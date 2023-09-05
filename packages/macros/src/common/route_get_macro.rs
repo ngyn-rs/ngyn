@@ -28,7 +28,7 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
         } else if input_str.starts_with('[') && input_str.ends_with(']') {
             let paths: Vec<String> = input_str[1..input_str.len() - 1]
                 .split(',')
-                .map(|s| s.trim().to_string())
+                .map(|s| s.trim().trim_matches('"').to_string().to_lowercase())
                 .collect();
             Some(Path::Multiple(paths))
         } else if input_str.is_empty() {

@@ -31,16 +31,20 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut handle_routes: Vec<_> = Vec::new();
 
     match arg {
-        Some(routes) => routes.split(",").into_iter().for_each(|route| {
-            let route_ident = str_to_ident(route.trim().to_string());
-            let path = str_to_ident(format!("register_{}", route.trim()));
-            handle_routes.push(quote! {
-                    #route => {
-                        Self::#route_ident(Self::new(), req, res)
-                    }
-            });
-            route_registry.push(quote! { controller.#path(); })
-        }),
+        Some(routes) => routes
+            .split(",")
+            .into_iter()
+            .map(|r| r.trim())
+            .for_each(|route| {
+                let route_ident = str_to_ident(route.to_string());
+                let path = str_to_ident(format!("register_{}", route));
+                handle_routes.push(quote! {
+                        #route => {
+                            Self::#route_ident(Self::new(), req, res)
+                        }
+                });
+                route_registry.push(quote! { controller.#path(); })
+            }),
         _ => {}
     }
 
@@ -94,7 +98,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
-                        res
+                        res.status(404)
                     }
                 }
             }
