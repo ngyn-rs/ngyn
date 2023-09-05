@@ -1,7 +1,6 @@
 use std::vec;
 
 use nject::provider;
-use rustle_shared::{RustleRequest, RustleResponse};
 
 /// `RustleProvider` is a struct that acts as a provider in Rustle.
 /// This single struct is used to inject all the dependencies.
@@ -9,23 +8,8 @@ use rustle_shared::{RustleRequest, RustleResponse};
 #[provider]
 pub struct RustleProvider;
 
-impl
-    nject::Provider<
-        '_,
-        Vec<(
-            String,
-            String,
-            Box<dyn Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync>,
-        )>,
-    > for RustleProvider
-{
-    fn provide(
-        &self,
-    ) -> Vec<(
-        String,
-        String,
-        Box<dyn Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync>,
-    )> {
+impl nject::Provider<'_, Vec<(String, String, String)>> for RustleProvider {
+    fn provide(&self) -> Vec<(String, String, String)> {
         vec![]
     }
 }
