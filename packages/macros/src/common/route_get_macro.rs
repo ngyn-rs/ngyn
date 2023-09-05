@@ -57,18 +57,14 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
         Path::Multiple(paths) => {
             for path in paths {
                 let route_code = quote! {
-                    self.add_route(#path.to_string(), #http_method.to_string(), Box::new(move |req: rustle_core::RustleRequest, res: rustle_core::RustleResponse| -> rustle_core::RustleResponse {
-                    res
-                }));
+                    self.add_route(#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string());
                 };
                 expanded_methods.push(route_code);
             }
         }
         Path::Single(path) => {
             let route_code = quote! {
-                self.add_route(#path.to_string(), #http_method.to_string(), Box::new(move |req: rustle_core::RustleRequest, res: rustle_core::RustleResponse| -> rustle_core::RustleResponse {
-                    res
-                }));
+                self.add_route(#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string());
             };
             expanded_methods.push(route_code);
         }
@@ -77,7 +73,7 @@ pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream
     let register_ident = str_to_ident(format!("register_{}", ident));
 
     let expanded = quote! {
-        async fn #ident(#inputs) -> #output {
+        fn #ident(#inputs) -> #output {
             #block
         }
 

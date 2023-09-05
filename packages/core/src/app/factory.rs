@@ -17,13 +17,20 @@ impl RustleFactory {
     pub fn create<AppModule: RustleModule>() -> RustleServer {
         let module = AppModule::new();
         let mut server = RustleServer::new();
-        module.get_controllers().iter().for_each(|controller| {
+        for controller in module.get_controllers() {
             println!("Registering controller: {}", controller.name());
             for (path, http_method, handler) in controller.routes() {
                 let http_method = HttpMethod::from_str(http_method.as_str()).unwrap();
-                server.route(path.as_str(), http_method, handler);
+                server.route(
+                    path.as_str(),
+                    http_method,
+                    Box::new({
+                        let controller = controller.clone();
+                        move |req, res| controller.handle(handler.clone(), req, res)
+                    }),
+                );
             }
-        });
+        }
         server
     }
 }

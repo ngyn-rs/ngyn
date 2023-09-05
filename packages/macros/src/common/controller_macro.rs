@@ -28,10 +28,17 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     };
     let mut route_registry: Vec<_> = Vec::new();
+    let mut handle_routes: Vec<_> = Vec::new();
 
     match arg {
         Some(routes) => routes.split(",").into_iter().for_each(|route| {
+            let route_ident = str_to_ident(route.trim().to_string());
             let path = str_to_ident(format!("register_{}", route.trim()));
+            handle_routes.push(quote! {
+                    #route => {
+                        Self::#route_ident(Self::new(), req, res)
+                    }
+            });
             route_registry.push(quote! { controller.#path(); })
         }),
         _ => {}
@@ -76,27 +83,28 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 &mut self,
                 path: String,
                 http_method: String,
-                handler: Box<
-                    dyn Fn(rustle_core::RustleRequest, rustle_core::RustleResponse) -> rustle_core::RustleResponse
-                        + Send
-                        + Sync,
-                >,
+                handler: String,
             ) {
-                self.all_routes.push((path, http_method, handler));
+                self.all_routes.push((path, http_method, Box::new(|req, res| res)));
             }
 
             fn routes(&self) -> Vec<(
                 String,
                 String,
-                &Box<
-                    dyn Fn(rustle_core::RustleRequest, rustle_core::RustleResponse) -> rustle_core::RustleResponse
-                        + Send
-                        + Sync,
-                >,
+                String,
             )> {
                 self.all_routes.iter().map(|(path, http_method, handler)| {
-                    (path.clone(), http_method.clone(), handler.clone())
+                    (path.clone(), http_method.clone(), path.clone())
                 }).collect()
+            }
+
+            fn handle(&self, handler: String, req: rustle_core::RustleRequest, res: rustle_core::RustleResponse) -> rustle_core::RustleResponse {
+                match handler.as_str() {
+                    #(#handle_routes)*
+                    _ => {
+                        res
+                    }
+                }
             }
         }
 

@@ -11,7 +11,7 @@ impl SampleController {
     #[get("/")]
     fn say_hello(self, _req: RustleRequest, res: RustleResponse) {
         self.sample_service.say_hello();
-        res
+        res.body("Hello, Rustle!")
     }
 
     #[get(["/bye", "/goodbye"])]
