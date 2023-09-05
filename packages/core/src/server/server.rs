@@ -1,4 +1,5 @@
 use rustle_shared::{HttpMethod, RustleRequest, RustleResponse};
+use std::sync::Arc;
 use tide::Server;
 
 /// `RustleServer` is a struct that represents a server instance in the Rustle framework.
@@ -32,17 +33,21 @@ impl RustleServer {
     ///    res.status(200)
     /// });
     /// ```
-    pub fn route(
-        &mut self,
-        path: &str,
-        method: HttpMethod,
-        handler: &Box<dyn Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync>,
-    ) -> &mut Self {
-        let handler = std::sync::Arc::new(handler);
-        let req_handler = move |req: tide::Request<()>| async move {
-            let rustle_request = RustleRequest::new(req);
-            let rustle_response = RustleResponse::new();
-            rustle_response.body("Hello World").build()
+    pub fn route<F>(&mut self, path: &str, method: HttpMethod, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        let handler = Arc::new(handler);
+        let req_handler = {
+            let handler = Arc::clone(&handler);
+            move |req: tide::Request<()>| {
+                let handler = Arc::clone(&handler);
+                async move {
+                    let rustle_request = RustleRequest::new(req);
+                    let rustle_response = RustleResponse::new();
+                    handler(rustle_request, rustle_response).build()
+                }
+            }
         };
         match method {
             HttpMethod::Get => self.server.at(path).get(req_handler),
