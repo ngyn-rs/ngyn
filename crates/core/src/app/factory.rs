@@ -6,7 +6,7 @@ use rustle_shared::{enums::HttpMethod, RustleModule};
 pub struct RustleFactory {}
 
 impl RustleFactory {
-    /// The `create` function takes a generic parameter `AppModule` that implements the `RustleModule` trait.
+    /// The `create` method takes a generic parameter `AppModule` that implements the `RustleModule` trait.
     /// It returns an instance of `RustleServer`.
     ///
     /// # Example

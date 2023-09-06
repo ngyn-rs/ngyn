@@ -3,7 +3,6 @@ use std::sync::Arc;
 use tide::{Result, Server};
 
 /// `RustleServer` is a struct that represents a server instance in the Rustle framework.
-/// It contains a `Server` from the Tide framework and an optional `Route`.
 pub struct RustleServer {
     server: Server<()>,
 }
@@ -14,6 +13,34 @@ impl RustleServer {
         Self {
             server: Server::new(),
         }
+    }
+
+    pub fn get<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Get, handler)
+    }
+
+    pub fn post<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Post, handler)
+    }
+
+    pub fn put<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Put, handler)
+    }
+
+    pub fn delete<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Delete, handler)
     }
 
     /// Adds a new route to the `RustleServer`.
