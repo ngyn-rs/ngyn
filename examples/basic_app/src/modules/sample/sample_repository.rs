@@ -1,4 +1,4 @@
-use ngyn_core::injectable;
+use ngyn::injectable;
 
 #[injectable]
 pub struct SampleRepository;

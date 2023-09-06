@@ -14,7 +14,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        #[ngyn_core::dependency]
+        #[ngyn::dependency]
         #[derive(Clone)]
         pub struct #ident {
             #(#fields),*
@@ -23,19 +23,19 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         impl #ident {
             pub fn new() -> Self {
                 #ident {
-                    #(#keys: ngyn_core::NgynProvider.provide()),*
+                    #(#keys: ngyn::NgynProvider.provide()),*
                 }
             }
         }
 
-        impl ngyn_core::NgynInjectable for #ident {
+        impl ngyn::NgynInjectable for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
         }
 
-        impl ngyn_core::NgynInjectableInit for #ident {
-            fn new() -> Box<dyn ngyn_core::NgynInjectable> {
+        impl ngyn::NgynInjectableInit for #ident {
+            fn new() -> Box<dyn ngyn::NgynInjectable> {
                 Box::new(Self::new())
             }
         }

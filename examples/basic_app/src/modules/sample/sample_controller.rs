@@ -1,4 +1,4 @@
-use ngyn_core::{controller, get, NgynRequest, NgynResponse};
+use ngyn::{controller, get, NgynRequest, NgynResponse};
 
 use super::sample_service::SampleService;
 

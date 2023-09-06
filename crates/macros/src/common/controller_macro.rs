@@ -51,9 +51,9 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
 
     let expanded = quote! {
-        use ngyn_core::NgynController as #ngyn_controller_alias;
+        use ngyn::NgynController as #ngyn_controller_alias;
 
-        #[ngyn_core::dependency]
+        #[ngyn::dependency]
         pub struct #ident {
             all_routes: Vec<(String, String, String)>,
             #(#fields),*
@@ -63,14 +63,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             pub fn new() -> Self {
                 let mut controller = #ident {
                     all_routes: vec![],
-                    #(#keys: ngyn_core::NgynProvider.provide()),*
+                    #(#keys: ngyn::NgynProvider.provide()),*
                 };
                 #(#route_registry)*
                 controller
             }
         }
 
-        impl ngyn_core::NgynController for #ident {
+        impl ngyn::NgynController for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
@@ -94,7 +94,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            fn handle(&self, handler: String, req: ngyn_core::NgynRequest, res: ngyn_core::NgynResponse) -> ngyn_core::NgynResponse {
+            fn handle(&self, handler: String, req: ngyn::NgynRequest, res: ngyn::NgynResponse) -> ngyn::NgynResponse {
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
@@ -104,8 +104,8 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
-        impl ngyn_core::NgynControllerInit for #ident {
-            fn new() -> Box<dyn ngyn_core::NgynController> {
+        impl ngyn::NgynControllerInit for #ident {
+            fn new() -> Box<dyn ngyn::NgynController> {
                 Box::new(Self::new())
             }
         }

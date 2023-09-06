@@ -1,7 +1,7 @@
 mod modules;
 
 use modules::sample::sample_module::SampleModule;
-use ngyn_core::{NgynFactory, Result};
+use ngyn::{NgynFactory, Result};
 
 #[async_std::main]
 async fn main() -> Result<()> {

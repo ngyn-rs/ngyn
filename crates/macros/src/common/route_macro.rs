@@ -72,7 +72,7 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let ident = &input.sig.ident;
     let inputs = &input.sig.inputs;
     let output = match &input.sig.output {
-        syn::ReturnType::Default => quote! { ngyn_core::NgynResponse },
+        syn::ReturnType::Default => quote! { ngyn::NgynResponse },
         syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
     let block = &input.block;

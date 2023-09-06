@@ -69,12 +69,12 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        #[ngyn_core::dependency]
+        #[ngyn::dependency]
         pub struct #ident {
             #(#fields),*
         }
 
-        impl ngyn_core::NgynModule for #ident {
+        impl ngyn::NgynModule for #ident {
             /// Creates a new `#ident` with the specified components.
             ///
             /// # Examples
@@ -84,7 +84,7 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             /// ```
             fn new() -> Self {
                 #ident {
-                    #(#keys: ngyn_core::NgynProvider.provide()),*
+                    #(#keys: ngyn::NgynProvider.provide()),*
                 }
             }
 
@@ -96,8 +96,8 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             /// let module = #ident::new();
             /// let controllers = module.get_controllers();
             /// ```
-            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn ngyn_core::NgynController>> {
-                let mut controllers: Vec<std::sync::Arc<dyn ngyn_core::NgynController>> = vec![];
+            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
+                let mut controllers: Vec<std::sync::Arc<dyn ngyn::NgynController>> = vec![];
                 #(#add_controllers)*
                 controllers
             }

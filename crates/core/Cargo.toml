@@ -1,7 +1,9 @@
 [package]
-name = "ngyn_core"
-version = "0.0.0"
+name = "ngyn"
+version = "0.0.2"
 edition = "2021"
+description = "Modular backend framework for web applications"
+license = "MIT"
 
 [lib]
 path = "src/lib.rs"

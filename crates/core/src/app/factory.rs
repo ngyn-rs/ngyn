@@ -12,7 +12,7 @@ impl NgynFactory {
     /// # Example
     ///
     /// ```
-    /// use ngyn_core::{module, NgynFactory};
+    /// use ngyn::{module, NgynFactory};
     ///
     /// #[module]
     /// pub struct YourAppModule;
