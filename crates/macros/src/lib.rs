@@ -4,7 +4,7 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::{controller_macro::*, injectable_macro::*, route_get_macro::*};
+use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
 use crate::core::{interceptor_macro::*, module_macro::*};
 use proc_macro::TokenStream;
 
@@ -85,5 +85,5 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 /// }
 /// ```
 pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
-    route_get_macro(args, input)
+    route_macro(args, input)
 }

@@ -9,12 +9,12 @@ struct Args {
     path: Option<Path>,
 }
 
-pub fn route_get_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
+pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let input = match syn::parse::<ItemFn>(raw_input) {
         Ok(input) => input,
         Err(err) => {
             let error_message = err.to_string();
-            panic!("failed to parse input: {}", error_message)
+            panic!("failed to parse method: {}", error_message)
         }
     };
 

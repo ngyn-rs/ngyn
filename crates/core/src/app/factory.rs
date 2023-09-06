@@ -13,10 +13,10 @@ impl RustleFactory {
     ///
     /// ```
     /// use rustle_core::{module, RustleFactory};
-    /// 
+    ///
     /// #[module]
     /// pub struct YourAppModule;
-    /// 
+    ///
     /// let server = RustleFactory::create::<YourAppModule>();
     /// ```
     pub fn create<AppModule: RustleModule>() -> RustleServer {
