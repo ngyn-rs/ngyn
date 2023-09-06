@@ -1,9 +1,8 @@
 use rustle_shared::{HttpMethod, RustleRequest, RustleResponse};
 use std::sync::Arc;
-use tide::Server;
+use tide::{Result, Server};
 
 /// `RustleServer` is a struct that represents a server instance in the Rustle framework.
-/// It contains a `Server` from the Tide framework and an optional `Route`.
 pub struct RustleServer {
     server: Server<()>,
 }
@@ -14,6 +13,34 @@ impl RustleServer {
         Self {
             server: Server::new(),
         }
+    }
+
+    pub fn get<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Get, handler)
+    }
+
+    pub fn post<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Post, handler)
+    }
+
+    pub fn put<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Put, handler)
+    }
+
+    pub fn delete<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Delete, handler)
     }
 
     /// Adds a new route to the `RustleServer`.
@@ -43,9 +70,9 @@ impl RustleServer {
             move |req: tide::Request<()>| {
                 let handler = Arc::clone(&handler);
                 async move {
-                    let rustle_request = RustleRequest::new(req);
-                    let rustle_response = RustleResponse::new();
-                    handler(rustle_request, rustle_response).build()
+                    let request = RustleRequest::new(req);
+                    let response = RustleResponse::new();
+                    handler(request, response).build()
                 }
             }
         };
@@ -61,7 +88,7 @@ impl RustleServer {
 
     /// Starts listening for incoming connections on the specified address.
     /// This function is asynchronous and returns a `tide::Result`.
-    pub async fn listen(self, address: &str) -> tide::Result<()> {
+    pub async fn listen(self, address: &str) -> Result<()> {
         self.server.listen(address).await.map_err(tide::Error::from)
     }
 }

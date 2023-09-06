@@ -1,15 +1,16 @@
 use std::collections::HashMap;
+use tide::Request;
 
 use crate::enums::HttpMethod;
 
 pub struct RustleRequest {
-    request: tide::Request<()>,
+    request: Request<()>,
 }
 
 impl RustleRequest {
     /// Constructs a new `RustleRequest`.
-    pub fn new(request: tide::Request<()>) -> Self {
-        Self { request: request }
+    pub fn new(request: Request<()>) -> Self {
+        Self { request }
     }
 
     /// Gets the method of the `RustleRequest`.

@@ -1,13 +1,15 @@
+use tide::{Response, Result, StatusCode};
+
 /// RustleResponse is a struct that represents a server response.
 pub struct RustleResponse {
-    response: tide::Response,
+    response: Response,
 }
 
 impl RustleResponse {
     /// Constructs a new `RustleResponse` with a default status code of 200.
     pub fn new() -> Self {
         Self {
-            response: tide::Response::new(200),
+            response: Response::new(200),
         }
     }
 
@@ -22,7 +24,7 @@ impl RustleResponse {
     /// * A mutable reference to the `RustleResponse`.
     pub fn status(mut self, status: u16) -> Self {
         self.response
-            .set_status(tide::StatusCode::try_from(status).unwrap());
+            .set_status(StatusCode::try_from(status).unwrap());
         self
     }
 
@@ -41,7 +43,7 @@ impl RustleResponse {
     }
 
     /// Builds the `RustleResponse`.
-    pub fn build(self) -> tide::Result {
+    pub fn build(self) -> Result {
         Ok(self.response)
     }
 }
