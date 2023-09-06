@@ -5,7 +5,7 @@ use std::process::exit;
 use anyhow::Result;
 use clap::ArgMatches;
 use console::{style, Style};
-use rustle_cli::CmdExit;
+use ngyn_cli::CmdExit;
 use tracing::debug;
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;

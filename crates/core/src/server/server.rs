@@ -1,41 +1,68 @@
-use rustle_shared::{HttpMethod, RustleRequest, RustleResponse};
+use ngyn_shared::{HttpMethod, NgynRequest, NgynResponse};
 use std::sync::Arc;
-use tide::Server;
+use tide::{Result, Server};
 
-/// `RustleServer` is a struct that represents a server instance in the Rustle framework.
-/// It contains a `Server` from the Tide framework and an optional `Route`.
-pub struct RustleServer {
+/// `NgynServer` is a struct that represents a server instance in the Ngyn framework.
+pub struct NgynServer {
     server: Server<()>,
 }
 
-impl RustleServer {
-    /// Creates a new instance of `RustleServer` with a new `Server`
+impl NgynServer {
+    /// Creates a new instance of `NgynServer` with a new `Server`
     pub fn new() -> Self {
         Self {
             server: Server::new(),
         }
     }
 
-    /// Adds a new route to the `RustleServer`.
+    pub fn get<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Get, handler)
+    }
+
+    pub fn post<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Post, handler)
+    }
+
+    pub fn put<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Put, handler)
+    }
+
+    pub fn delete<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    where
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+    {
+        self.route(path, HttpMethod::Delete, handler)
+    }
+
+    /// Adds a new route to the `NgynServer`.
     /// This function is chainable.
     ///
     /// # Arguments
     ///
     /// * `path` - A string slice that represents the path of the route.
     /// * `method` - An `HttpMethod` that represents the HTTP method of the route.
-    /// * `handler` - A closure that takes a `RustleRequest` and a `RustleResponse` and returns a `RustleResponse`.
+    /// * `handler` - A closure that takes a `NgynRequest` and a `NgynResponse` and returns a `NgynResponse`.
     ///
     /// # Example
     ///
     /// ```
-    /// let mut server = RustleServer::new();
+    /// let mut server = NgynServer::new();
     /// server.route("/", HttpMethod::Get, |req, res| {
     ///    res.status(200)
     /// });
     /// ```
     pub fn route<F>(&mut self, path: &str, method: HttpMethod, handler: Box<F>) -> &mut Self
     where
-        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
     {
         let handler = Arc::new(handler);
         let req_handler = {
@@ -43,9 +70,9 @@ impl RustleServer {
             move |req: tide::Request<()>| {
                 let handler = Arc::clone(&handler);
                 async move {
-                    let rustle_request = RustleRequest::new(req);
-                    let rustle_response = RustleResponse::new();
-                    handler(rustle_request, rustle_response).build()
+                    let request = NgynRequest::new(req);
+                    let response = NgynResponse::new();
+                    handler(request, response).build()
                 }
             }
         };
@@ -61,7 +88,7 @@ impl RustleServer {
 
     /// Starts listening for incoming connections on the specified address.
     /// This function is asynchronous and returns a `tide::Result`.
-    pub async fn listen(self, address: &str) -> tide::Result<()> {
+    pub async fn listen(self, address: &str) -> Result<()> {
         self.server.listen(address).await.map_err(tide::Error::from)
     }
 }

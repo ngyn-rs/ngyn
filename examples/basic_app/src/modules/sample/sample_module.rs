@@ -1,4 +1,4 @@
-use rustle_core::module;
+use ngyn::module;
 
 use super::sample_controller::SampleController;
 

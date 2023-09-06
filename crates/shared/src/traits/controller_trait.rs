@@ -1,13 +1,13 @@
-/// `RustleControllerInit` is a trait that defines the basic structure of a controller initializer in Rustle.
-pub trait RustleControllerInit: Send + Sync {
+/// `NgynControllerInit` is a trait that defines the basic structure of a controller initializer in Ngyn.
+pub trait NgynControllerInit: Send + Sync {
     /// Creates a new instance of the controller.
     /// This is for internal use only.
-    fn new() -> Box<dyn RustleController>;
+    fn new() -> Box<dyn NgynController>;
 }
 
-/// `RustleController` is a trait that defines the basic structure of a controller in Rustle.
+/// `NgynController` is a trait that defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
-pub trait RustleController: Send + Sync {
+pub trait NgynController: Send + Sync {
     /// Returns the name of the controller.
     ///
     fn name(&self) -> &str;
@@ -19,12 +19,12 @@ pub trait RustleController: Send + Sync {
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)>;
 
-    /// Returns a `RustleResponse` for the controller.
+    /// Returns a `NgynResponse` for the controller.
     /// This is for internal use only.
     fn handle(
         &self,
         handler: String,
-        req: crate::RustleRequest,
-        res: crate::RustleResponse,
-    ) -> crate::RustleResponse;
+        req: crate::NgynRequest,
+        res: crate::NgynResponse,
+    ) -> crate::NgynResponse;
 }

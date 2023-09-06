@@ -69,12 +69,12 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        #[rustle_core::dependency]
+        #[ngyn::dependency]
         pub struct #ident {
             #(#fields),*
         }
 
-        impl rustle_core::RustleModule for #ident {
+        impl ngyn::NgynModule for #ident {
             /// Creates a new `#ident` with the specified components.
             ///
             /// # Examples
@@ -84,7 +84,7 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             /// ```
             fn new() -> Self {
                 #ident {
-                    #(#keys: rustle_core::RustleProvider.provide()),*
+                    #(#keys: ngyn::NgynProvider.provide()),*
                 }
             }
 
@@ -96,8 +96,8 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             /// let module = #ident::new();
             /// let controllers = module.get_controllers();
             /// ```
-            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn rustle_core::RustleController>> {
-                let mut controllers: Vec<std::sync::Arc<dyn rustle_core::RustleController>> = vec![];
+            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
+                let mut controllers: Vec<std::sync::Arc<dyn ngyn::NgynController>> = vec![];
                 #(#add_controllers)*
                 controllers
             }

@@ -1,11 +1,11 @@
 mod modules;
 
 use modules::sample::sample_module::SampleModule;
-use rustle_core::{Result, RustleFactory};
+use ngyn::{NgynFactory, Result};
 
 #[async_std::main]
 async fn main() -> Result<()> {
-    let app = RustleFactory::create::<SampleModule>();
+    let app = NgynFactory::create::<SampleModule>();
 
     println!("Starting server at http://127.0.0.1:8080");
 

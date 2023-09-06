@@ -1,31 +1,31 @@
 targets:
   - platform: win32
     arch: x64
-    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-x86_64-windows.zip
+    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-x86_64-windows.zip
   - platform: linux
     arch: x64
-    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-x86_64-linux.tar.xz
+    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-x86_64-linux.tar.xz
   - platform: darwin
     arch: x64
-    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-x86_64-macos.tar.xz
+    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-x86_64-macos.tar.xz
   - platform: darwin
     arch: arm64
-    url_template: https://github.com/rustle-rs/rustle-rs/releases/download/v__VERSION__/rustle-aarch64-macos.tar.xz
+    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-aarch64-macos.tar.xz
 
 brew:
-  name: rustle
+  name: ngyn
   publish: true
-  tap: rustle
-  recipe_fname: rustle.rb
+  tap: ngyn
+  recipe_fname: ngyn.rb
   recipe_template: |
-    class RustleFormula < Formula
+    class NgynFormula < Formula
       desc "desc"
-      homepage "http://github.com/rustle-rs/rustle-rs"
+      homepage "http://github.com/ngyn-rs/ngyn-rs"
       url "__URL__"
       version "__VERSION__"
       sha256 "__SHA__"
 
       def install
-        bin.install "rustle"
+        bin.install "ngyn"
       end
     end

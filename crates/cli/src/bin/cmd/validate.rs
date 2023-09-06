@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
-pub fn command() -> Command {
+pub fn command() -> Command<'static> {
     Command::new("validate")
         .about("Validate keys")
         .arg(
@@ -18,11 +18,8 @@ pub fn command() -> Command {
         )
 }
 
-pub fn run(
-    _matches: &ArgMatches,
-    _subcommand_matches: &ArgMatches,
-) -> Result<rustle_cli::CmdExit> {
-    Ok(rustle_cli::CmdExit {
+pub fn run(_matches: &ArgMatches, _subcommand_matches: &ArgMatches) -> Result<ngyn_cli::CmdExit> {
+    Ok(ngyn_cli::CmdExit {
         code: exitcode::OK,
         message: None,
     })
