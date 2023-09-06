@@ -48,12 +48,12 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => {}
     }
 
-    let rustle_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
+    let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
 
     let expanded = quote! {
-        use rustle_core::RustleController as #rustle_controller_alias;
+        use ngyn_core::NgynController as #ngyn_controller_alias;
 
-        #[rustle_core::dependency]
+        #[ngyn_core::dependency]
         pub struct #ident {
             all_routes: Vec<(String, String, String)>,
             #(#fields),*
@@ -63,14 +63,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             pub fn new() -> Self {
                 let mut controller = #ident {
                     all_routes: vec![],
-                    #(#keys: rustle_core::RustleProvider.provide()),*
+                    #(#keys: ngyn_core::NgynProvider.provide()),*
                 };
                 #(#route_registry)*
                 controller
             }
         }
 
-        impl rustle_core::RustleController for #ident {
+        impl ngyn_core::NgynController for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
@@ -94,7 +94,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            fn handle(&self, handler: String, req: rustle_core::RustleRequest, res: rustle_core::RustleResponse) -> rustle_core::RustleResponse {
+            fn handle(&self, handler: String, req: ngyn_core::NgynRequest, res: ngyn_core::NgynResponse) -> ngyn_core::NgynResponse {
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
@@ -104,8 +104,8 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
-        impl rustle_core::RustleControllerInit for #ident {
-            fn new() -> Box<dyn rustle_core::RustleController> {
+        impl ngyn_core::NgynControllerInit for #ident {
+            fn new() -> Box<dyn ngyn_core::NgynController> {
                 Box::new(Self::new())
             }
         }

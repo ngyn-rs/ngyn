@@ -1,6 +1,6 @@
+use ngyn_shared::path_enum::Path;
 use proc_macro::TokenStream;
 use quote::quote;
-use rustle_shared::path_enum::Path;
 use syn::ItemFn;
 
 use crate::utils::str_to_ident;
@@ -72,7 +72,7 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let ident = &input.sig.ident;
     let inputs = &input.sig.inputs;
     let output = match &input.sig.output {
-        syn::ReturnType::Default => quote! { rustle_core::RustleResponse },
+        syn::ReturnType::Default => quote! { ngyn_core::NgynResponse },
         syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
     let block = &input.block;

@@ -1,37 +1,40 @@
 [package]
-name = "rustle_cli"
+name = "ngyn"
 version = "0.0.1"
 edition = "2021"
+
+[lib]
+path = "src/lib.rs"
 
 #
 # cargo binstall metadata:
 #
 
 [package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
-pkg-url = "{ repo }/releases/download/v{ version }/rustle-x86_64-windows.zip"
-bin-dir = "rustle-x86_64-windows/rustle.exe"
+pkg-url = "{ repo }/releases/download/v{ version }/ngyn-x86_64-windows.zip"
+bin-dir = "ngyn-x86_64-windows/ngyn.exe"
 pkg-fmt = "zip"
 
 [package.metadata.binstall.overrides.x86_64-apple-darwin]
-pkg-url = "{ repo }/releases/download/v{ version }/rustle-x86_64-macos.tar.xz"
-bin-dir = "rustle-x86_64-macos/rustle"
+pkg-url = "{ repo }/releases/download/v{ version }/ngyn-x86_64-macos.tar.xz"
+bin-dir = "ngyn-x86_64-macos/ngyn"
 pkg-fmt = "txz"
 
 [package.metadata.binstall.overrides.aarch64-apple-darwin]
-pkg-url = "{ repo }/releases/download/v{ version }/rustle-aarch64-macos.tar.xz"
-bin-dir = "rustle-x86_64-macos/rustle"
+pkg-url = "{ repo }/releases/download/v{ version }/ngyn-aarch64-macos.tar.xz"
+bin-dir = "ngyn-x86_64-macos/ngyn"
 pkg-fmt = "txz"
 
 [package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
-pkg-url = "{ repo }/releases/download/v{ version }/rustle-x86_64-linux.tar.xz"
-bin-dir = "rustle-x86_64-linux/rustle"
+pkg-url = "{ repo }/releases/download/v{ version }/ngyn-x86_64-linux.tar.xz"
+bin-dir = "ngyn-x86_64-linux/ngyn"
 pkg-fmt = "txz"
 
 # </cargo binstall>
 
 [dependencies]
 
-clap = { version = "4", features = ["cargo"], optional = true }
+clap = { version = "3.2.25", features = ["cargo"], optional = true }
 serde = "1"
 serde_json = "1"
 serde_derive = "1"
@@ -50,7 +53,7 @@ default = ["cli"]
 cli = ["clap"]
 
 [[bin]]
-name = "rustle"
+name = "ngyn"
 path = "src/bin/main.rs"
 
 required-features = ["cli"]

@@ -14,7 +14,7 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
-        #[rustle_core::dependency]
+        #[ngyn_core::dependency]
         #[derive(Clone)]
         pub struct #ident {
             #(#fields),*
@@ -23,19 +23,19 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         impl #ident {
             pub fn new() -> Self {
                 #ident {
-                    #(#keys: rustle_core::RustleProvider.provide()),*
+                    #(#keys: ngyn_core::NgynProvider.provide()),*
                 }
             }
         }
 
-        impl rustle_core::RustleInjectable for #ident {
+        impl ngyn_core::NgynInjectable for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
         }
 
-        impl rustle_core::RustleInjectableInit for #ident {
-            fn new() -> Box<dyn rustle_core::RustleInjectable> {
+        impl ngyn_core::NgynInjectableInit for #ident {
+            fn new() -> Box<dyn ngyn_core::NgynInjectable> {
                 Box::new(Self::new())
             }
         }

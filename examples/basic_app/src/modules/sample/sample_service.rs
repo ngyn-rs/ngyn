@@ -1,4 +1,4 @@
-use rustle_core::injectable;
+use ngyn_core::injectable;
 
 use super::sample_repository::SampleRepository;
 

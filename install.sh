@@ -5,9 +5,9 @@
 set -e
 
 # assumes bin name same as project name
-project="rustle"
-bin_name="rustle"
-repo="rustle-rs/rustle-rs"
+project="ngyn"
+bin_name="ngyn"
+repo="ngyn-rs/ngyn-rs"
 
 case "$OS" in
 	"Windows_NT") target="x86_64-windows" ;;

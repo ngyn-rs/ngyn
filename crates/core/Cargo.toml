@@ -1,5 +1,5 @@
 [package]
-name = "rustle_core"
+name = "ngyn_core"
 version = "0.0.0"
 edition = "2021"
 
@@ -8,6 +8,6 @@ path = "src/lib.rs"
 
 [dependencies]
 nject = "0.3.0"
-rustle_macros = { path = "../macros" }
-rustle_shared = { path = "../shared" }
+ngyn_macros = { path = "../macros" }
+ngyn_shared = { path = "../shared" }
 tide = "0.16.0"
