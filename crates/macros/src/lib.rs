@@ -4,7 +4,7 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::{controller_macro::*, injectable_macro::*, route_get_macro::*};
+use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
 use crate::core::{interceptor_macro::*, module_macro::*};
 use proc_macro::TokenStream;
 
@@ -74,6 +74,26 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
+/// The `route` attribute is used to mark a function as a route.
+/// This means that the function can handle HTTP requests and responses.
+///
+/// ### Arguments
+/// * `method` - The HTTP method that the route will handle. (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+/// * `path` - The path that the route will handle.
+///
+/// ### Examples
+///
+/// ```
+/// #[route("GET", "/")]
+/// fn index() -> String {
+///    "Hello, world!".to_string()
+/// }
+/// ```
+pub fn route(args: TokenStream, input: TokenStream) -> TokenStream {
+    route_macro(args, input)
+}
+
+#[proc_macro_attribute]
 /// The `get` attribute is used to mark a function as a GET route.
 ///
 /// ### Examples
@@ -85,5 +105,74 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 /// }
 /// ```
 pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
-    route_get_macro(args, input)
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "GET", #args };
+    route_macro(args_with_method.into(), input)
+}
+
+#[proc_macro_attribute]
+/// The `post` attribute is used to mark a function as a GET route.
+///
+/// ### Examples
+///
+/// ```
+/// #[post("/")]
+/// fn index() -> String {
+///    "Hello, world!".to_string()
+/// }
+/// ```
+pub fn post(args: TokenStream, input: TokenStream) -> TokenStream {
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "POST", #args };
+    route_macro(args_with_method.into(), input)
+}
+
+#[proc_macro_attribute]
+/// The `put` attribute is used to mark a function as a GET route.
+///
+/// ### Examples
+///
+/// ```
+/// #[put("/")]
+/// fn index() -> String {
+///   "Hello, world!".to_string()
+/// }
+/// ```
+pub fn put(args: TokenStream, input: TokenStream) -> TokenStream {
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "PUT", #args };
+    route_macro(args_with_method.into(), input)
+}
+
+#[proc_macro_attribute]
+/// The `delete` attribute is used to mark a function as a GET route.
+///
+/// ### Examples
+///
+/// ```
+/// #[delete("/")]
+/// fn index() -> String {
+///  "Hello, world!".to_string()
+/// }
+/// ```
+pub fn delete(args: TokenStream, input: TokenStream) -> TokenStream {
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "DELETE", #args };
+    route_macro(args_with_method.into(), input)
+}
+
+#[proc_macro_attribute]
+/// The `patch` attribute is used to mark a function as a GET route.
+pub fn patch(args: TokenStream, input: TokenStream) -> TokenStream {
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "PATCH", #args };
+    route_macro(args_with_method.into(), input)
+}
+
+#[proc_macro_attribute]
+/// The `head` attribute is used to mark a function as a GET route.
+pub fn head(args: TokenStream, input: TokenStream) -> TokenStream {
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "HEAD", #args };
+    route_macro(args_with_method.into(), input)
 }
