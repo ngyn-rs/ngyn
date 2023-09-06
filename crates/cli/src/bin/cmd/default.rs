@@ -1,11 +1,10 @@
 use anyhow::Result;
 use clap::{crate_version, ArgAction};
 use clap::{Arg, ArgMatches, Command};
-use rustle_cli;
 use tracing::info;
 
-pub fn command() -> Command {
-    Command::new("rustle_cli")
+pub fn command() -> Command<'static> {
+    Command::new("ngyn ")
         .version(crate_version!())
         .about("A starter project for Rust")
         .arg(
@@ -37,11 +36,11 @@ pub fn command() -> Command {
         )
 }
 
-pub fn run(matches: &ArgMatches) -> Result<rustle_cli::CmdExit> {
+pub fn run(matches: &ArgMatches) -> Result<ngyn_cli::CmdExit> {
     info!("default cmd {:?}", matches.get_one::<String>("reporter"));
-    println!("going to run {}", rustle_cli::CMD);
-    rustle_cli::run();
-    Ok(rustle_cli::CmdExit {
+    println!("going to run {}", ngyn_cli::CMD);
+    ngyn_cli::run();
+    Ok(ngyn_cli::CmdExit {
         code: exitcode::OK,
         message: None,
     })

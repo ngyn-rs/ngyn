@@ -3,8 +3,8 @@
 
 $ErrorActionPreference = 'Stop'
 
-$Project = "rustle"
-$GithubRepo = "rustle-rs/rustle-rs"
+$Project = "ngyn"
+$GithubRepo = "ngyn-rs/ngyn-rs"
 $Target = 'x86_64-windows'
 $Install = $env:BP_INSTALL
 $BinDir = if ($Install) { "$Install" } else { "$Home\.$Project-bin" }

@@ -1,16 +1,16 @@
-use rustle_shared::{RustleRequest, RustleResponse};
+use ngyn_shared::{NgynRequest, NgynResponse};
 use tide::{utils::async_trait, Middleware, Next, Request};
 
-pub struct RustleEngine;
+pub struct NgynEngine;
 
 #[async_trait]
-impl Middleware<()> for RustleEngine {
+impl Middleware<()> for NgynEngine {
     async fn handle(&self, req: Request<()>, _next: Next<'_, ()>) -> tide::Result {
-        let mut _rustle_response = RustleResponse::new();
-        let _rustle_request = RustleRequest::new(req);
+        let mut _ngyn_response = NgynResponse::new();
+        let _ngyn_request = NgynRequest::new(req);
 
         // TODO: Implement routing logic here
 
-        _rustle_response.build()
+        _ngyn_response.build()
     }
 }

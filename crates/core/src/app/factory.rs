@@ -1,27 +1,27 @@
-use crate::server::RustleServer;
+use crate::server::NgynServer;
 
-use rustle_shared::{enums::HttpMethod, RustleModule};
+use ngyn_shared::{enums::HttpMethod, NgynModule};
 
-/// The `RustleFactory` struct is used to create instances of `RustleServer`.
-pub struct RustleFactory {}
+/// The `NgynFactory` struct is used to create instances of `NgynServer`.
+pub struct NgynFactory {}
 
-impl RustleFactory {
-    /// The `create` method takes a generic parameter `AppModule` that implements the `RustleModule` trait.
-    /// It returns an instance of `RustleServer`.
+impl NgynFactory {
+    /// The `create` method takes a generic parameter `AppModule` that implements the `NgynModule` trait.
+    /// It returns an instance of `NgynServer`.
     ///
     /// # Example
     ///
     /// ```
-    /// use rustle_core::{module, RustleFactory};
+    /// use ngyn::{module, NgynFactory};
     ///
     /// #[module]
     /// pub struct YourAppModule;
     ///
-    /// let server = RustleFactory::create::<YourAppModule>();
+    /// let server = NgynFactory::create::<YourAppModule>();
     /// ```
-    pub fn create<AppModule: RustleModule>() -> RustleServer {
+    pub fn create<AppModule: NgynModule>() -> NgynServer {
         let module = AppModule::new();
-        let mut server = RustleServer::new();
+        let mut server = NgynServer::new();
         for controller in module.get_controllers() {
             println!("Registering controller: {}", controller.name());
             for (path, http_method, handler) in controller.routes() {

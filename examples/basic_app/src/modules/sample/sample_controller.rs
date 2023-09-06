@@ -1,4 +1,4 @@
-use rustle_core::{controller, get, RustleRequest, RustleResponse};
+use ngyn::{controller, get, NgynRequest, NgynResponse};
 
 use super::sample_service::SampleService;
 
@@ -9,13 +9,13 @@ pub struct SampleController {
 
 impl SampleController {
     #[get("/")]
-    fn say_hello(self, _req: RustleRequest, res: RustleResponse) -> RustleResponse {
+    fn say_hello(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
         self.sample_service.say_hello();
-        res.body("Hello, Rustle!")
+        res.body("Hello, Ngyn!")
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(self, _req: RustleRequest, res: RustleResponse) -> RustleResponse {
+    fn say_goodbye(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
         println!("Goodbye!");
         res
     }
