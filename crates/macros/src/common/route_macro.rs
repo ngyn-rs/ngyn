@@ -72,8 +72,10 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let ident = &input.sig.ident;
     let inputs = &input.sig.inputs;
     let output = match &input.sig.output {
-        syn::ReturnType::Default => quote! { rustle_core::RustleResponse },
-        syn::ReturnType::Type(_, ty) => quote! { #ty },
+        syn::ReturnType::Default => {
+            quote! { Box<dyn std::future::Future<Output = rustle_core::RustleResponse>> }
+        }
+        syn::ReturnType::Type(_, ty) => quote! { Box<dyn std::future::Future<Output = #ty>> },
     };
     let block = &input.block;
 
@@ -100,7 +102,10 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         fn #ident(#inputs) -> #output {
-            #block
+            let block = async {
+                #block
+            };
+            Box::new(block)
         }
 
         fn #register_ident(&mut self) {
