@@ -26,5 +26,5 @@ pub trait RustleController: Send + Sync {
         handler: String,
         req: crate::RustleRequest,
         res: crate::RustleResponse,
-    ) -> Box<dyn std::future::Future<Output = crate::RustleResponse> + Send>;
+    ) -> crate::RustleResponse;
 }

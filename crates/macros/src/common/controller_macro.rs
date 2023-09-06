@@ -94,11 +94,11 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            fn handle(&self, handler: String, req: rustle_core::RustleRequest, res: rustle_core::RustleResponse) -> Box<dyn std::future::Future<Output = rustle_core::RustleResponse> + Send> {
+            fn handle(&self, handler: String, req: rustle_core::RustleRequest, res: rustle_core::RustleResponse) -> rustle_core::RustleResponse {
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
-                        async { res.status(404) }
+                        res.status(404)
                     }
                 }
             }

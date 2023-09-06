@@ -15,34 +15,30 @@ impl RustleServer {
         }
     }
 
-    pub fn get<R, F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn get<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
-        R: std::future::Future<Output = RustleResponse> + Send,
-        F: Fn(RustleRequest, RustleResponse) -> R + Send + Sync + ?Sized + 'static,
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
     {
         self.route(path, HttpMethod::Get, handler)
     }
 
-    pub fn post<R, F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn post<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
-        R: std::future::Future<Output = RustleResponse> + Send,
-        F: Fn(RustleRequest, RustleResponse) -> R + Send + Sync + ?Sized + 'static,
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
     {
         self.route(path, HttpMethod::Post, handler)
     }
 
-    pub fn put<R, F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn put<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
-        R: std::future::Future<Output = RustleResponse> + Send,
-        F: Fn(RustleRequest, RustleResponse) -> R + Send + Sync + ?Sized + 'static,
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
     {
         self.route(path, HttpMethod::Put, handler)
     }
 
-    pub fn delete<R, F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn delete<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
-        R: std::future::Future<Output = RustleResponse> + Send,
-        F: Fn(RustleRequest, RustleResponse) -> R + Send + Sync + ?Sized + 'static,
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
     {
         self.route(path, HttpMethod::Delete, handler)
     }
@@ -64,10 +60,9 @@ impl RustleServer {
     ///    res.status(200)
     /// });
     /// ```
-    pub fn route<R, F>(&mut self, path: &str, method: HttpMethod, handler: Box<F>) -> &mut Self
+    pub fn route<F>(&mut self, path: &str, method: HttpMethod, handler: Box<F>) -> &mut Self
     where
-        R: std::future::Future<Output = RustleResponse> + Send,
-        F: Fn(RustleRequest, RustleResponse) -> R + Send + Sync + ?Sized + 'static,
+        F: Fn(RustleRequest, RustleResponse) -> RustleResponse + Send + Sync + ?Sized + 'static,
     {
         let handler = Arc::new(handler);
         let req_handler = {
@@ -77,7 +72,7 @@ impl RustleServer {
                 async move {
                     let request = RustleRequest::new(req);
                     let response = RustleResponse::new();
-                    handler(request, response).await.build()
+                    handler(request, response).build()
                 }
             }
         };
