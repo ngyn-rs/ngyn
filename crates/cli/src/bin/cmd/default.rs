@@ -36,11 +36,11 @@ pub fn command() -> Command<'static> {
         )
 }
 
-pub fn run(matches: &ArgMatches) -> Result<ngyn::CmdExit> {
+pub fn run(matches: &ArgMatches) -> Result<ngyn_cli::CmdExit> {
     info!("default cmd {:?}", matches.get_one::<String>("reporter"));
-    println!("going to run {}", ngyn::CMD);
-    ngyn::run();
-    Ok(ngyn::CmdExit {
+    println!("going to run {}", ngyn_cli::CMD);
+    ngyn_cli::run();
+    Ok(ngyn_cli::CmdExit {
         code: exitcode::OK,
         message: None,
     })

@@ -338,7 +338,7 @@ name = "basic_app"
 version = "0.1.0"
 dependencies = [
  "async-std",
- "ngyn_core",
+ "ngyn",
  "nject",
 ]
 
@@ -1035,6 +1035,16 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "ngyn"
+version = "0.0.2"
+dependencies = [
+ "ngyn_macros",
+ "ngyn_shared",
+ "nject",
+ "tide",
+]
+
+[[package]]
+name = "ngyn_cli"
 version = "0.0.1"
 dependencies = [
  "anyhow",
@@ -1048,16 +1058,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tracing-tree",
-]
-
-[[package]]
-name = "ngyn_core"
-version = "0.0.0"
-dependencies = [
- "ngyn_macros",
- "ngyn_shared",
- "nject",
- "tide",
 ]
 
 [[package]]

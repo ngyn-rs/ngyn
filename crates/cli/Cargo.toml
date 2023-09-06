@@ -1,5 +1,5 @@
 [package]
-name = "ngyn"
+name = "ngyn_cli"
 version = "0.0.1"
 edition = "2021"
 description = "Modular backend framework for web applications"
