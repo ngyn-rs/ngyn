@@ -10,6 +10,6 @@ path = "src/lib.rs"
 
 [dependencies]
 nject = "0.3.0"
-ngyn_macros = { path = "../macros" }
-ngyn_shared = { path = "../shared" }
+ngyn_macros = { path = "../macros", version = "0.0.1" }
+ngyn_shared = { path = "../shared", version = "0.0.1" }
 tide = "0.16.0"
