@@ -85,5 +85,7 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 /// }
 /// ```
 pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
-    route_macro(args, input)
+    let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
+    let args_with_method = quote::quote! { "GET", #args };
+    route_macro(args_with_method.into(), input)
 }

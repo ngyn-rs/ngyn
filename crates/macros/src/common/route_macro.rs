@@ -7,6 +7,7 @@ use crate::utils::str_to_ident;
 
 struct Args {
     path: Option<Path>,
+    http_method: String,
 }
 
 pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
@@ -21,26 +22,52 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let args = {
         let input_str = args.to_string();
 
-        let path = if input_str.starts_with("\"") && input_str.ends_with("\"") {
-            Some(Path::Single(
-                input_str.trim_matches('"').to_string().to_lowercase(),
-            ))
-        } else if input_str.starts_with('[') && input_str.ends_with(']') {
-            let paths: Vec<String> = input_str[1..input_str.len() - 1]
-                .split(',')
-                .map(|s| s.trim().trim_matches('"').to_string().to_lowercase())
-                .collect();
-            Some(Path::Multiple(paths))
-        } else if input_str.is_empty() {
-            Some(Path::Single(input_str.to_string()))
+        let (path, http_method) = if input_str.starts_with("\"") {
+            // the input_str should be of this structure: `"GET", "/path"` or `"GET", ["/path1", "/path2"]`
+            // match the first argument to see if it's a valid HTTP method
+            let mut input_str = input_str.trim_matches('"').split(",");
+            let http_method = input_str
+                .next()
+                .unwrap()
+                .to_string()
+                .trim_matches('"')
+                .to_uppercase();
+
+            // panic if the HTTP method is invalid
+            if !["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+                .contains(&http_method.as_str())
+            {
+                panic!("invalid HTTP method: {}", http_method)
+            }
+
+            // match everything else as the path or paths
+            let route_path = input_str
+                .skip(0)
+                .map(|s| s.trim())
+                .collect::<Vec<_>>()
+                .join(",");
+            let path = if route_path.starts_with("[") {
+                let paths: Vec<_> = route_path
+                    .trim_matches(|p| p == '[' || p == ']')
+                    .split(",")
+                    .map(|p| p.trim_matches('"').to_string())
+                    .collect();
+                Some(Path::Multiple(paths))
+            } else if route_path.is_empty() {
+                Some(Path::Single("/".to_string()))
+            } else {
+                Some(Path::Single(route_path.trim_matches('"').to_string()))
+            };
+            (path, http_method)
         } else {
-            panic!("invalid path")
+            panic!("route expects at least one argument")
         };
 
-        Args { path }
+        Args { path, http_method }
     };
 
     let path = args.path.unwrap();
+    let http_method = args.http_method;
 
     let ident = &input.sig.ident;
     let inputs = &input.sig.inputs;
@@ -49,7 +76,6 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
     let block = &input.block;
-    let http_method = String::from("GET");
 
     let mut expanded_methods: Vec<_> = Vec::new();
 
