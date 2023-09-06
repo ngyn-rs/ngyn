@@ -1062,7 +1062,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "ngyn_shared",
  "nject",
@@ -1072,7 +1072,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "nject",
  "tide",
