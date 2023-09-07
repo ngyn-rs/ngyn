@@ -6,7 +6,7 @@ Contributing to open source projects like Ngyn is a rewarding way to learn, teac
 
 Contributing to Ngyn involves a few common steps. This guide will walk you through the process, from forking the repository to submitting your pull request. Let's get started!
 
-1. **Fork the repository**: Navigate to the [Ngyn GitHub repository](https://github.com/ngyn-rs/ngyn-rs), and click on the 'Fork' button in the upper right corner. This will create a copy of the repository in your GitHub account.
+1. **Fork the repository**: Navigate to the [Ngyn GitHub repository](https://github.com/ngyn-rs/ngyn), and click on the 'Fork' button in the upper right corner. This will create a copy of the repository in your GitHub account.
 
 2. **Clone the repository**: Open a terminal on your local machine, navigate to the directory where you want to clone the repository, and run the following command:
 
