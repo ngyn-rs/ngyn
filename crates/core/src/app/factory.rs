@@ -25,7 +25,7 @@ impl NgynFactory {
         for controller in module.get_controllers() {
             println!("Registering controller: {}", controller.name());
             for (path, http_method, handler) in controller.routes() {
-                let http_method = HttpMethod::from_str(http_method.as_str()).unwrap();
+                let http_method = HttpMethod::from(http_method);
                 server.route(
                     path.as_str(),
                     http_method,

@@ -16,7 +16,7 @@ impl NgynRequest {
     /// Gets the method of the `NgynRequest`.
     pub fn method(&self) -> HttpMethod {
         let method = self.request.method().to_string();
-        HttpMethod::from_str(method.as_str()).unwrap()
+        HttpMethod::from(method)
     }
 
     /// Gets the url of the `NgynRequest`.
