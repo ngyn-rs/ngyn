@@ -3,7 +3,11 @@
 pub trait NgynInjectableInit: Send + Sync {
     /// Creates a new instance of the injectable.
     /// This is for internal use only.
-    fn new() -> Box<dyn NgynInjectable>;
+    fn new() -> Self;
+
+    /// Returns a boxed `NgynInjectable`.
+    /// This is for internal use only.
+    fn boxed() -> Box<dyn NgynInjectable>;
 }
 
 /// `NgynInjectable` is a trait that defines the basic structure of an injectable in Ngyn.

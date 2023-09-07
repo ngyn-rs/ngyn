@@ -104,7 +104,11 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl ngyn::NgynControllerInit for #ident {
-            fn new() -> Box<dyn ngyn::NgynController> {
+            fn new() -> Self {
+                Self::new()
+            }
+
+            fn boxed() -> Box<dyn ngyn::NgynController> {
                 Box::new(Self::new())
             }
         }
