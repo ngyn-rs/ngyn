@@ -39,5 +39,4 @@ impl HttpMethod {
             _ => None,
         }
     }
-    
 }

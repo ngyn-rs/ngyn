@@ -1,16 +1,16 @@
 targets:
   - platform: win32
     arch: x64
-    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-x86_64-windows.zip
+    url_template: https://github.com/ngyn-rs/ngyn/releases/download/v__VERSION__/ngyn-x86_64-windows.zip
   - platform: linux
     arch: x64
-    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-x86_64-linux.tar.xz
+    url_template: https://github.com/ngyn-rs/ngyn/releases/download/v__VERSION__/ngyn-x86_64-linux.tar.xz
   - platform: darwin
     arch: x64
-    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-x86_64-macos.tar.xz
+    url_template: https://github.com/ngyn-rs/ngyn/releases/download/v__VERSION__/ngyn-x86_64-macos.tar.xz
   - platform: darwin
     arch: arm64
-    url_template: https://github.com/ngyn-rs/ngyn-rs/releases/download/v__VERSION__/ngyn-aarch64-macos.tar.xz
+    url_template: https://github.com/ngyn-rs/ngyn/releases/download/v__VERSION__/ngyn-aarch64-macos.tar.xz
 
 brew:
   name: ngyn
@@ -20,7 +20,7 @@ brew:
   recipe_template: |
     class NgynFormula < Formula
       desc "desc"
-      homepage "http://github.com/ngyn-rs/ngyn-rs"
+      homepage "http://github.com/ngyn-rs/ngyn"
       url "__URL__"
       version "__VERSION__"
       sha256 "__SHA__"
