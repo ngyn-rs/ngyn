@@ -98,3 +98,9 @@ impl NgynEngine {
         self.server.listen(address).await.map_err(tide::Error::from)
     }
 }
+
+impl Default for NgynEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
