@@ -46,3 +46,9 @@ impl NgynRequest {
         }
     }
 }
+
+impl From<Request<()>> for NgynRequest {
+    fn from(request: Request<()>) -> Self {
+        Self::new(request)
+    }
+}

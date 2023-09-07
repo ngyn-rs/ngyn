@@ -76,7 +76,7 @@ impl NgynServer {
             move |req: tide::Request<()>| {
                 let handler = Arc::clone(&handler);
                 async move {
-                    let request = NgynRequest::new(req);
+                    let request = NgynRequest::from(req);
                     let response = NgynResponse::new();
                     handler(request, response).build()
                 }
