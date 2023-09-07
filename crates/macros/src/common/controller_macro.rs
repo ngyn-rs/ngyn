@@ -20,7 +20,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let arg: Option<String> = {
         let input_str = args.to_string();
         // TODO: catch invalid arguments
-        if input_str.starts_with("\"") && input_str.ends_with("\"") {
+        if input_str.starts_with('"') && input_str.ends_with('"') {
             Some(input_str.trim_matches('"').to_lowercase())
         } else {
             None
@@ -29,22 +29,17 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut route_registry: Vec<_> = Vec::new();
     let mut handle_routes: Vec<_> = Vec::new();
 
-    match arg {
-        Some(routes) => routes
-            .split(",")
-            .into_iter()
-            .map(|r| r.trim())
-            .for_each(|route| {
-                let route_ident = str_to_ident(route.to_string());
-                let path = str_to_ident(format!("register_{}", route));
-                handle_routes.push(quote! {
-                        #route => {
-                            Self::#route_ident(Self::new(), req, res)
-                        }
-                });
-                route_registry.push(quote! { controller.#path(); })
-            }),
-        _ => {}
+    if let Some(routes) = arg {
+        routes.split(',').map(|r| r.trim()).for_each(|route| {
+            let route_ident = str_to_ident(route.to_string());
+            let path = str_to_ident(format!("register_{}", route));
+            handle_routes.push(quote! {
+                #route => {
+                    Self::#route_ident(Self::new(), req, res)
+                }
+            });
+            route_registry.push(quote! { controller.#path(); })
+        })
     }
 
     let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
@@ -104,7 +99,11 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl ngyn::NgynControllerInit for #ident {
-            fn new() -> Box<dyn ngyn::NgynController> {
+            fn new() -> Self {
+                Self::new()
+            }
+
+            fn boxed() -> Box<dyn ngyn::NgynController> {
                 Box::new(Self::new())
             }
         }

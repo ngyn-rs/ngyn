@@ -2,7 +2,11 @@
 pub trait NgynControllerInit: Send + Sync {
     /// Creates a new instance of the controller.
     /// This is for internal use only.
-    fn new() -> Box<dyn NgynController>;
+    fn new() -> Self;
+
+    /// Returns a boxed `NgynController`.
+    /// This is for internal use only.
+    fn boxed() -> Box<dyn NgynController>;
 }
 
 /// `NgynController` is a trait that defines the basic structure of a controller in Ngyn.

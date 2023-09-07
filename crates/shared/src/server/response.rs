@@ -47,3 +47,15 @@ impl NgynResponse {
         Ok(self.response)
     }
 }
+
+impl From<Response> for NgynResponse {
+    fn from(response: Response) -> Self {
+        Self { response }
+    }
+}
+
+impl Default for NgynResponse {
+    fn default() -> Self {
+        Self::new()
+    }
+}
