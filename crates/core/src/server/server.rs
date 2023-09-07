@@ -15,6 +15,7 @@ impl NgynServer {
         }
     }
 
+    /// Adds a new route to the `NgynServer` with the `HttpMethod::Get`.
     pub fn get<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
         F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
@@ -22,6 +23,7 @@ impl NgynServer {
         self.route(path, HttpMethod::Get, handler)
     }
 
+    /// Adds a new route to the `NgynServer` with the `HttpMethod::Post`.
     pub fn post<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
         F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
@@ -29,6 +31,7 @@ impl NgynServer {
         self.route(path, HttpMethod::Post, handler)
     }
 
+    /// Adds a new route to the `NgynServer` with the `HttpMethod::Put`.
     pub fn put<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
         F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
@@ -36,6 +39,7 @@ impl NgynServer {
         self.route(path, HttpMethod::Put, handler)
     }
 
+    /// Adds a new route to the `NgynServer` with the `HttpMethod::Delete`.
     pub fn delete<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
     where
         F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
@@ -55,10 +59,12 @@ impl NgynServer {
     /// # Example
     ///
     /// ```
+    /// use ngyn::{server::NgynServer, HttpMethod, NgynRequest, NgynResponse};
+    ///
     /// let mut server = NgynServer::new();
-    /// server.route("/", HttpMethod::Get, |req, res| {
+    /// server.route("/", HttpMethod::Get, Box::new(|req: NgynRequest, res: NgynResponse| {
     ///    res.status(200)
-    /// });
+    /// }));
     /// ```
     pub fn route<F>(&mut self, path: &str, method: HttpMethod, handler: Box<F>) -> &mut Self
     where
