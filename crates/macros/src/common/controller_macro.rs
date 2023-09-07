@@ -29,18 +29,17 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut route_registry: Vec<_> = Vec::new();
     let mut handle_routes: Vec<_> = Vec::new();
 
-    match arg {
-        Some(routes) => routes.split(',').map(|r| r.trim()).for_each(|route| {
+    if let Some(routes) = arg {
+        routes.split(',').map(|r| r.trim()).for_each(|route| {
             let route_ident = str_to_ident(route.to_string());
             let path = str_to_ident(format!("register_{}", route));
             handle_routes.push(quote! {
-                    #route => {
-                        Self::#route_ident(Self::new(), req, res)
-                    }
+                #route => {
+                    Self::#route_ident(Self::new(), req, res)
+                }
             });
             route_registry.push(quote! { controller.#path(); })
-        }),
-        _ => {}
+        })
     }
 
     let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
