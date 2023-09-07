@@ -22,10 +22,10 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let args = {
         let input_str = args.to_string();
 
-        let (path, http_method) = if input_str.starts_with("\"") {
+        let (path, http_method) = if input_str.starts_with('"') {
             // the input_str should be of this structure: `"GET", "/path"` or `"GET", ["/path1", "/path2"]`
             // match the first argument to see if it's a valid HTTP method
-            let mut input_str = input_str.trim_matches('"').split(",");
+            let mut input_str = input_str.trim_matches('"').split(',');
             let http_method = input_str
                 .next()
                 .unwrap()
@@ -46,10 +46,10 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
                 .map(|s| s.trim())
                 .collect::<Vec<_>>()
                 .join(",");
-            let path = if route_path.starts_with("[") {
+            let path = if route_path.starts_with('[') {
                 let paths: Vec<_> = route_path
                     .trim_matches(|p| p == '[' || p == ']')
-                    .split(",")
+                    .split(',')
                     .map(|p| p.trim_matches('"').to_string())
                     .collect();
                 Some(Path::Multiple(paths))
