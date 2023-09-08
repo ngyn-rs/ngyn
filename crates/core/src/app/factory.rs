@@ -1,6 +1,6 @@
 use crate::server::NgynEngine;
 
-use ngyn_shared::{enums::HttpMethod, NgynModule};
+use ngyn_shared::{enums::HttpMethod, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory {}
@@ -31,7 +31,9 @@ impl NgynFactory {
                     http_method,
                     Box::new({
                         let controller = controller.clone();
-                        move |req, res| controller.handle(handler.clone(), req, res)
+                        move |req, res: NgynResponse| {
+                            res.from_route(controller.clone(), handler.clone(), req)
+                        }
                     }),
                 );
             }

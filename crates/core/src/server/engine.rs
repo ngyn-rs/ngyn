@@ -78,7 +78,7 @@ impl NgynEngine {
                 async move {
                     let request = NgynRequest::from(req);
                     let response = NgynResponse::new();
-                    handler(request, response).build()
+                    handler(request, response).await.build()
                 }
             }
         };

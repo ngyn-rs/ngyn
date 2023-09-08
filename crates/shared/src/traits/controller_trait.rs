@@ -9,6 +9,7 @@ pub trait NgynControllerInit: Send + Sync {
     fn boxed() -> Box<dyn NgynController>;
 }
 
+#[tide::utils::async_trait]
 /// `NgynController` is a trait that defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
 pub trait NgynController: Send + Sync {
@@ -25,7 +26,7 @@ pub trait NgynController: Send + Sync {
 
     /// Returns a `NgynResponse` for the controller.
     /// This is for internal use only.
-    fn handle(
+    async fn handle(
         &self,
         handler: String,
         req: crate::NgynRequest,

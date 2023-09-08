@@ -6,4 +6,4 @@ pub use crate::app::provider::*;
 pub use ngyn_macros::*;
 pub use ngyn_shared::*;
 pub use nject::{injectable as dependency, provider};
-pub use tide::Result;
+pub use tide::{utils::async_trait, Result};
