@@ -35,7 +35,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             let path = str_to_ident(format!("register_{}", route));
             handle_routes.push(quote! {
                 #route => {
-                    Self::#route_ident(Self::new(), req, res)
+                    Self::#route_ident(Self::new(), req, res).await
                 }
             });
             route_registry.push(quote! { controller.#path(); })
@@ -64,6 +64,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
+        #[ngyn::async_trait]
         impl ngyn::NgynController for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
@@ -88,7 +89,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            fn handle(&self, handler: String, req: ngyn::NgynRequest, res: ngyn::NgynResponse) -> ngyn::NgynResponse {
+            async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: ngyn::NgynResponse) -> ngyn::NgynResponse {
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {

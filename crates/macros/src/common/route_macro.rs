@@ -99,7 +99,7 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let register_ident = str_to_ident(format!("register_{}", ident));
 
     let expanded = quote! {
-        fn #ident(#inputs) -> #output {
+        async fn #ident(#inputs) -> #output {
             #block
         }
 
