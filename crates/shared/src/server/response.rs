@@ -59,6 +59,17 @@ impl NgynResponse {
         self
     }
 
+    // makes a clone of the response
+    pub fn clone(&mut self) -> Self {
+        let mut response = Response::from(self.response.take_body());
+        response.set_status(self.response.status());
+
+        Self {
+            response,
+            route: None,
+        }
+    }
+
     /// Builds the `NgynResponse`.
     pub fn build(self) -> Result {
         Ok(self.response)
@@ -98,7 +109,8 @@ impl Future for NgynResponse {
                 let handler = route.handler;
                 let controller = route.controller;
                 let request = route.request;
-                let response = Self::new();
+                let response = Self::default();
+
                 let result = controller
                     .handle(handler, request, response)
                     .as_mut()
@@ -109,7 +121,7 @@ impl Future for NgynResponse {
                     Poll::Pending => Poll::Pending,
                 }
             }
-            None => todo!(), // TODO: Handle possible non-route cases
+            None => Poll::Ready(self.clone()),
         }
     }
 }
