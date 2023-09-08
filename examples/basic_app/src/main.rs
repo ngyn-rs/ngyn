@@ -5,7 +5,11 @@ use ngyn::{NgynFactory, Result};
 
 #[async_std::main]
 async fn main() -> Result<()> {
-    let app = NgynFactory::create::<SampleModule>();
+    let mut app = NgynFactory::create::<SampleModule>();
+
+    app.get("/author", |_req, res| {
+        res.body("Ngyn is created by @elcharitas.")
+    });
 
     println!("Starting server at http://127.0.0.1:8080");
 

@@ -16,35 +16,51 @@ impl NgynEngine {
     }
 
     /// Adds a new route to the `NgynEngine` with the `HttpMethod::Get`.
-    pub fn get<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn get<F>(&mut self, path: &str, handler: F) -> &mut Self
     where
-        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + Sized + 'static,
     {
-        self.route(path, HttpMethod::Get, handler)
+        self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
     /// Adds a new route to the `NgynEngine` with the `HttpMethod::Post`.
-    pub fn post<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn post<F>(&mut self, path: &str, handler: F) -> &mut Self
     where
-        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + Sized + 'static,
     {
-        self.route(path, HttpMethod::Post, handler)
+        self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
     /// Adds a new route to the `NgynEngine` with the `HttpMethod::Put`.
-    pub fn put<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn put<F>(&mut self, path: &str, handler: F) -> &mut Self
     where
-        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + Sized + 'static,
     {
-        self.route(path, HttpMethod::Put, handler)
+        self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
     /// Adds a new route to the `NgynEngine` with the `HttpMethod::Delete`.
-    pub fn delete<F>(&mut self, path: &str, handler: Box<F>) -> &mut Self
+    pub fn delete<F>(&mut self, path: &str, handler: F) -> &mut Self
     where
-        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + ?Sized + 'static,
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + Sized + 'static,
     {
-        self.route(path, HttpMethod::Delete, handler)
+        self.route(path, HttpMethod::Get, Box::new(handler))
+    }
+
+    /// Adds a new route to the `NgynEngine` with the `HttpMethod::Patch`.
+    pub fn patch<F>(&mut self, path: &str, handler: F) -> &mut Self
+    where
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + Sized + 'static,
+    {
+        self.route(path, HttpMethod::Get, Box::new(handler))
+    }
+
+    /// Adds a new route to the `NgynEngine` with the `HttpMethod::Head`.
+    pub fn head<F>(&mut self, path: &str, handler: F) -> &mut Self
+    where
+        F: Fn(NgynRequest, NgynResponse) -> NgynResponse + Send + Sync + Sized + 'static,
+    {
+        self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
     /// Adds a new route to the `NgynEngine`.
@@ -87,6 +103,8 @@ impl NgynEngine {
             HttpMethod::Post => self.server.at(path).post(req_handler),
             HttpMethod::Put => self.server.at(path).put(req_handler),
             HttpMethod::Delete => self.server.at(path).delete(req_handler),
+            HttpMethod::Patch => self.server.at(path).patch(req_handler),
+            HttpMethod::Head => self.server.at(path).head(req_handler),
             _ => panic!("Unsupported HTTP method"),
         };
         self
