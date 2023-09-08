@@ -1,8 +1,24 @@
+use std::{
+    convert::TryFrom,
+    future::Future,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+};
 use tide::{Response, Result, StatusCode};
+
+use crate::{NgynController, NgynRequest};
+
+struct NgynResponseRoute {
+    controller: Arc<dyn NgynController>,
+    handler: String,
+    request: NgynRequest,
+}
 
 /// NgynResponse is a struct that represents a server response.
 pub struct NgynResponse {
     response: Response,
+    route: Option<NgynResponseRoute>,
 }
 
 impl NgynResponse {
@@ -10,6 +26,7 @@ impl NgynResponse {
     pub fn new() -> Self {
         Self {
             response: Response::new(200),
+            route: None,
         }
     }
 
@@ -46,11 +63,54 @@ impl NgynResponse {
     pub fn build(self) -> Result {
         Ok(self.response)
     }
+
+    /// Handles the `NgynResponse` from a route.
+    pub fn from_route(
+        mut self,
+        controller: Arc<dyn NgynController>,
+        handler: String,
+        request: NgynRequest,
+    ) -> Self {
+        self.route = Some(NgynResponseRoute {
+            controller,
+            handler,
+            request,
+        });
+        self
+    }
 }
 
 impl From<Response> for NgynResponse {
     fn from(response: Response) -> Self {
-        Self { response }
+        Self {
+            response,
+            route: None,
+        }
+    }
+}
+
+impl Future for NgynResponse {
+    type Output = NgynResponse;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.route.take() {
+            Some(route) => {
+                let handler = route.handler;
+                let controller = route.controller;
+                let request = route.request;
+                let response = Self::new();
+                let result = controller
+                    .handle(handler, request, response)
+                    .as_mut()
+                    .poll(cx);
+
+                match result {
+                    Poll::Ready(result) => Poll::Ready(result),
+                    Poll::Pending => Poll::Pending,
+                }
+            }
+            None => todo!(), // TODO: Handle possible non-route cases
+        }
     }
 }
 
