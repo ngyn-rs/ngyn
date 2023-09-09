@@ -2,5 +2,5 @@ use ngyn::module;
 
 use super::sample_controller::SampleController;
 
-#[module([SampleController])]
+#[module(controllers = [SampleController])]
 pub struct SampleModule {}
