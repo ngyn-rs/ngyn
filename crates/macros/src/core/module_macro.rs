@@ -3,43 +3,83 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-use crate::utils::handle_macro::handle_macro;
-
 struct ModuleArgs {
+    imports: Vec<syn::Path>,
     controllers: Vec<syn::Path>,
+}
+
+impl syn::parse::Parse for ModuleArgs {
+    /// Parses the attribute arguments of a `#[module]` macro.
+    /// We make sure that the arguments are in the format `controllers = [], imports = []`.
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut imports = vec![];
+        let mut controllers = vec![];
+
+        while !input.is_empty() {
+            let ident: syn::Ident = input.parse()?;
+            input.parse::<syn::Token![=]>()?;
+
+            match ident.to_string().as_str() {
+                "imports" => {
+                    let content;
+                    syn::bracketed!(content in input);
+                    while !content.is_empty() {
+                        let path: syn::Path = content.parse()?;
+                        imports.push(path);
+                        if !content.is_empty() {
+                            content.parse::<syn::Token![,]>()?;
+                        }
+                    }
+                }
+                "controllers" => {
+                    let content;
+                    syn::bracketed!(content in input);
+                    while !content.is_empty() {
+                        let path: syn::Path = content.parse()?;
+                        controllers.push(path);
+                        if !content.is_empty() {
+                            content.parse::<syn::Token![,]>()?;
+                        }
+                    }
+                }
+                _ => {
+                    return Err(syn::Error::new(
+                        ident.span(),
+                        format!("unexpected attribute `{}`", ident),
+                    ))
+                }
+            }
+
+            if !input.is_empty() {
+                input.parse::<syn::Token![,]>()?;
+            }
+        }
+
+        Ok(ModuleArgs {
+            imports,
+            controllers,
+        })
+    }
 }
 
 pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let (ident, _, _) = handle_macro(input);
+    let args = parse_macro_input!(args as ModuleArgs);
 
-    // Parse the attributes to get the controller types
-    let args = {
-        let input_str = args.to_string();
+    let ident = input.ident;
 
-        let controllers = if input_str.starts_with('[') && input_str.ends_with(']') {
-            let controllers: Vec<syn::Path> =
-                if !input_str[1..input_str.len() - 1].trim().is_empty() {
-                    input_str[1..input_str.len() - 1]
-                        .split(',')
-                        .map(|s| s.trim().to_string())
-                        .map(|s| syn::parse_str(&s).unwrap())
-                        .collect()
-                } else {
-                    vec![]
-                };
-
-            Some(controllers)
-        } else if input_str.is_empty() {
-            Some(vec![])
-        } else {
-            panic!("invalid path")
-        };
-
-        ModuleArgs {
-            controllers: controllers.unwrap(),
-        }
-    };
+    let add_modules: Vec<_> = args
+        .imports
+        .iter()
+        .map(|import| {
+            quote! {
+                let module: #import = #import::new();
+                module.get_controllers().iter().for_each(|controller| {
+                    controllers.push(controller.clone());
+                });
+            }
+        })
+        .collect();
 
     let add_controllers: Vec<_> = args
         .controllers
@@ -52,53 +92,25 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let keys = args.controllers.iter().map(|controller| {
-        let segments = &controller.segments;
-        let name = &segments.last().unwrap().ident;
-        quote! { #name }
-    });
-
-    let fields: Vec<_> = keys
-        .clone()
-        .zip(args.controllers.iter())
-        .map(|(key, controller)| {
-            quote! {
-                #key: #controller
-            }
-        })
-        .collect();
-
     let expanded = quote! {
         #[ngyn::dependency]
-        pub struct #ident {
-            #(#fields),*
-        }
+        pub struct #ident {}
 
         impl ngyn::NgynModule for #ident {
-            /// Creates a new `#ident` with the specified components.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// let module = #ident::new();
-            /// ```
+
             fn new() -> Self {
-                #ident {
-                    #(#keys: ngyn::NgynProvider.provide()),*
-                }
+                Self {}
             }
 
-            /// Returns the controllers of the module.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// let module = #ident::new();
-            /// let controllers = module.get_controllers();
-            /// ```
+            fn name(&self) -> &str {
+                stringify!(#ident)
+            }
+
             fn get_controllers(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
+                let mut modules: Vec<std::sync::Arc<dyn ngyn::NgynModule>> = vec![];
                 let mut controllers: Vec<std::sync::Arc<dyn ngyn::NgynController>> = vec![];
                 #(#add_controllers)*
+                #(#add_modules)*
                 controllers
             }
         }
