@@ -11,20 +11,6 @@ struct ModuleArgs {
 impl syn::parse::Parse for ModuleArgs {
     /// Parses the attribute arguments of a `#[module]` macro.
     /// We make sure that the arguments are in the format `controllers = [], imports = []`.
-    /// If the arguments are not in this format, we return an error.
-    /// Otherwise, we return a `ModuleArgs` struct with the parsed arguments.
-    /// The attributes are parsed as a `syn::Path` and stored in a `Vec`.
-    /// They may also be omitted.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #[module(controllers = [SampleController, SampleService])]
-    ///
-    /// #[module(imports = [SampleModule])]
-    ///
-    /// #[module(controllers = [SampleController], imports = [SampleModule])]
-    /// ```
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut imports = vec![];
         let mut controllers = vec![];
