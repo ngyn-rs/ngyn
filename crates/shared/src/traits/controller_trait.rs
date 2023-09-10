@@ -3,10 +3,6 @@ pub trait NgynControllerInit: Send + Sync {
     /// Creates a new instance of the controller.
     /// This is for internal use only.
     fn new() -> Self;
-
-    /// Returns a boxed `NgynController`.
-    /// This is for internal use only.
-    fn boxed() -> Box<dyn NgynController>;
 }
 
 #[tide::utils::async_trait]
