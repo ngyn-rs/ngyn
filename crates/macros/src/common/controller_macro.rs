@@ -103,10 +103,6 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn new() -> Self {
                 Self::new()
             }
-
-            fn boxed() -> Box<dyn ngyn::NgynController> {
-                Box::new(Self::new())
-            }
         }
     };
     expanded.into()

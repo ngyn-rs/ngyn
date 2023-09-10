@@ -38,10 +38,6 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
             fn new() -> Self {
                 Self::new()
             }
-
-            fn boxed() -> Box<dyn ngyn::NgynInjectable> {
-                Box::new(Self::new())
-            }
         }
     };
     expanded.into()

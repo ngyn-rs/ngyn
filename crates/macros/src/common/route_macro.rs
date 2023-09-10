@@ -70,6 +70,8 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let http_method = args.http_method;
 
     let ident = &input.sig.ident;
+    let fn_vis = &input.vis;
+    let fn_async = &input.sig.asyncness;
     let inputs = &input.sig.inputs;
     let output = match &input.sig.output {
         syn::ReturnType::Default => quote! { ngyn::NgynResponse },
@@ -99,9 +101,7 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let register_ident = str_to_ident(format!("register_{}", ident));
 
     let expanded = quote! {
-        async fn #ident(#inputs) -> #output {
-            #block
-        }
+        #fn_vis #fn_async fn #ident(#inputs) -> #output #block
 
         fn #register_ident(&mut self) {
             #(#expanded_methods)*
