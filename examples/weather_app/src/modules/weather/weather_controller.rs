@@ -9,7 +9,8 @@ pub struct WeatherController {
 
 impl WeatherController {
     #[get("/weather")]
-    fn get_location(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
-        res.body(&self.weather_service.get_location_weather("London"))
+    async fn get_location(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
+        let weather = self.weather_service.get_location_weather("London").await;
+        res.body(weather.get("current").unwrap())
     }
 }
