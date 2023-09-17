@@ -26,7 +26,6 @@ impl WeatherRepository {
         println!("Getting weather for {}", location);
         let url = self.build_url("current", location);
         println!("Sending request to {}", url);
-        let resp = self.send_request(&url).await.unwrap();
-        resp
+        self.send_request(&url).await.unwrap()
     }
 }
