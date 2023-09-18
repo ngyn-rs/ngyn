@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 RUN cargo build --release
 
-FROM debian:buster-slim
+FROM ubuntu:20.04
 WORKDIR /app
 COPY --from=builder /app/target/release/basic_app .
 EXPOSE 8080
