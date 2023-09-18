@@ -9,6 +9,6 @@ edition = "2021"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 dotenv = "0.15.0"
 nject = "0.3.0"
-ngyn = { path = "../../crates/core" }
+ngyn = { path = "../../crates/core", version = "0.1.0" }
 reqwest = { version = "0.11.20", features = ["json"] }
 tokio = { version = "1.32.0", features = ["full"] }
