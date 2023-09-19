@@ -13,6 +13,13 @@ impl NgynFactory<NgynApplication> {
     }
 }
 
+#[cfg(feature = "vercel")]
+impl NgynFactory<crate::server::VercelApplication> {
+    pub fn create<AppModule: NgynModule>() -> crate::server::VercelApplication {
+        Self::build::<AppModule>()
+    }
+}
+
 impl<Application: NgynEngine> NgynFactory<Application> {
     /// The `create` method takes a generic parameter `AppModule` that implements the `NgynModule` trait.
     /// It returns an instance of `NgynEngine`.
