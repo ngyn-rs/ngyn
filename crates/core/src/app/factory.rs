@@ -1,11 +1,19 @@
-use crate::server::NgynEngine;
+use crate::server::{NgynApplication, NgynEngine};
 
 use ngyn_shared::{enums::HttpMethod, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
-pub struct NgynFactory {}
+pub struct NgynFactory<Application: NgynEngine> {
+    _app: Application,
+}
 
-impl NgynFactory {
+impl NgynFactory<NgynApplication> {
+    pub fn create<AppModule: NgynModule>() -> NgynApplication {
+        Self::build::<AppModule>()
+    }
+}
+
+impl<Application: NgynEngine> NgynFactory<Application> {
     /// The `create` method takes a generic parameter `AppModule` that implements the `NgynModule` trait.
     /// It returns an instance of `NgynEngine`.
     ///
@@ -19,9 +27,9 @@ impl NgynFactory {
     ///
     /// let server = NgynFactory::create::<YourAppModule>();
     /// ```
-    pub fn create<AppModule: NgynModule>() -> NgynEngine {
+    fn build<AppModule: NgynModule>() -> Application {
         let module = AppModule::new();
-        let mut server = NgynEngine::new();
+        let mut server = Application::new();
         for controller in module.get_controllers() {
             println!("Registering controller: {}", controller.name());
             for (path, http_method, handler) in controller.routes() {
