@@ -4,12 +4,12 @@ use tide::{Result, Server};
 
 use super::{Handler, NgynEngine};
 
-/// `NgynService` is a struct that represents a server instance in the Ngyn framework.
-pub struct NgynService {
+/// `NgynApplication` is a struct that represents a server instance in the Ngyn framework.
+pub struct NgynApplication {
     server: Server<()>,
 }
 
-impl NgynEngine for NgynService {
+impl NgynEngine for NgynApplication {
     fn new() -> Self {
         Self {
             server: Server::new(),
@@ -42,33 +42,33 @@ impl NgynEngine for NgynService {
     }
 }
 
-impl NgynService {
-    /// Adds a new route to the `NgynService` with the `HttpMethod::Get`.
+impl NgynApplication {
+    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Get`.
     pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
-    /// Adds a new route to the `NgynService` with the `HttpMethod::Post`.
+    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Post`.
     pub fn post(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
-    /// Adds a new route to the `NgynService` with the `HttpMethod::Put`.
+    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Put`.
     pub fn put(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
-    /// Adds a new route to the `NgynService` with the `HttpMethod::Delete`.
+    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Delete`.
     pub fn delete(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
-    /// Adds a new route to the `NgynService` with the `HttpMethod::Patch`.
+    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Patch`.
     pub fn patch(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
     }
 
-    /// Adds a new route to the `NgynService` with the `HttpMethod::Head`.
+    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Head`.
     pub fn head(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
     }
@@ -80,7 +80,7 @@ impl NgynService {
     }
 }
 
-impl Default for NgynService {
+impl Default for NgynApplication {
     fn default() -> Self {
         Self::new()
     }

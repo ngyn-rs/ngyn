@@ -1,5 +1,5 @@
 pub mod engine;
-pub mod service;
+pub mod core;
 
 pub use engine::*;
-pub use service::*;
+pub use core::*;
