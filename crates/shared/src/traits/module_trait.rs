@@ -1,4 +1,4 @@
-use crate::NgynController;
+use crate::{NgynController, NgynMiddleware};
 
 /// `NgynModule` is a trait that defines the basic structure of a module in Ngyn.
 pub trait NgynModule: Send + Sync {
@@ -12,4 +12,6 @@ pub trait NgynModule: Send + Sync {
 
     /// Returns the controllers of the module.
     fn get_controllers(&self) -> Vec<std::sync::Arc<dyn NgynController>>;
+
+    fn get_middlewares(&self) -> Vec<std::sync::Arc<dyn NgynMiddleware>>;
 }

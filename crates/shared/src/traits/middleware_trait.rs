@@ -3,7 +3,7 @@ use crate::{NgynRequest, NgynResponse};
 pub type NextFn = fn(NgynRequest, NgynResponse);
 
 /// Trait for implementing a middleware.
-pub trait NgynMiddleware {
+pub trait NgynMiddleware: Send + Sync {
     /// Handles the request.
-    fn handle(request: NgynRequest, response: NgynResponse, next: NextFn);
+    fn handle(&self, request: NgynRequest, response: NgynResponse, next: NextFn);
 }
