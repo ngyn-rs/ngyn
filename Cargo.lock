@@ -2778,6 +2778,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
+name = "vercel_app"
+version = "0.1.0"
+dependencies = [
+ "ngyn 0.1.0",
+ "nject",
+ "tokio",
+ "vercel_runtime",
+]
+
+[[package]]
 name = "vercel_runtime"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
