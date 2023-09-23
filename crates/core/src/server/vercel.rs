@@ -1,5 +1,6 @@
-use ngyn_shared::{HttpMethod, NgynRequest, NgynResponse};
+use ngyn_shared::HttpMethod;
 
+#[cfg(feature = "vercel")]
 use vercel_runtime::{Body, Error, Request, Response};
 
 use super::{Handler, NgynEngine};
@@ -19,6 +20,7 @@ impl NgynEngine for VercelApplication {
     }
 }
 
+#[cfg(feature = "vercel")]
 impl VercelApplication {
     pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))
@@ -29,16 +31,36 @@ impl VercelApplication {
     }
 
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
-        let mut res = NgynResponse::new();
+        let mut res = ngyn_shared::NgynResponse::new();
+        let (parts, body) = request.into_parts();
         for (path, method, handler) in self.routes {
-            if request.uri().path() == path && request.method().as_str() == method.as_str() {
-                let req = NgynRequest::from(request);
+            let uri = parts.uri.clone();
+            if uri.path() == path && parts.method.as_str() == method.as_str() {
+                let headers = {
+                    let mut entries = std::collections::HashMap::new();
+                    for (name, value) in parts.headers.clone().into_iter() {
+                        match name {
+                            Some(name) => {
+                                let value = value.to_str().unwrap();
+                                entries.insert(name.to_string(), value.to_string());
+                            }
+                            None => todo!(),
+                        }
+                    }
+                    entries
+                };
+                let req = ngyn_shared::NgynRequest::from((
+                    parts.method.to_string(),
+                    uri.to_string(),
+                    headers,
+                    body.to_vec(),
+                ));
                 res = handler.handle(req, res);
             }
         }
         Ok(Response::builder()
             .status(res.status_code)
-            .body(res.body.into())
+            .body(res.raw_body.into())
             .unwrap())
     }
 }
