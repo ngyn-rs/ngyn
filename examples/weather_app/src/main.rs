@@ -1,3 +1,4 @@
+mod middlewares;
 mod modules;
 
 use dotenv::dotenv;
