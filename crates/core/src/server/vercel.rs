@@ -33,6 +33,7 @@ impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
         let mut res = ngyn_shared::NgynResponse::new();
         let (parts, body) = request.into_parts();
+
         let mut found_route = false;
         for (path, method, handler) in self.routes {
             let uri = parts.uri.clone();
@@ -58,6 +59,7 @@ impl VercelApplication {
                 ));
                 res = handler.handle(req, res).await;
                 found_route = true;
+                break; // Exit the loop once a route is found
             }
         }
 
