@@ -27,12 +27,12 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// # Example
     ///
     /// ```
-    /// use ngyn::{module, NgynFactory};
+    /// use ngyn::{module, NgynFactory, server::NgynApplication};
     ///
     /// #[module]
     /// pub struct YourAppModule;
     ///
-    /// let server = NgynFactory::create::<YourAppModule>();
+    /// let server = NgynFactory::<NgynApplication>::create::<YourAppModule>();
     /// ```
     fn build<AppModule: NgynModule>() -> Application {
         let module = AppModule::new();
