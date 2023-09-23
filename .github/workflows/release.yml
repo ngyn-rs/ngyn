@@ -1,0 +1,44 @@
+name: Release Workflow
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+
+      - name: Build and Test
+        run: cargo build --release && cargo test
+
+      - name: Bump Version
+        run: cargo bump patch
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -a -m "Bump version"
+          git push
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.BUMPED_VERSION }}
+          release_name: Release ${{ env.BUMPED_VERSION }}
+          body: |
+            This is the release of the project.
+            Version: ${{ env.BUMPED_VERSION }}
+          draft: false
+          prerelease: false

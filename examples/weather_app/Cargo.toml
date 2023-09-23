@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-std = { version = "1.6.0", features = ["attributes"] }
+async-std = { version = "1", features = ["attributes", "tokio1"] }
 dotenv = "0.15.0"
 nject = "0.3.0"
-ngyn = { path = "../../crates/core" }
+ngyn = { path = "../../crates/core", version = "0.1.0" }
+reqwest = { version = "0.11.20", features = ["json"] }
+tokio = { version = "1.32.0", features = ["full"] }

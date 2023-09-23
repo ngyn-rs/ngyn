@@ -1,10 +1,5 @@
 use ngyn::injectable;
-use std::{
-    env,
-    error::Error,
-    io::{Read, Write},
-    net::TcpStream,
-};
+use std::{collections::HashMap, env, error::Error};
 
 #[injectable]
 pub struct WeatherRepository;
@@ -18,25 +13,19 @@ impl WeatherRepository {
         )
     }
 
-    fn send_request(&self, url: &str) -> Result<String, Box<dyn Error>> {
-        let mut stream = TcpStream::connect("api.weatherapi.com:80")?;
-        let request = format!("GET {} HTTP/1.1\r\nHost: api.weatherapi.com\r\n\r\n", url);
-
-        println!("Sending request: {}", request);
-
-        stream.write_all(request.as_bytes())?;
-
-        let mut response = String::new();
-        stream.read_to_string(&mut response)?;
+    async fn send_request(&self, url: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
+        let response = reqwest::get(url)
+            .await?
+            .json::<HashMap<String, String>>()
+            .await?;
 
         Ok(response)
     }
 
-    pub fn get_location_current_weather(&self, location: &str) -> String {
+    pub async fn get_location_current_weather(&self, location: &str) -> HashMap<String, String> {
         println!("Getting weather for {}", location);
         let url = self.build_url("current", location);
         println!("Sending request to {}", url);
-        let resp = self.send_request(&url).unwrap();
-        resp
+        self.send_request(&url).await.unwrap()
     }
 }
