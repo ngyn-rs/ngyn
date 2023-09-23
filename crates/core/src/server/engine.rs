@@ -1,4 +1,5 @@
 use ngyn_shared::{HttpMethod, NgynRequest, NgynResponse};
+
 pub trait Handler: Sync + Send + 'static {
     fn handle(&self, req: NgynRequest, res: NgynResponse) -> NgynResponse;
 }
@@ -13,10 +14,10 @@ where
 }
 
 pub trait NgynEngine {
-    /// Creates a new instance of `NgynService` with a new `Server`
+    /// Creates a new instance of `NgynApplication` with a new `Server`
     fn new() -> Self;
 
-    /// Adds a new route to the `NgynService`.
+    /// Adds a new route to the `NgynApplication`.
     /// This function is chainable.
     ///
     /// # Arguments
@@ -28,9 +29,9 @@ pub trait NgynEngine {
     /// # Example
     ///
     /// ```
-    /// use ngyn::{server::NgynService, HttpMethod, NgynRequest, NgynResponse};
+    /// use ngyn::{server::NgynApplication, HttpMethod, NgynRequest, NgynResponse};
     ///
-    /// let mut server = NgynService::new();
+    /// let mut server = NgynApplication::new();
     /// server.route("/", HttpMethod::Get, Box::new(|req: NgynRequest, res: NgynResponse| {
     ///    res.status(200)
     /// }));
