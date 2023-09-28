@@ -20,7 +20,7 @@ impl NgynFactory {
     /// let server = NgynFactory::create::<YourAppModule>();
     /// ```
     pub fn create<AppModule: NgynModule>() -> NgynEngine {
-        let module = AppModule::new();
+        let mut module = AppModule::new(vec![]);
         let mut server = NgynEngine::new();
         for controller in module.get_controllers() {
             println!("Registering controller: {}", controller.name());

@@ -4,8 +4,7 @@ use ngyn::{injectable, NgynMiddleware};
 pub struct TestMiddleware;
 
 impl NgynMiddleware for TestMiddleware {
-    fn handle(&self, request: ngyn::NgynRequest, response: ngyn::NgynResponse, next: ngyn::NextFn) {
-        print!("middleware works");
-        next(request, response);
+    fn handle(&self, _request: &ngyn::NgynRequest, _response: &ngyn::NgynResponse) {
+        println!("middleware works");
     }
 }

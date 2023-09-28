@@ -24,10 +24,7 @@ pub struct NgynResponse {
 impl NgynResponse {
     /// Constructs a new `NgynResponse` with a default status code of 200.
     pub fn new() -> Self {
-        Self {
-            response: Response::new(200),
-            route: None,
-        }
+        Self::from(Response::new(200))
     }
 
     /// Sets the status code of the `NgynResponse`.
@@ -63,11 +60,7 @@ impl NgynResponse {
     pub fn clone(&mut self) -> Self {
         let mut response = Response::from(self.response.take_body());
         response.set_status(self.response.status());
-
-        Self {
-            response,
-            route: None,
-        }
+        Self::from(response)
     }
 
     /// Builds the `NgynResponse`.
@@ -110,14 +103,11 @@ impl Future for NgynResponse {
                 let controller = route.controller;
                 let request = route.request;
                 let response = Self::default();
-                print!("{}", controller.middlewares().iter().count());
 
-                let mut middlewares = controller.middlewares();
-                middlewares.reverse();
-                middlewares.iter().reduce(|next_middleware, middleware| {
-                    print!(stringify!(next_middleware));
-                    next_middleware
-                });
+                let middlewares = controller.middlewares();
+                for middleware in middlewares {
+                    middleware.handle(&request, &response);
+                }
 
                 let result = controller
                     .handle(handler, request, response)
