@@ -35,7 +35,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             let path = str_to_ident(format!("register_{}", route));
             handle_routes.push(quote! {
                 #route => {
-                    Self::#route_ident(Self::new(), req, res).await
+                    Self::#route_ident(Self::new(self.middlewares()), req, res).await
                 }
             });
             route_registry.push(quote! { controller.#path(); })
@@ -49,14 +49,16 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
         #[ngyn::dependency]
         pub struct #ident {
-            all_routes: Vec<(String, String, String)>,
+            __routes: Vec<(String, String, String)>,
+            __middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
             #(#fields),*
         }
 
         impl #ident {
-            pub fn new() -> Self {
+            pub fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
                 let mut controller = #ident {
-                    all_routes: vec![],
+                    __routes: vec![],
+                    __middlewares: middlewares,
                     #(#keys: ngyn::NgynProvider.provide()),*
                 };
                 #(#route_registry)*
@@ -76,7 +78,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 http_method: String,
                 handler: String,
             ) {
-                self.all_routes.push((path, http_method, handler));
+                self.__routes.push((path, http_method, handler));
             }
 
             fn routes(&self) -> Vec<(
@@ -84,9 +86,13 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 String,
                 String,
             )> {
-                self.all_routes.iter().map(|(path, http_method, handler)| {
+                self.__routes.iter().map(|(path, http_method, handler)| {
                     (path.clone(), http_method.clone(), handler.clone())
                 }).collect()
+            }
+
+            fn middlewares(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>> {
+                self.__middlewares.clone()
             }
 
             async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: ngyn::NgynResponse) -> ngyn::NgynResponse {
@@ -100,8 +106,8 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl ngyn::NgynControllerInit for #ident {
-            fn new() -> Self {
-                Self::new()
+            fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
+                Self::new(middlewares)
             }
         }
     };

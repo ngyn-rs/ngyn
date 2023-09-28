@@ -2,7 +2,7 @@
 pub trait NgynControllerInit: Send + Sync {
     /// Creates a new instance of the controller.
     /// This is for internal use only.
-    fn new() -> Self;
+    fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self;
 }
 
 #[tide::utils::async_trait]
@@ -19,6 +19,9 @@ pub trait NgynController: Send + Sync {
 
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)>;
+
+    /// Returns a vec of middlewares
+    fn middlewares(&self) -> Vec<std::sync::Arc<dyn super::NgynMiddleware>>;
 
     /// Returns a `NgynResponse` for the controller.
     /// This is for internal use only.

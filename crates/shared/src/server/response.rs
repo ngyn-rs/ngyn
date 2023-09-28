@@ -110,6 +110,14 @@ impl Future for NgynResponse {
                 let controller = route.controller;
                 let request = route.request;
                 let response = Self::default();
+                print!("{}", controller.middlewares().iter().count());
+
+                let mut middlewares = controller.middlewares();
+                middlewares.reverse();
+                middlewares.iter().reduce(|next_middleware, middleware| {
+                    print!(stringify!(next_middleware));
+                    next_middleware
+                });
 
                 let result = controller
                     .handle(handler, request, response)

@@ -77,7 +77,8 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|controller| {
             quote! {
-                let controller: #controller = #controller::new();
+                print!("{}", middlewares.iter().count());
+                let controller: #controller = #controller::new(middlewares.clone());
                 controllers.push(std::sync::Arc::new(controller));
             }
         })
@@ -113,15 +114,11 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn get_controllers(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
                 let mut modules: Vec<std::sync::Arc<dyn ngyn::NgynModule>> = vec![];
                 let mut controllers: Vec<std::sync::Arc<dyn ngyn::NgynController>> = vec![];
+                let mut middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>> = vec![];
+                #(#add_middlewares)*
                 #(#add_controllers)*
                 #(#add_imported_modules_controllers)*
                 controllers
-            }
-
-            fn get_middlewares(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>> {
-                let mut middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>> = vec![];
-                #(#add_middlewares)*
-                middlewares
             }
         }
     };
