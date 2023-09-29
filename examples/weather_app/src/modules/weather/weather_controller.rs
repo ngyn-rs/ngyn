@@ -2,7 +2,7 @@ use ngyn::{controller, get, NgynRequest, NgynResponse};
 
 use super::weather_service::WeatherService;
 
-#[controller("get_location")]
+#[controller("get_location", middlewares = [WeatherService])]
 pub struct WeatherController {
     weather_service: WeatherService,
 }
