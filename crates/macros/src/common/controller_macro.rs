@@ -101,6 +101,17 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         route_registry.push(quote! { controller.#path(); })
     });
 
+    let add_middlewares: Vec<_> = args
+        .middlewares
+        .iter()
+        .map(|m| {
+            quote! {
+                let middleware: #m = ngyn::NgynProvider.provide();
+                middlewares.push(std::sync::Arc::new(middleware));
+            }
+        })
+        .collect();
+
     let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
 
     let expanded = quote! {
@@ -115,6 +126,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl #ident {
             pub fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
+                #(#add_middlewares)*
                 let mut controller = #ident {
                     __routes: vec![],
                     __middlewares: middlewares,
