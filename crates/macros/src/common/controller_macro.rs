@@ -19,7 +19,7 @@ impl syn::parse::Parse for ControllerArgs {
             let route = input.parse::<syn::LitStr>()?;
             routes = route
                 .value()
-                .split(",")
+                .split(',')
                 .map(|r| r.trim().to_string())
                 .collect();
             if !input.is_empty() {
@@ -32,13 +32,13 @@ impl syn::parse::Parse for ControllerArgs {
 
             match ident.to_string().as_str() {
                 "routes" => {
-                    if routes.len() > 0 {
+                    if !routes.is_empty() {
                         panic!("routes already registered");
                     }
                     let route = input.parse::<syn::LitStr>()?;
                     routes = route
                         .value()
-                        .split(",")
+                        .split(',')
                         .map(|r| r.trim().to_string())
                         .collect();
                 }
