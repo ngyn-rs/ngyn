@@ -10,18 +10,10 @@ pub trait NgynControllerInit: Send + Sync {
 /// It is designed to be thread-safe.
 pub trait NgynController: Send + Sync {
     /// Returns the name of the controller.
-    ///
     fn name(&self) -> &str;
 
-    /// Add route to the controller.
-    /// This is for internal use only.
-    fn add_route(&mut self, path: String, http_method: String, handler: String);
-
     /// Returns a vector of routes for the controller.
-    fn routes(&self) -> Vec<(String, String, String)>;
-
-    /// Returns a vec of middlewares
-    fn middlewares(&self) -> Vec<std::sync::Arc<dyn super::NgynMiddleware>>;
+    fn get_routes(&self) -> Vec<(String, String, String)>;
 
     /// Returns a `NgynResponse` for the controller.
     /// This is for internal use only.
