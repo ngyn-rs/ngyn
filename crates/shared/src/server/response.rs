@@ -1,11 +1,10 @@
 use std::{
-    convert::TryFrom,
     future::Future,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
 };
-use tide::{Response, Result, StatusCode};
+use tide::{Response, Result};
 
 use crate::{NgynController, NgynRequest};
 
@@ -17,14 +16,23 @@ struct NgynResponseRoute {
 
 /// NgynResponse is a struct that represents a server response.
 pub struct NgynResponse {
-    response: Response,
     route: Option<NgynResponseRoute>,
+    pub status_code: u16,
+    pub raw_body: String,
+    pub headers: Vec<(String, String)>,
+    pub cookies: Vec<(String, String)>,
 }
 
 impl NgynResponse {
     /// Constructs a new `NgynResponse` with a default status code of 200.
     pub fn new() -> Self {
-        Self::from(Response::new(200))
+        Self {
+            route: None,
+            status_code: 200,
+            raw_body: String::new(),
+            headers: Vec::new(),
+            cookies: Vec::new(),
+        }
     }
 
     /// Sets the status code of the `NgynResponse`.
@@ -37,8 +45,7 @@ impl NgynResponse {
     ///
     /// * A mutable reference to the `NgynResponse`.
     pub fn status(mut self, status: u16) -> Self {
-        self.response
-            .set_status(StatusCode::try_from(status).unwrap());
+        self.status_code = status;
         self
     }
 
@@ -52,20 +59,25 @@ impl NgynResponse {
     ///
     /// * A mutable reference to the `NgynResponse`.
     pub fn body(mut self, data: &str) -> Self {
-        self.response.set_body(data);
+        self.raw_body = data.to_string();
         self
     }
 
     // makes a clone of the response
     pub fn clone(&mut self) -> Self {
-        let mut response = Response::from(self.response.take_body());
-        response.set_status(self.response.status());
-        Self::from(response)
+        Self {
+            route: None,
+            status_code: self.status_code,
+            raw_body: self.raw_body.clone(),
+            headers: self.headers.clone(),
+            cookies: self.cookies.clone(),
+        }
     }
 
     /// Builds the `NgynResponse`.
     pub fn build(self) -> Result {
-        Ok(self.response)
+        let response = Response::builder(self.status_code).body(self.raw_body);
+        Ok(response.build())
     }
 
     /// Handles the `NgynResponse` from a route.
@@ -84,15 +96,6 @@ impl NgynResponse {
     }
 }
 
-impl From<Response> for NgynResponse {
-    fn from(response: Response) -> Self {
-        Self {
-            response,
-            route: None,
-        }
-    }
-}
-
 impl Future for NgynResponse {
     type Output = NgynResponse;
 
@@ -102,7 +105,7 @@ impl Future for NgynResponse {
                 let handler = route.handler;
                 let controller = route.controller;
                 let request = route.request;
-                let response = Self::default();
+                let response = Self::default(); // TODO: add response fields to this
 
                 let result = controller
                     .handle(handler, request, response)
