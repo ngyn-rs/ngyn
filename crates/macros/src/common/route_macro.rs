@@ -85,14 +85,14 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         Path::Multiple(paths) => {
             for path in paths {
                 let route_code = quote! {
-                    self.__routes.push((#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string()));
+                    self.routes.push((#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string()));
                 };
                 expanded_methods.push(route_code);
             }
         }
         Path::Single(path) => {
             let route_code = quote! {
-                self.__routes.push((#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string()));
+                self.routes.push((#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string()));
             };
             expanded_methods.push(route_code);
         }

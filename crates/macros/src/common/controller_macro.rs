@@ -119,7 +119,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
         #[ngyn::dependency]
         pub struct #ident {
-            __routes: Vec<(String, String, String)>,
+            routes: Vec<(String, String, String)>,
             middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
             #(#fields),*
         }
@@ -128,7 +128,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             pub fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
                 let mut controller = #ident {
-                    __routes: vec![],
+                    routes: vec![],
                     middlewares,
                     #(#keys: ngyn::NgynProvider.provide()),*
                 };
@@ -148,7 +148,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 String,
                 String,
             )> {
-                self.__routes.iter().map(|(path, http_method, handler)| {
+                self.routes.iter().map(|(path, http_method, handler)| {
                     (path.clone(), http_method.clone(), handler.clone())
                 }).collect()
             }
