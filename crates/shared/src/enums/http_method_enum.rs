@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 pub enum HttpMethod {
     Get,
     Post,
@@ -24,20 +26,47 @@ impl HttpMethod {
             Self::Patch => "PATCH",
         }
     }
+}
 
-    pub fn from_str(method: &str) -> Option<Self> {
+impl From<&str> for HttpMethod {
+    fn from(method: &str) -> Self {
         match method {
-            "GET" => Some(Self::Get),
-            "POST" => Some(Self::Post),
-            "PUT" => Some(Self::Put),
-            "DELETE" => Some(Self::Delete),
-            "HEAD" => Some(Self::Head),
-            "CONNECT" => Some(Self::Connect),
-            "OPTIONS" => Some(Self::Options),
-            "TRACE" => Some(Self::Trace),
-            "PATCH" => Some(Self::Patch),
-            _ => None,
+            "GET" => Self::Get,
+            "POST" => Self::Post,
+            "PUT" => Self::Put,
+            "DELETE" => Self::Delete,
+            "HEAD" => Self::Head,
+            "CONNECT" => Self::Connect,
+            "OPTIONS" => Self::Options,
+            "TRACE" => Self::Trace,
+            "PATCH" => Self::Patch,
+            _ => Self::Get,
         }
     }
-    
+}
+
+impl FromStr for HttpMethod {
+    type Err = ();
+
+    fn from_str(method: &str) -> Result<Self, Self::Err> {
+        Ok(Self::from(method))
+    }
+}
+
+impl From<String> for HttpMethod {
+    fn from(method: String) -> Self {
+        HttpMethod::from(method.as_str())
+    }
+}
+
+impl From<&String> for HttpMethod {
+    fn from(method: &String) -> Self {
+        HttpMethod::from(method.as_str())
+    }
+}
+
+impl From<&&str> for HttpMethod {
+    fn from(method: &&str) -> Self {
+        HttpMethod::from(*method)
+    }
 }

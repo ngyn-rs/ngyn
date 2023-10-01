@@ -35,8 +35,8 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl ngyn::NgynInjectableInit for #ident {
-            fn new() -> Box<dyn ngyn::NgynInjectable> {
-                Box::new(Self::new())
+            fn new() -> Self {
+                Self::new()
             }
         }
     };

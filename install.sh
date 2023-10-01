@@ -7,7 +7,7 @@ set -e
 # assumes bin name same as project name
 project="ngyn"
 bin_name="ngyn"
-repo="ngyn-rs/ngyn-rs"
+repo="ngyn-rs/ngyn"
 
 case "$OS" in
 	"Windows_NT") target="x86_64-windows" ;;

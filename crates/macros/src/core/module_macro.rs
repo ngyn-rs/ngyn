@@ -3,67 +3,95 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-use crate::utils::handle_macro::handle_macro;
-
 struct ModuleArgs {
+    imports: Vec<syn::Path>,
     controllers: Vec<syn::Path>,
+    middlewares: Vec<syn::Path>,
+}
+
+impl syn::parse::Parse for ModuleArgs {
+    /// Parses the attribute arguments of a `#[module]` macro.
+    /// We make sure that the arguments are in the format `controllers = [], imports = []`.
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut imports = vec![];
+        let mut controllers = vec![];
+        let mut middlewares = vec![];
+
+        while !input.is_empty() {
+            let ident: syn::Ident = input.parse()?;
+            input.parse::<syn::Token![=]>()?;
+
+            let content;
+            syn::bracketed!(content in input);
+
+            while !content.is_empty() {
+                let path: syn::Path = content.parse()?;
+                match ident.to_string().as_str() {
+                    "imports" => imports.push(path),
+                    "controllers" => controllers.push(path),
+                    "middlewares" => middlewares.push(path),
+                    _ => {
+                        return Err(syn::Error::new(
+                            ident.span(),
+                            format!("unexpected attribute `{}`", ident),
+                        ))
+                    }
+                }
+                if !content.is_empty() {
+                    content.parse::<syn::Token![,]>()?;
+                }
+            }
+
+            if !input.is_empty() {
+                input.parse::<syn::Token![,]>()?;
+            }
+        }
+
+        Ok(ModuleArgs {
+            imports,
+            controllers,
+            middlewares,
+        })
+    }
 }
 
 pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let (ident, _, _) = handle_macro(input);
+    let args = parse_macro_input!(args as ModuleArgs);
 
-    // Parse the attributes to get the controller types
-    let args = {
-        let input_str = args.to_string();
+    let ident = input.ident;
 
-        let controllers = if input_str.starts_with('[') && input_str.ends_with(']') {
-            let controllers: Vec<syn::Path> =
-                if !input_str[1..input_str.len() - 1].trim().is_empty() {
-                    input_str[1..input_str.len() - 1]
-                        .split(',')
-                        .map(|s| s.trim().to_string())
-                        .map(|s| syn::parse_str(&s).unwrap())
-                        .collect()
-                } else {
-                    vec![]
-                };
-
-            Some(controllers)
-        } else if input_str.is_empty() {
-            Some(vec![])
-        } else {
-            panic!("invalid path")
-        };
-
-        ModuleArgs {
-            controllers: controllers.unwrap(),
-        }
-    };
+    let add_middlewares: Vec<_> = args
+        .middlewares
+        .iter()
+        .map(|middleware| {
+            quote! {
+                let middleware: #middleware = ngyn::NgynProvider.provide();
+                self.middlewares.push(std::sync::Arc::new(middleware));
+            }
+        })
+        .collect();
 
     let add_controllers: Vec<_> = args
         .controllers
         .iter()
         .map(|controller| {
             quote! {
-                let controller: #controller = #controller::new();
+                let controller: #controller = #controller::new(self.middlewares.clone());
                 controllers.push(std::sync::Arc::new(controller));
             }
         })
         .collect();
 
-    let keys = args.controllers.iter().map(|controller| {
-        let segments = &controller.segments;
-        let name = &segments.last().unwrap().ident;
-        quote! { #name }
-    });
-
-    let fields: Vec<_> = keys
-        .clone()
-        .zip(args.controllers.iter())
-        .map(|(key, controller)| {
+    let add_imported_modules_controllers: Vec<_> = args
+        .imports
+        .iter()
+        .map(|import| {
             quote! {
-                #key: #controller
+                let mut module: #import = #import::new(self.middlewares.clone());
+                module.get_controllers().iter().for_each(|controller| {
+                    controllers.push(controller.clone());
+                });
             }
         })
         .collect();
@@ -71,34 +99,25 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #[ngyn::dependency]
         pub struct #ident {
-            #(#fields),*
+            middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
         }
 
         impl ngyn::NgynModule for #ident {
-            /// Creates a new `#ident` with the specified components.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// let module = #ident::new();
-            /// ```
-            fn new() -> Self {
-                #ident {
-                    #(#keys: ngyn::NgynProvider.provide()),*
-                }
+
+            fn new(middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
+                Self { middlewares }
             }
 
-            /// Returns the controllers of the module.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// let module = #ident::new();
-            /// let controllers = module.get_controllers();
-            /// ```
-            fn get_controllers(&self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
+            fn name(&self) -> &str {
+                stringify!(#ident)
+            }
+
+            fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
+                let mut modules: Vec<std::sync::Arc<dyn ngyn::NgynModule>> = vec![];
                 let mut controllers: Vec<std::sync::Arc<dyn ngyn::NgynController>> = vec![];
+                #(#add_middlewares)*
                 #(#add_controllers)*
+                #(#add_imported_modules_controllers)*
                 controllers
             }
         }

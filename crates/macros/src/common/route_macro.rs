@@ -22,10 +22,10 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let args = {
         let input_str = args.to_string();
 
-        let (path, http_method) = if input_str.starts_with("\"") {
+        let (path, http_method) = if input_str.starts_with('"') {
             // the input_str should be of this structure: `"GET", "/path"` or `"GET", ["/path1", "/path2"]`
             // match the first argument to see if it's a valid HTTP method
-            let mut input_str = input_str.trim_matches('"').split(",");
+            let mut input_str = input_str.trim_matches('"').split(',');
             let http_method = input_str
                 .next()
                 .unwrap()
@@ -46,10 +46,10 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
                 .map(|s| s.trim())
                 .collect::<Vec<_>>()
                 .join(",");
-            let path = if route_path.starts_with("[") {
+            let path = if route_path.starts_with('[') {
                 let paths: Vec<_> = route_path
                     .trim_matches(|p| p == '[' || p == ']')
-                    .split(",")
+                    .split(',')
                     .map(|p| p.trim_matches('"').to_string())
                     .collect();
                 Some(Path::Multiple(paths))
@@ -70,6 +70,8 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let http_method = args.http_method;
 
     let ident = &input.sig.ident;
+    let fn_vis = &input.vis;
+    let fn_async = &input.sig.asyncness;
     let inputs = &input.sig.inputs;
     let output = match &input.sig.output {
         syn::ReturnType::Default => quote! { ngyn::NgynResponse },
@@ -83,14 +85,14 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         Path::Multiple(paths) => {
             for path in paths {
                 let route_code = quote! {
-                    self.add_route(#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string());
+                    self.routes.push((#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string()));
                 };
                 expanded_methods.push(route_code);
             }
         }
         Path::Single(path) => {
             let route_code = quote! {
-                self.add_route(#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string());
+                self.routes.push((#path.to_string(), #http_method.to_string(), stringify!(#ident).to_string()));
             };
             expanded_methods.push(route_code);
         }
@@ -99,9 +101,7 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let register_ident = str_to_ident(format!("register_{}", ident));
 
     let expanded = quote! {
-        fn #ident(#inputs) -> #output {
-            #block
-        }
+        #fn_vis #fn_async fn #ident(#inputs) -> #output #block
 
         fn #register_ident(&mut self) {
             #(#expanded_methods)*
