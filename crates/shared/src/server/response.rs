@@ -105,7 +105,7 @@ impl Future for NgynResponse {
                 let handler = route.handler;
                 let controller = route.controller;
                 let request = route.request;
-                let response = Self::default(); // TODO: add response fields to this
+                let response = self.clone();
 
                 let result = controller
                     .handle(handler, request, response)
