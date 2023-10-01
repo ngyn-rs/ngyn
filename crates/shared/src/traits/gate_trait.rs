@@ -10,6 +10,6 @@ pub trait NgynGate {
     ///
     /// # Returns
     ///
-    /// Returns `true` if the gate can activate, `false` otherwise.
-    fn can_activate(request: NgynRequest) -> bool;
+    /// Returns `true` if the route can activate, `false` otherwise.
+    fn check(request: NgynRequest) -> bool;
 }
