@@ -9,8 +9,8 @@ struct ControllerArgs {
 }
 
 impl syn::parse::Parse for ControllerArgs {
-    /// Parses the attribute arguments of a `#[module]` macro.
-    /// We make sure that the arguments are in the format `controllers = [], imports = []`.
+    /// Parses a string like `routes = "get_location, get_location_weather", middlewares = [WeatherGate]`
+    /// into a `ControllerArgs` struct.
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut routes = vec![];
         let mut middlewares = vec![];
@@ -118,11 +118,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
-
     let expanded = quote! {
-        use ngyn::NgynController as #ngyn_controller_alias;
-
         #(#attrs)*
         #[ngyn::dependency]
         #vis struct #ident {
