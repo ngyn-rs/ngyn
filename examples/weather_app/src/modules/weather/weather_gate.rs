@@ -4,7 +4,7 @@ use ngyn::{injectable, NgynGate};
 pub struct WeatherGate;
 
 impl NgynGate for WeatherGate {
-    fn check(request: ngyn::NgynRequest) -> bool {
+    fn check(self, _request: ngyn::NgynRequest) -> bool {
         return true;
     }
 }
