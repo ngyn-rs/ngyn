@@ -1,11 +1,17 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::handle_macro::handle_macro;
+use crate::utils::parse_macro_data::parse_macro_data;
 
 pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as syn::DeriveInput);
-    let (ident, types, keys) = handle_macro(input);
+    let syn::DeriveInput {
+        ident,
+        data,
+        attrs,
+        vis,
+        ..
+    } = syn::parse_macro_input!(input as syn::DeriveInput);
+    let (types, keys) = parse_macro_data(data);
 
     let fields: Vec<_> = types
         .iter()
@@ -14,9 +20,10 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
+        #(#attrs)*
         #[ngyn::dependency]
         #[derive(Clone)]
-        pub struct #ident {
+        #vis struct #ident {
             #(#fields),*
         }
 

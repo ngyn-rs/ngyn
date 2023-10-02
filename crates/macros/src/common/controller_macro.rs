@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::{handle_macro, str_to_ident};
+use crate::utils::{parse_macro_data, str_to_ident};
 
 struct ControllerArgs {
     routes: Vec<String>,
@@ -73,9 +73,15 @@ impl syn::parse::Parse for ControllerArgs {
 }
 
 pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+    let syn::DeriveInput {
+        attrs,
+        ident,
+        data,
+        vis,
+        ..
+    } = syn::parse_macro_input!(input as syn::DeriveInput);
     let args = syn::parse_macro_input!(args as ControllerArgs);
-    let (ident, types, keys) = handle_macro(input);
+    let (types, keys) = parse_macro_data(data);
 
     let fields: Vec<_> = types
         .iter()
@@ -117,8 +123,9 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         use ngyn::NgynController as #ngyn_controller_alias;
 
+        #(#attrs)*
         #[ngyn::dependency]
-        pub struct #ident {
+        #vis struct #ident {
             routes: Vec<(String, String, String)>,
             middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
             #(#fields),*

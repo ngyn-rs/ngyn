@@ -1,8 +1,6 @@
-use syn::{DeriveInput, Ident, Type};
+use syn::{Data, Ident, Type};
 
-pub fn handle_macro(input: DeriveInput) -> (Ident, Vec<Type>, Vec<Ident>) {
-    let DeriveInput { ident, data, .. } = input;
-    let name = ident;
+pub fn parse_macro_data(data: Data) -> (Vec<Type>, Vec<Ident>) {
     let raw_fields = match data {
         syn::Data::Struct(d) => d.fields,
         _ => panic!("Only structs are supported"),
@@ -15,5 +13,5 @@ pub fn handle_macro(input: DeriveInput) -> (Ident, Vec<Type>, Vec<Ident>) {
         .iter()
         .map(|f| f.ident.clone().unwrap())
         .collect::<Vec<Ident>>();
-    (name, types, keys)
+    (types, keys)
 }
