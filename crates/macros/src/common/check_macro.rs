@@ -47,7 +47,7 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             {
                 use ngyn::NgynGate;
                 let gate: #gate = ngyn::NgynProvider.provide();
-                if !gate.check(&#req) {
+                if !gate.can_activate(&#req) {
                     return #res.status(403);
                 }
             }

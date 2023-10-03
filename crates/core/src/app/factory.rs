@@ -4,6 +4,7 @@ use ngyn_shared::{enums::HttpMethod, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {
+    /// this is just a placeholder and would prolly not be used
     _app: Application,
 }
 
