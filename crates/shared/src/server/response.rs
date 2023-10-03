@@ -37,11 +37,11 @@ impl NgynResponse {
 
     /// Sets the status code of the `NgynResponse`.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `status` - A u16 that represents the status code to be set.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
     pub fn status(mut self, status: u16) -> Self {
@@ -51,11 +51,11 @@ impl NgynResponse {
 
     /// Sets the body of the response
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `data` - A string that represents the body
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
     pub fn body(mut self, data: &str) -> Self {
@@ -81,7 +81,7 @@ impl NgynResponse {
     }
 
     /// Handles the `NgynResponse` from a route.
-    pub fn from_route(
+    pub fn with_controller(
         mut self,
         controller: Arc<dyn NgynController>,
         handler: String,
@@ -101,10 +101,11 @@ impl Future for NgynResponse {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.route.take() {
-            Some(route) => {
-                let handler = route.handler;
-                let controller = route.controller;
-                let request = route.request;
+            Some(NgynResponseRoute {
+                handler,
+                controller,
+                request,
+            }) => {
                 let response = self.clone();
 
                 let result = controller

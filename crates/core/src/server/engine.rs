@@ -20,13 +20,13 @@ pub trait NgynEngine {
     /// Adds a new route to the `NgynApplication`.
     /// This function is chainable.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `path` - A string slice that represents the path of the route.
     /// * `method` - An `HttpMethod` that represents the HTTP method of the route.
     /// * `handler` - A closure that takes a `NgynRequest` and a `NgynResponse` and returns a `NgynResponse`.
     ///
-    /// # Example
+    /// ### Example
     ///
     /// ```
     /// use ngyn::{server::{NgynApplication, NgynEngine}, HttpMethod, NgynRequest, NgynResponse};

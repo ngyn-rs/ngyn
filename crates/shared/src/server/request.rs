@@ -30,10 +30,14 @@ impl Future for Body {
     }
 }
 
+/// A struct that represents a request.
 pub struct NgynRequest {
-    pub method: HttpMethod,
-    pub url: String,
-    pub headers: HashMap<String, String>,
+    /// The HTTP method of the request.
+    method: HttpMethod,
+    /// The URL of the request.
+    url: String,
+    /// The headers of the request.
+    headers: HashMap<String, String>,
     body: Body,
 }
 
@@ -59,6 +63,21 @@ impl NgynRequest {
     /// Gets the body of the `NgynRequest`.
     pub async fn body_string(&mut self) -> Result<String, std::io::Error> {
         self.body.clone().await
+    }
+
+    /// Gets the HTTP method of the `NgynRequest`.
+    pub fn method(&self) -> HttpMethod {
+        self.method.clone()
+    }
+
+    /// Gets the URL of the `NgynRequest`.
+    pub fn url(&self) -> String {
+        self.url.clone()
+    }
+
+    /// Gets the headers of the `NgynRequest`.
+    pub fn headers(&self) -> HashMap<String, String> {
+        self.headers.clone()
     }
 }
 

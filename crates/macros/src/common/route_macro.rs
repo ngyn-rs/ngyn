@@ -1,4 +1,4 @@
-use ngyn_shared::path_enum::Path;
+use ngyn_shared::{path_enum::Path, HttpMethod};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemFn, Signature};
@@ -12,11 +12,9 @@ struct Args {
 
 impl syn::parse::Parse for Args {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let http_method = input.parse::<syn::LitStr>()?.value().to_uppercase();
+        let http_method = input.parse::<syn::LitStr>()?.value();
 
-        if !["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
-            .contains(&http_method.as_str())
-        {
+        if HttpMethod::from(&http_method) == HttpMethod::Unknown {
             panic!("Unsupported HTTP method: {}", http_method)
         } else {
             input.parse::<syn::Token![,]>()?;

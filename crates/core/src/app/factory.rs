@@ -24,7 +24,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// The `create` method takes a generic parameter `AppModule` that implements the `NgynModule` trait.
     /// It returns an instance of `NgynEngine`.
     ///
-    /// # Example
+    /// ### Example
     ///
     /// ```
     /// use ngyn::{module, NgynFactory, server::NgynApplication};
@@ -47,7 +47,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
                     Box::new({
                         let controller = controller.clone();
                         move |req, res: NgynResponse| {
-                            res.from_route(controller.clone(), handler.clone(), req)
+                            res.with_controller(controller.clone(), handler.clone(), req)
                         }
                     }),
                 );

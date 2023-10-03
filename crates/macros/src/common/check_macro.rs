@@ -32,15 +32,13 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         block,
     } = syn::parse_macro_input!(input as ItemFn);
 
-    let second_arg = sig.inputs.iter().nth(1).unwrap();
-    let req = match second_arg {
-        syn::FnArg::Typed(pat_type) => &pat_type.pat,
+    let req = match sig.inputs.iter().nth(1) {
+        Some(syn::FnArg::Typed(pat_type)) => &pat_type.pat,
         _ => panic!("Expected a valid request parameter"),
     };
 
-    let third_arg = sig.inputs.iter().nth(2).unwrap();
-    let res = match third_arg {
-        syn::FnArg::Typed(pat_type) => &pat_type.pat,
+    let res = match sig.inputs.iter().nth(2) {
+        Some(syn::FnArg::Typed(pat_type)) => &pat_type.pat,
         _ => panic!("Expected a valid response parameter"),
     };
 
@@ -49,7 +47,7 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             {
                 use ngyn::NgynGate;
                 let gate: #gate = ngyn::NgynProvider.provide();
-                if !gate.check(#req) {
+                if !gate.check(&#req) {
                     return #res.status(403);
                 }
             }
