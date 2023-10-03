@@ -19,8 +19,8 @@ brew:
   recipe_fname: ngyn.rb
   recipe_template: |
     class NgynFormula < Formula
-      desc "desc"
-      homepage "http://github.com/ngyn-rs/ngyn"
+      desc "A progressive backend framework for Rust"
+      homepage "https://github.com/ngyn-rs/ngyn"
       url "__URL__"
       version "__VERSION__"
       sha256 "__SHA__"
