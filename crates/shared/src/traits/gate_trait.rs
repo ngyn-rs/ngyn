@@ -4,12 +4,12 @@ use crate::{NgynInjectable, NgynRequest};
 pub trait NgynGate: NgynInjectable {
     /// Determines if the gate can activate for the given request.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `request` - The request to check.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// Returns `true` if the route can activate, `false` otherwise.
-    fn check(self, request: NgynRequest) -> bool;
+    fn can_activate(self, request: &NgynRequest) -> bool;
 }

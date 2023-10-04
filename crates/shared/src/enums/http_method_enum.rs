@@ -1,5 +1,8 @@
 use std::str::FromStr;
 
+#[derive(Debug, Clone, PartialEq)]
+/// An enum that represents an HTTP method.
+/// It is used to specify the HTTP method of a route.
 pub enum HttpMethod {
     Get,
     Post,
@@ -10,6 +13,7 @@ pub enum HttpMethod {
     Options,
     Trace,
     Patch,
+    Unknown,
 }
 
 impl HttpMethod {
@@ -24,13 +28,16 @@ impl HttpMethod {
             Self::Options => "OPTIONS",
             Self::Trace => "TRACE",
             Self::Patch => "PATCH",
+            _ => panic!("Unknown HTTP method"),
         }
     }
 }
 
 impl From<&str> for HttpMethod {
+    /// Takes in any string literal and returns the corresponding `HttpMethod` enum.
+    /// If the string literal is not a valid HTTP method, it returns `HttpMethod::Unknown`.
     fn from(method: &str) -> Self {
-        match method {
+        match method.to_uppercase().as_str() {
             "GET" => Self::Get,
             "POST" => Self::Post,
             "PUT" => Self::Put,
@@ -40,7 +47,7 @@ impl From<&str> for HttpMethod {
             "OPTIONS" => Self::Options,
             "TRACE" => Self::Trace,
             "PATCH" => Self::Patch,
-            _ => Self::Get,
+            _ => Self::Unknown,
         }
     }
 }

@@ -37,7 +37,7 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 /// The `route` attribute is used to mark a function as a route.
 ///
-/// ### Arguments
+/// ##### Arguments
 /// * `method` - The HTTP method that the route will handle. (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
 /// * `path` - The path that the route will handle.
 pub fn route(args: TokenStream, input: TokenStream) -> TokenStream {
