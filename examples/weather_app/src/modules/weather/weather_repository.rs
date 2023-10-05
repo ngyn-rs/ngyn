@@ -8,7 +8,7 @@ impl WeatherRepository {
     fn build_url(&self, api_type: &str, location: &str) -> String {
         let api_key = env::var("WEATHER_API_KEY").unwrap();
         format!(
-            "http://api.weatherapi.com/v1/{}.json?key={}&q={}",
+            "https://api.weatherapi.com/v1/{}.json?key={}&q={}",
             api_type, api_key, location
         )
     }

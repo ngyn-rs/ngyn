@@ -8,13 +8,13 @@ pub struct SampleController {
 }
 
 impl SampleController {
-    #[get("/api/hello")]
+    #[get("/hello")]
     fn say_hello(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
         self.sample_service.say_hello();
         res.body("Hello, Ngyn!")
     }
 
-    #[get(["/api/bye", "/api/goodbye"])]
+    #[get(["/bye", "/goodbye"])]
     fn say_goodbye(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
         println!("Goodbye!");
         res
