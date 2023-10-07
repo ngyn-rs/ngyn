@@ -9,6 +9,7 @@ license = "MIT"
 path = "src/lib.rs"
 
 [dependencies]
+async-std = { version = "1.6.0", features = ["attributes"] }
 nject = "0.3.0"
 ngyn_macros = { path = "../macros", version = "0.2.1" }
 ngyn_shared = { path = "../shared", version = "0.2.0" }

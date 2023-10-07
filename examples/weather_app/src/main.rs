@@ -5,7 +5,7 @@ use dotenv::dotenv;
 use modules::AppModule;
 use ngyn::{server::NgynApplication, NgynFactory, Result};
 
-#[tokio::main]
+#[ngyn::main]
 async fn main() -> Result<()> {
     dotenv().ok();
     let app = NgynFactory::<NgynApplication>::create::<AppModule>();

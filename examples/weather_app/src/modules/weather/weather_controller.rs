@@ -13,6 +13,6 @@ impl WeatherController {
     #[get("/weather")]
     async fn get_location(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
         let weather = self.weather_service.get_location_weather("London").await;
-        res.body(weather.get("current").unwrap())
+        res.body(weather.as_str())
     }
 }
