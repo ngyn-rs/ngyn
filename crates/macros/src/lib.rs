@@ -5,7 +5,7 @@ mod core;
 mod utils;
 
 use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
-use crate::core::{interceptor_macro::*, module_macro::*};
+use crate::core::module_macro::*;
 use common::check_macro::check_macro;
 use proc_macro::TokenStream;
 
@@ -13,12 +13,6 @@ use proc_macro::TokenStream;
 /// `module` is a procedural macro that generates a struct and its implementation.
 pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
     module_macro(args, input)
-}
-
-#[proc_macro_attribute]
-/// The `interceptor` attribute is used to implement an `intercept` function for a given type.
-pub fn interceptor(args: TokenStream, input: TokenStream) -> TokenStream {
-    interceptor_macro(args, input)
 }
 
 #[proc_macro_attribute]
