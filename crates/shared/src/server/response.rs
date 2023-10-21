@@ -70,17 +70,6 @@ impl NgynResponse {
         self
     }
 
-    // makes a clone of the response
-    pub fn clone(&self) -> Self {
-        Self {
-            route: self.route.clone(),
-            status_code: self.status_code,
-            raw_body: self.raw_body.clone(),
-            headers: self.headers.clone(),
-            cookies: self.cookies.clone(),
-        }
-    }
-
     /// Builds the `NgynResponse`.
     pub fn build(self) -> Result {
         let response = Response::builder(self.status_code).body(self.raw_body);
@@ -100,6 +89,18 @@ impl NgynResponse {
             request: request.clone(),
         });
         self.clone()
+    }
+}
+
+impl Clone for NgynResponse {
+    fn clone(&self) -> Self {
+        Self {
+            route: self.route.clone(),
+            status_code: self.status_code,
+            raw_body: self.raw_body.clone(),
+            headers: self.headers.clone(),
+            cookies: self.cookies.clone(),
+        }
     }
 }
 

@@ -6,7 +6,7 @@ pub trait Handler: Sync + Send + 'static {
 
 impl<F> Handler for F
 where
-    F: Fn(&NgynRequest, &mut NgynResponse) -> () + Send + Sync + 'static,
+    F: Fn(&NgynRequest, &mut NgynResponse) + Send + Sync + 'static,
 {
     fn handle(&self, req: &NgynRequest, res: &mut NgynResponse) {
         self(req, res)
@@ -32,8 +32,8 @@ pub trait NgynEngine {
     /// use ngyn::{server::{NgynApplication, NgynEngine}, HttpMethod, NgynRequest, NgynResponse};
     ///
     /// let mut server = NgynApplication::new();
-    /// server.route("/", HttpMethod::Get, Box::new(|req: NgynRequest, res: NgynResponse| {
-    ///    res.status(200)
+    /// server.route("/", HttpMethod::Get, Box::new(|req: &NgynRequest, res: &mut NgynResponse| {
+    ///    res.status(200);
     /// }));
     /// ```
     fn route(&mut self, path: &str, method: HttpMethod, handler: Box<impl Handler>) -> &mut Self;
