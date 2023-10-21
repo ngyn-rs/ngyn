@@ -101,7 +101,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         let path = str_to_ident(format!("register_{}", route));
         handle_routes.push(quote! {
             #route => {
-                Self::#route_ident(Self::new(self.middlewares.clone()), req, res).await
+                Self::#route_ident(Self::new(self.middlewares.clone()), &req, &mut res).await
             }
         });
         route_registry.push(quote! { controller.#path(); })
@@ -156,14 +156,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: ngyn::NgynResponse) -> ngyn::NgynResponse {
+            async fn handle(&self, handler: String, req: ngyn::NgynRequest, mut res: ngyn::NgynResponse) -> ngyn::NgynResponse {
                 for middleware in self.middlewares.clone() {
                     middleware.handle(&req, &res);
                 }
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
-                        res.status(404)
+                        res.status(404).clone()
                     }
                 }
             }

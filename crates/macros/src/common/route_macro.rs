@@ -71,7 +71,9 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     } = sig;
 
     let output = match output {
-        syn::ReturnType::Default => quote! { ngyn::NgynResponse },
+        syn::ReturnType::Default => {
+            panic!("Route handler must have a return type of NgynResponse")
+        }
         syn::ReturnType::Type(_, ty) => quote! { #ty },
     };
 
