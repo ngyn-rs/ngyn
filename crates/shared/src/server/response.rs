@@ -8,6 +8,7 @@ use tide::{Response, Result};
 
 use crate::{NgynController, NgynRequest};
 
+#[derive(Clone)]
 struct NgynResponseRoute {
     controller: Arc<dyn NgynController>,
     handler: String,
@@ -17,10 +18,10 @@ struct NgynResponseRoute {
 /// NgynResponse is a struct that represents a server response.
 pub struct NgynResponse {
     route: Option<NgynResponseRoute>,
-    pub status_code: u16,
-    pub raw_body: String,
-    pub headers: Vec<(String, String)>,
-    pub cookies: Vec<(String, String)>,
+    status_code: u16,
+    raw_body: String,
+    headers: Vec<(String, String)>,
+    cookies: Vec<(String, String)>,
 }
 
 impl NgynResponse {
@@ -35,6 +36,12 @@ impl NgynResponse {
         }
     }
 
+    pub fn from_status(code: u16) -> Self {
+        let mut response = Self::new();
+        response.status_code = code;
+        response
+    }
+
     /// Sets the status code of the `NgynResponse`.
     ///
     /// ### Arguments
@@ -44,7 +51,7 @@ impl NgynResponse {
     /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
-    pub fn status(mut self, status: u16) -> Self {
+    pub fn status(&mut self, status: u16) -> &mut Self {
         self.status_code = status;
         self
     }
@@ -58,15 +65,15 @@ impl NgynResponse {
     /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
-    pub fn body(mut self, data: &str) -> Self {
+    pub fn body(&mut self, data: &str) -> &mut Self {
         self.raw_body = data.to_string();
         self
     }
 
     // makes a clone of the response
-    pub fn clone(&mut self) -> Self {
+    pub fn clone(&self) -> Self {
         Self {
-            route: None,
+            route: self.route.clone(),
             status_code: self.status_code,
             raw_body: self.raw_body.clone(),
             headers: self.headers.clone(),
@@ -82,17 +89,17 @@ impl NgynResponse {
 
     /// Handles the `NgynResponse` from a route.
     pub fn with_controller(
-        mut self,
+        &mut self,
         controller: Arc<dyn NgynController>,
         handler: String,
-        request: NgynRequest,
+        request: &NgynRequest,
     ) -> Self {
         self.route = Some(NgynResponseRoute {
             controller,
             handler,
-            request,
+            request: request.clone(),
         });
-        self
+        self.clone()
     }
 }
 

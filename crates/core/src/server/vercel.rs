@@ -31,10 +31,10 @@ impl VercelApplication {
     }
 
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
-        let mut res = ngyn_shared::NgynResponse::new();
+        let mut res = ngyn_shared::NgynResponse::from_status(404);
+        res.raw_body = "Route not found".to_string();
         let (parts, body) = request.into_parts();
 
-        let mut found_route = false;
         for (path, method, handler) in self.routes {
             let uri = parts.uri.clone();
             if uri.path() == path && parts.method.as_str() == method.as_str() {
@@ -57,17 +57,9 @@ impl VercelApplication {
                     headers,
                     body.to_vec(),
                 ));
-                res = handler.handle(req, res).await;
-                found_route = true;
+                res = handler.handle(&req, &res).await;
                 break; // Exit the loop once a route is found
             }
-        }
-
-        if !found_route {
-            // Handle case where route is not found
-            // Return a 404 Not Found response
-            res.status_code = 404;
-            res.raw_body = "Route not found".to_string();
         }
 
         Ok(Response::builder()
