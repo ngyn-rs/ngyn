@@ -31,6 +31,7 @@ impl Future for Body {
 }
 
 /// A struct that represents a request.
+#[derive(Clone)]
 pub struct NgynRequest {
     /// The HTTP method of the request.
     method: HttpMethod,
