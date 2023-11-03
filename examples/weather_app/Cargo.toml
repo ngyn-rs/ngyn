@@ -1,6 +1,6 @@
 [package]
 name = "weather_api"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,5 +9,5 @@ edition = "2021"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 dotenv = "0.15.0"
 nject = "0.3.0"
-ngyn = { path = "../../crates/core", version = "0.2.1" }
+ngyn = { path = "../../crates/core", version = "0.2.2" }
 ureq = { version = "2.8.0" }

@@ -1402,9 +1402,11 @@ dependencies = [
 [[package]]
 name = "ngyn"
 version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38671c35568880d3b264b73424adef827f6a5091601d0851bc91b77ed704e38f"
 dependencies = [
  "async-std",
- "ngyn_macros 0.2.2",
+ "ngyn_macros 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ngyn_shared 0.2.1",
  "nject",
  "tide",
@@ -1413,13 +1415,11 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38671c35568880d3b264b73424adef827f6a5091601d0851bc91b77ed704e38f"
+version = "0.2.2"
 dependencies = [
  "async-std",
- "ngyn_macros 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ngyn_shared 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_macros 0.2.2",
+ "ngyn_shared 0.2.2",
  "nject",
  "tide",
  "vercel_runtime",
@@ -1458,7 +1458,7 @@ dependencies = [
 name = "ngyn_macros"
 version = "0.2.2"
 dependencies = [
- "ngyn_shared 0.2.1",
+ "ngyn_shared 0.2.2",
  "nject",
  "quote",
  "syn 2.0.32",
@@ -1470,7 +1470,7 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a0e1ed9c74e58e30b20706350e748a7262d5d8718f3c2c1cd216b0e1c911e1bf"
 dependencies = [
- "ngyn_shared 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_shared 0.2.1",
  "nject",
  "quote",
  "syn 2.0.32",
@@ -1489,6 +1489,8 @@ dependencies = [
 [[package]]
 name = "ngyn_shared"
 version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22a53ee02c6328008b99e14806b0217ffa3622c1b71be1f40358d5dc096169fb"
 dependencies = [
  "nject",
  "tide",
@@ -1496,9 +1498,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22a53ee02c6328008b99e14806b0217ffa3622c1b71be1f40358d5dc096169fb"
+version = "0.2.2"
 dependencies = [
  "nject",
  "tide",
@@ -2668,7 +2668,7 @@ dependencies = [
 name = "vercel_app"
 version = "0.2.1"
 dependencies = [
- "ngyn 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn 0.2.1",
  "nject",
  "tokio",
  "vercel_runtime",
@@ -2835,7 +2835,7 @@ version = "0.1.1"
 dependencies = [
  "async-std",
  "dotenv",
- "ngyn 0.2.1",
+ "ngyn 0.2.2",
  "nject",
  "ureq",
 ]
