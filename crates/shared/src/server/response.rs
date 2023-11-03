@@ -51,9 +51,14 @@ impl NgynResponse {
     /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
-    pub fn status(&mut self, status: u16) -> &mut Self {
+    pub fn set_status(&mut self, status: u16) -> &mut Self {
         self.status_code = status;
         self
+    }
+
+    /// Gets the status code of the response
+    pub fn status(&self) -> u16 {
+        self.status_code
     }
 
     /// Sets the body of the response
@@ -68,6 +73,11 @@ impl NgynResponse {
     pub fn body(&mut self, data: &str) -> &mut Self {
         self.raw_body = data.to_string();
         self
+    }
+
+    /// Gets the raw value for response body
+    pub fn raw(&self) -> String {
+        self.raw_body.clone()
     }
 
     /// Builds the `NgynResponse`.
