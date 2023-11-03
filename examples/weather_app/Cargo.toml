@@ -9,5 +9,5 @@ edition = "2021"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 dotenv = "0.15.0"
 nject = "0.3.0"
-ngyn = { path = "../../crates/core", version = "0.2.3" }
+ngyn = { path = "../../crates/core", version = "0.2.4" }
 ureq = { version = "2.8.0" }
