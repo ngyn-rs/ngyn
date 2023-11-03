@@ -163,7 +163,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
-                        res.status(404).clone()
+                        res.set_status(404).clone()
                     }
                 }
             }

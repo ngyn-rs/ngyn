@@ -33,7 +33,7 @@ pub trait NgynEngine {
     ///
     /// let mut server = NgynApplication::new();
     /// server.route("/", HttpMethod::Get, Box::new(|req: &NgynRequest, res: &mut NgynResponse| {
-    ///    res.status(200);
+    ///    res.set_status(200);
     /// }));
     /// ```
     fn route(&mut self, path: &str, method: HttpMethod, handler: Box<impl Handler>) -> &mut Self;
