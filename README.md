@@ -17,7 +17,7 @@ Ngyn is easy to get started with. All you need is a basic understanding of Rust 
 
 Ngyn is a great choice for creating robust applications quickly and easily. With its flexible and powerful API, powerful macros, and robust security features, you can be sure that your applications are secure and performant. 
 
-```rs
+```rust
 use modules::MyAppModule;
 use ngyn::{NgynFactory, Result};
 
@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
 }
 ```
 
-```rs
+```rust
 // my_gate.rs
 // Define a gate to restrict access to a resource
 use ngyn::NgynGate;
