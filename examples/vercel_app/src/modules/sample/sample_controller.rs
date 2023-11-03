@@ -9,14 +9,14 @@ pub struct SampleController {
 
 impl SampleController {
     #[get("/hello")]
-    fn say_hello(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
+    fn say_hello(self, _req: &NgynRequest, res: &NgynResponse) -> NgynResponse {
         self.sample_service.say_hello();
-        res.body("Hello, Ngyn!")
+        res.body("Hello, Ngyn!").clone()
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
+    fn say_goodbye(self, _req: &NgynRequest, res: &NgynResponse) -> NgynResponse {
         println!("Goodbye!");
-        res
+        res.clone()
     }
 }
