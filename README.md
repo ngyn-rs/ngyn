@@ -22,7 +22,7 @@ Ngyn is a great choice for creating robust applications quickly and easily. With
 use modules::MyAppModule;
 use ngyn::{NgynFactory, NgynRequest, NgynResponse, Result};
 
-#[tokio::main]
+#[ngyn::main]
 async fn main() -> Result<()> {
     let app = NgynFactory::create::<MyAppModule>();
 
