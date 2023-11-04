@@ -1,7 +1,5 @@
-use ngyn_shared::HttpMethod;
+use ngyn_shared::{Handler, HttpMethod, NgynEngine};
 use vercel_runtime::{Body, Error, Request, Response};
-
-use super::{Handler, NgynEngine};
 
 pub struct VercelApplication {
     routes: Vec<(String, HttpMethod, Box<dyn Handler>)>,
