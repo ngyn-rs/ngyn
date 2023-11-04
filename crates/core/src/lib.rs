@@ -1,5 +1,5 @@
 pub mod app;
-pub mod server;
+pub mod platforms;
 
 pub use crate::app::factory::*;
 pub use crate::app::provider::*;
