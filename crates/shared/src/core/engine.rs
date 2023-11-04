@@ -1,17 +1,5 @@
-use ngyn_shared::{HttpMethod, NgynRequest, NgynResponse};
-
-pub trait Handler: Sync + Send + 'static {
-    fn handle(&self, req: &NgynRequest, res: &mut NgynResponse);
-}
-
-impl<F> Handler for F
-where
-    F: Fn(&NgynRequest, &mut NgynResponse) + Send + Sync + 'static,
-{
-    fn handle(&self, req: &NgynRequest, res: &mut NgynResponse) {
-        self(req, res)
-    }
-}
+use super::Handler;
+use crate::HttpMethod;
 
 pub trait NgynEngine {
     /// Creates a new instance of `NgynApplication` with a new `Server`

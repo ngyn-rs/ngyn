@@ -1,8 +1,7 @@
 #[cfg(feature = "tide")]
 use crate::server::NgynApplication;
-use crate::server::NgynEngine;
 
-use ngyn_shared::{enums::HttpMethod, NgynModule, NgynRequest, NgynResponse};
+use ngyn_shared::{enums::HttpMethod, NgynEngine, NgynModule, NgynRequest, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {

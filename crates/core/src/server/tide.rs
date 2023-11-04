@@ -1,8 +1,6 @@
-use ngyn_shared::{HttpMethod, NgynRequest, NgynResponse};
+use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest, NgynResponse};
 use std::sync::Arc;
 use tide::{Result, Server};
-
-use super::{Handler, NgynEngine};
 
 /// `NgynApplication` is a struct that represents a server instance in the Ngyn framework.
 pub struct NgynApplication {
