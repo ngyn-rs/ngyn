@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 async-std = { version = "1.6.0", features = ["attributes"] }
 nject = "0.3.0"
-ngyn = { version = "0.2.6", features = ["tide"] }
+ngyn = { version = "0.2.7", features = ["tide"] }
