@@ -19,13 +19,13 @@ Ngyn is a great choice for creating robust applications quickly and easily. With
 
 ```rust
 use modules::MyAppModule;
-use ngyn::{NgynFactory, Result};
+use ngyn::{NgynFactory, NgynRequest, NgynResponse, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = NgynFactory::create::<MyAppModule>();
 
-    app.get("/", |req, res| {
+    app.get("/", |req: &NgynRequest, res: &mut NgynResponse| {
         res.send("Hello World!");
     });
 
