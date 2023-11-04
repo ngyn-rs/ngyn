@@ -8,7 +8,7 @@ async fn main() -> Result<()> {
     let mut app = NgynFactory::<NgynApplication>::create::<SampleModule>();
 
     app.get("/author", |_req: &NgynRequest, res: &mut NgynResponse| {
-        res.body("Ngyn is created by @elcharitas.");
+        res.send("Ngyn is created by @elcharitas.");
     });
 
     println!("Starting server at http://127.0.0.1:8080");
