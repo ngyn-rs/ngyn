@@ -9,7 +9,8 @@ Ngyn is a lightweight and powerful framework for creating robust applications in
 - **Powerful Macros**: Ngyn provides a set of powerful macros that simplify common tasks.
 - **Lightweight**: Ngyn is lightweight and has a minimal footprint, making it a great choice for projects of all sizes.
 - **High Performance**: Ngyn is built with performance in mind. It leverages the power of Rust to deliver fast, efficient web apps.
-- **Route Gates** (WIP): A simplified way to restrict access to a route based on a set condition
+- **Route Gates**: A simplified way to restrict access to a route based on a set condition
+- **Fully Extensible**: Ngyn allows you to build your own platform engines or make use of any of the built-in `vercel` or `tide` platform engines.
 
 ## Get Started
 
