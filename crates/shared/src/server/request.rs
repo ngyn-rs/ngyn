@@ -3,7 +3,7 @@ use std::{
     future::Future,
     task::{Context, Poll},
 };
-#[cfg(feature = "core")]
+#[cfg(feature = "tide")]
 use tide::Request;
 
 use crate::enums::HttpMethod;
@@ -65,7 +65,7 @@ impl NgynRequest {
     }
 }
 
-#[cfg(feature = "core")]
+#[cfg(feature = "tide")]
 impl From<Request<()>> for NgynRequest {
     fn from(request: Request<()>) -> Self {
         Self {
