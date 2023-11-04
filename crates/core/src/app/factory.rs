@@ -1,4 +1,6 @@
-use crate::server::{NgynApplication, NgynEngine};
+#[cfg(feature = "core")]
+use crate::server::NgynApplication;
+use crate::server::NgynEngine;
 
 use ngyn_shared::{enums::HttpMethod, NgynModule, NgynRequest, NgynResponse};
 
@@ -8,6 +10,7 @@ pub struct NgynFactory<Application: NgynEngine> {
     _app: Application,
 }
 
+#[cfg(feature = "core")]
 impl NgynFactory<NgynApplication> {
     pub fn create<AppModule: NgynModule>() -> NgynApplication {
         Self::build::<AppModule>()

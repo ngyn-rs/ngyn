@@ -330,9 +330,9 @@ checksum = "ecc7ab41815b3c653ccd2978ec3255c81349336702dfdf62ee6f7069b12a3aae"
 
 [[package]]
 name = "async-trait"
-version = "0.1.73"
+version = "0.1.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc00ceb34980c03614e35a3a4e218276a0a824e911d07651cd0d858a51e8c0f0"
+checksum = "a66537f1bb974b254c98ed142ff995236e81b9d0fe4db0575f46612cb15eb0f9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -422,7 +422,7 @@ name = "basic_app"
 version = "0.1.0"
 dependencies = [
  "async-std",
- "ngyn 0.1.0",
+ "ngyn 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "nject",
 ]
 
@@ -1389,18 +1389,6 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b15f4684f3d98daa55aaf6c828297889aa90f792df5c2340aa09fd53622a0c54"
-dependencies = [
- "ngyn_macros 0.1.0",
- "ngyn_shared 0.1.0",
- "nject",
- "tide",
-]
-
-[[package]]
-name = "ngyn"
 version = "0.2.4"
 dependencies = [
  "async-std",
@@ -1444,18 +1432,6 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c239bdb5b793f9710faa289e85b4269710ba5566aa71e973fd496131a72bf76"
-dependencies = [
- "ngyn_shared 0.1.0",
- "nject",
- "quote",
- "syn 2.0.32",
-]
-
-[[package]]
-name = "ngyn_macros"
 version = "0.2.4"
 dependencies = [
  "ngyn_shared 0.2.4",
@@ -1478,18 +1454,9 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea76137367c1392ec0bc5b5a2a2e4acc7dea77e85b80d47541c407aba0eaf068"
-dependencies = [
- "nject",
- "tide",
-]
-
-[[package]]
-name = "ngyn_shared"
 version = "0.2.4"
 dependencies = [
+ "async-trait",
  "nject",
  "tide",
 ]
