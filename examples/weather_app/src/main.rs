@@ -3,7 +3,7 @@ mod modules;
 
 use dotenv::dotenv;
 use modules::AppModule;
-use ngyn::{server::NgynApplication, NgynFactory, Result};
+use ngyn::{platforms::NgynApplication, NgynFactory, Result};
 
 #[ngyn::main]
 async fn main() -> Result<()> {

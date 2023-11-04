@@ -1,3 +1,5 @@
+use ngyn::{platforms::VercelApplication, NgynFactory};
+use vercel_app::modules::sample::sample_module::SampleModule;
 use vercel_runtime::{run, Body, Error, Request, Response};
 
 #[tokio::main]
@@ -6,8 +8,6 @@ async fn main() -> Result<(), Error> {
 }
 
 pub async fn handler(req: Request) -> Result<Response<Body>, Error> {
-    let app = ngyn::NgynFactory::<ngyn::server::VercelApplication>::create::<
-        vercel_app::modules::sample::sample_module::SampleModule,
-    >();
+    let app = NgynFactory::<VercelApplication>::create::<SampleModule>();
     app.handle(req).await
 }

@@ -3,6 +3,7 @@ use std::{
     future::Future,
     task::{Context, Poll},
 };
+#[cfg(feature = "tide")]
 use tide::Request;
 
 use crate::enums::HttpMethod;
@@ -43,24 +44,6 @@ pub struct NgynRequest {
 }
 
 impl NgynRequest {
-    /// Constructs a new `NgynRequest`.
-    pub fn new(request: Request<()>) -> Self {
-        Self {
-            method: HttpMethod::from(request.method().to_string()),
-            url: request.url().to_string(),
-            headers: {
-                let mut headers_map = HashMap::new();
-                for name in request.header_names() {
-                    if let Some(value) = request.header(name.as_str()) {
-                        headers_map.insert(name.to_string(), value.last().to_string());
-                    }
-                }
-                headers_map
-            },
-            body: Body::Raw(Vec::new()),
-        }
-    }
-
     /// Gets the body of the `NgynRequest`.
     pub async fn body_string(&mut self) -> Result<String, std::io::Error> {
         self.body.clone().await
@@ -82,9 +65,23 @@ impl NgynRequest {
     }
 }
 
+#[cfg(feature = "tide")]
 impl From<Request<()>> for NgynRequest {
     fn from(request: Request<()>) -> Self {
-        Self::new(request)
+        Self {
+            method: HttpMethod::from(request.method().to_string()),
+            url: request.url().to_string(),
+            headers: {
+                let mut headers_map = HashMap::new();
+                for name in request.header_names() {
+                    if let Some(value) = request.header(name.as_str()) {
+                        headers_map.insert(name.to_string(), value.last().to_string());
+                    }
+                }
+                headers_map
+            },
+            body: Body::Raw(Vec::new()),
+        }
     }
 }
 

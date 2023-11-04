@@ -1,6 +1,7 @@
-use crate::server::{NgynApplication, NgynEngine};
+#[cfg(feature = "tide")]
+use crate::platforms::NgynApplication;
 
-use ngyn_shared::{enums::HttpMethod, NgynModule, NgynRequest, NgynResponse};
+use ngyn_shared::{enums::HttpMethod, NgynEngine, NgynModule, NgynRequest, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {
@@ -8,6 +9,7 @@ pub struct NgynFactory<Application: NgynEngine> {
     _app: Application,
 }
 
+#[cfg(feature = "tide")]
 impl NgynFactory<NgynApplication> {
     pub fn create<AppModule: NgynModule>() -> NgynApplication {
         Self::build::<AppModule>()
@@ -15,8 +17,8 @@ impl NgynFactory<NgynApplication> {
 }
 
 #[cfg(feature = "vercel")]
-impl NgynFactory<crate::server::VercelApplication> {
-    pub fn create<AppModule: NgynModule>() -> crate::server::VercelApplication {
+impl NgynFactory<crate::platforms::VercelApplication> {
+    pub fn create<AppModule: NgynModule>() -> crate::platforms::VercelApplication {
         Self::build::<AppModule>()
     }
 }
@@ -28,7 +30,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::{module, NgynFactory, server::NgynApplication};
+    /// use ngyn::{module, NgynFactory, platforms::NgynApplication};
     ///
     /// #[module]
     /// pub struct YourAppModule;

@@ -1,8 +1,8 @@
-pub mod controller_trait;
-pub mod gate_trait;
-pub mod injectable_trait;
-pub mod middleware_trait;
-pub mod module_trait;
+mod controller_trait;
+mod gate_trait;
+mod injectable_trait;
+mod middleware_trait;
+mod module_trait;
 
 pub use controller_trait::*;
 pub use gate_trait::*;
