@@ -24,6 +24,7 @@ impl NgynFactory<crate::platforms::VercelApplication> {
 }
 
 impl<Application: NgynEngine> NgynFactory<Application> {
+    #[allow(dead_code)]
     /// The `create` method takes a generic parameter `AppModule` that implements the `NgynModule` trait.
     /// It returns an instance of `NgynEngine`.
     ///
