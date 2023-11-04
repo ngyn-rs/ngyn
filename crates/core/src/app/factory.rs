@@ -1,4 +1,4 @@
-#[cfg(feature = "core")]
+#[cfg(feature = "tide")]
 use crate::server::NgynApplication;
 use crate::server::NgynEngine;
 
@@ -10,7 +10,7 @@ pub struct NgynFactory<Application: NgynEngine> {
     _app: Application,
 }
 
-#[cfg(feature = "core")]
+#[cfg(feature = "tide")]
 impl NgynFactory<NgynApplication> {
     pub fn create<AppModule: NgynModule>() -> NgynApplication {
         Self::build::<AppModule>()

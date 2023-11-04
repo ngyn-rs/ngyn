@@ -5,7 +5,7 @@ use std::{
     task::{Context, Poll},
 };
 
-#[cfg(feature = "core")]
+#[cfg(feature = "tide")]
 use tide::{Response, Result};
 
 use crate::{NgynController, NgynRequest};
@@ -82,7 +82,7 @@ impl NgynResponse {
         self.raw_body.clone()
     }
 
-    #[cfg(feature = "core")]
+    #[cfg(feature = "tide")]
     /// Builds the `NgynResponse`.
     pub fn build(self) -> Result {
         let response = Response::builder(self.status_code).body(self.raw_body);
