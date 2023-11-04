@@ -55,6 +55,8 @@ impl VercelApplication {
                     headers,
                     body.to_vec(),
                 ));
+                // change the status code to 200 to prevent vercel from returning a 404
+                res.set_status(200).body("");
                 handler.handle(&req, &mut res);
                 break; // Exit the loop once a route is found
             }
