@@ -1,5 +1,5 @@
 #[cfg(feature = "tide")]
-use crate::server::NgynApplication;
+use crate::platforms::NgynApplication;
 
 use ngyn_shared::{enums::HttpMethod, NgynEngine, NgynModule, NgynRequest, NgynResponse};
 
@@ -17,8 +17,8 @@ impl NgynFactory<NgynApplication> {
 }
 
 #[cfg(feature = "vercel")]
-impl NgynFactory<crate::server::VercelApplication> {
-    pub fn create<AppModule: NgynModule>() -> crate::server::VercelApplication {
+impl NgynFactory<crate::platforms::VercelApplication> {
+    pub fn create<AppModule: NgynModule>() -> crate::platforms::VercelApplication {
         Self::build::<AppModule>()
     }
 }
@@ -30,7 +30,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::{module, NgynFactory, server::NgynApplication};
+    /// use ngyn::{module, NgynFactory, platforms::NgynApplication};
     ///
     /// #[module]
     /// pub struct YourAppModule;

@@ -17,7 +17,7 @@ pub trait NgynEngine {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::{server::{NgynApplication, NgynEngine}, HttpMethod, NgynRequest, NgynResponse};
+    /// use ngyn::{platforms::{NgynApplication, NgynEngine}, HttpMethod, NgynRequest, NgynResponse};
     ///
     /// let mut server = NgynApplication::new();
     /// server.route("/", HttpMethod::Get, Box::new(|req: &NgynRequest, res: &mut NgynResponse| {
