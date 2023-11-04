@@ -22,8 +22,7 @@ impl NgynEngine for NgynApplication {
                 let handler = Arc::clone(&handler);
                 async move {
                     let request = NgynRequest::from(req);
-                    let mut response = NgynResponse::from_status(404);
-                    response.body("Route not found");
+                    let mut response = NgynResponse::new();
                     handler.handle(&request, &mut response);
                     response.await.build()
                 }
