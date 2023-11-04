@@ -56,10 +56,10 @@ impl syn::parse::Parse for ModuleArgs {
 }
 
 pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let DeriveInput {
+        ident, attrs, vis, ..
+    } = parse_macro_input!(input as DeriveInput);
     let args = parse_macro_input!(args as ModuleArgs);
-
-    let ident = input.ident;
 
     let add_middlewares: Vec<_> = args
         .middlewares
@@ -97,8 +97,9 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .collect();
 
     let expanded = quote! {
+        #(#attrs)*
         #[ngyn::dependency]
-        pub struct #ident {
+        #vis struct #ident {
             middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
         }
 

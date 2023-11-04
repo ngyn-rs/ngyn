@@ -5,19 +5,14 @@ mod core;
 mod utils;
 
 use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
-use crate::core::{interceptor_macro::*, module_macro::*};
+use crate::core::module_macro::*;
+use common::check_macro::check_macro;
 use proc_macro::TokenStream;
 
 #[proc_macro_attribute]
 /// `module` is a procedural macro that generates a struct and its implementation.
 pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
     module_macro(args, input)
-}
-
-#[proc_macro_attribute]
-/// The `interceptor` attribute is used to implement an `intercept` function for a given type.
-pub fn interceptor(args: TokenStream, input: TokenStream) -> TokenStream {
-    interceptor_macro(args, input)
 }
 
 #[proc_macro_attribute]
@@ -36,7 +31,7 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 /// The `route` attribute is used to mark a function as a route.
 ///
-/// ### Arguments
+/// ##### Arguments
 /// * `method` - The HTTP method that the route will handle. (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
 /// * `path` - The path that the route will handle.
 pub fn route(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -89,4 +84,10 @@ pub fn head(args: TokenStream, input: TokenStream) -> TokenStream {
     let args = syn::parse_str::<syn::Expr>(args.to_string().as_str()).unwrap();
     let args_with_method = quote::quote! { "HEAD", #args };
     route_macro(args_with_method.into(), input)
+}
+
+#[proc_macro_attribute]
+/// `check` macro is used to determine if a route should be executed.
+pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
+    check_macro(args, input)
 }

@@ -5,7 +5,8 @@ pub struct HomeController {}
 
 impl HomeController {
     #[get("/")]
-    fn get_home(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
-        res.body("Welcome to the weather app! Try /weather?location=London")
+    fn get_home(self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
+        res.body("Welcome to the weather app! Try /weather?location=London");
+        res.clone()
     }
 }

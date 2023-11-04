@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::{handle_macro, str_to_ident};
+use crate::utils::{parse_macro_data, str_to_ident};
 
 struct ControllerArgs {
     routes: Vec<String>,
@@ -9,8 +9,8 @@ struct ControllerArgs {
 }
 
 impl syn::parse::Parse for ControllerArgs {
-    /// Parses the attribute arguments of a `#[module]` macro.
-    /// We make sure that the arguments are in the format `controllers = [], imports = []`.
+    /// Parses a string like `routes = "get_location, get_location_weather", middlewares = [WeatherGate]`
+    /// into a `ControllerArgs` struct.
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut routes = vec![];
         let mut middlewares = vec![];
@@ -73,9 +73,15 @@ impl syn::parse::Parse for ControllerArgs {
 }
 
 pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+    let syn::DeriveInput {
+        attrs,
+        ident,
+        data,
+        vis,
+        ..
+    } = syn::parse_macro_input!(input as syn::DeriveInput);
     let args = syn::parse_macro_input!(args as ControllerArgs);
-    let (ident, types, keys) = handle_macro(input);
+    let (types, keys) = parse_macro_data(data);
 
     let fields: Vec<_> = types
         .iter()
@@ -95,7 +101,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         let path = str_to_ident(format!("register_{}", route));
         handle_routes.push(quote! {
             #route => {
-                Self::#route_ident(Self::new(self.middlewares.clone()), req, res).await
+                Self::#route_ident(Self::new(self.middlewares.clone()), &req, &mut res).await
             }
         });
         route_registry.push(quote! { controller.#path(); })
@@ -112,13 +118,10 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let ngyn_controller_alias = str_to_ident(format!("{}ControllerBase", ident));
-
     let expanded = quote! {
-        use ngyn::NgynController as #ngyn_controller_alias;
-
+        #(#attrs)*
         #[ngyn::dependency]
-        pub struct #ident {
+        #vis struct #ident {
             routes: Vec<(String, String, String)>,
             middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
             #(#fields),*
@@ -153,14 +156,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: ngyn::NgynResponse) -> ngyn::NgynResponse {
+            async fn handle(&self, handler: String, req: ngyn::NgynRequest, mut res: ngyn::NgynResponse) -> ngyn::NgynResponse {
                 for middleware in self.middlewares.clone() {
                     middleware.handle(&req, &res);
                 }
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
-                        res.status(404)
+                        res.set_status(404).clone()
                     }
                 }
             }

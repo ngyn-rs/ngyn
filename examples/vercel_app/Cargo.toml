@@ -1,6 +1,6 @@
 [package]
 name = "vercel_app"
-version = "0.2.0"
+version = "0.2.4"
 edition = "2021"
 
 [[bin]]
@@ -14,6 +14,6 @@ path = "src/lib.rs"
 
 [dependencies]
 nject = "0.3.0"
-ngyn = { version = "0.2.0", features = ["vercel"] }
+ngyn = { version = "0.2.4", features = ["vercel"] }
 tokio = { version = "1.32.0", features = ["full"] }
 vercel_runtime = { version = "1.1.0" }

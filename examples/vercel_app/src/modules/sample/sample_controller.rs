@@ -8,15 +8,15 @@ pub struct SampleController {
 }
 
 impl SampleController {
-    #[get("/api/hello")]
-    fn say_hello(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
+    #[get("/hello")]
+    fn say_hello(self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
         self.sample_service.say_hello();
-        res.body("Hello, Ngyn!")
+        res.body("Hello, Ngyn!").clone()
     }
 
-    #[get(["/api/bye", "/api/goodbye"])]
-    fn say_goodbye(self, _req: NgynRequest, res: NgynResponse) -> NgynResponse {
+    #[get(["/bye", "/goodbye"])]
+    fn say_goodbye(self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
         println!("Goodbye!");
-        res
+        res.clone()
     }
 }

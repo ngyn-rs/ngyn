@@ -8,6 +8,7 @@ use tide::{Response, Result};
 
 use crate::{NgynController, NgynRequest};
 
+#[derive(Clone)]
 struct NgynResponseRoute {
     controller: Arc<dyn NgynController>,
     handler: String,
@@ -17,10 +18,10 @@ struct NgynResponseRoute {
 /// NgynResponse is a struct that represents a server response.
 pub struct NgynResponse {
     route: Option<NgynResponseRoute>,
-    pub status_code: u16,
-    pub raw_body: String,
-    pub headers: Vec<(String, String)>,
-    pub cookies: Vec<(String, String)>,
+    status_code: u16,
+    raw_body: String,
+    headers: Vec<(String, String)>,
+    cookies: Vec<(String, String)>,
 }
 
 impl NgynResponse {
@@ -35,43 +36,48 @@ impl NgynResponse {
         }
     }
 
+    pub fn from_status(code: u16) -> Self {
+        let mut response = Self::new();
+        response.status_code = code;
+        response
+    }
+
     /// Sets the status code of the `NgynResponse`.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `status` - A u16 that represents the status code to be set.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
-    pub fn status(mut self, status: u16) -> Self {
+    pub fn set_status(&mut self, status: u16) -> &mut Self {
         self.status_code = status;
         self
     }
 
+    /// Gets the status code of the response
+    pub fn status(&self) -> u16 {
+        self.status_code
+    }
+
     /// Sets the body of the response
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `data` - A string that represents the body
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
-    pub fn body(mut self, data: &str) -> Self {
+    pub fn body(&mut self, data: &str) -> &mut Self {
         self.raw_body = data.to_string();
         self
     }
 
-    // makes a clone of the response
-    pub fn clone(&mut self) -> Self {
-        Self {
-            route: None,
-            status_code: self.status_code,
-            raw_body: self.raw_body.clone(),
-            headers: self.headers.clone(),
-            cookies: self.cookies.clone(),
-        }
+    /// Gets the raw value for response body
+    pub fn raw(&self) -> String {
+        self.raw_body.clone()
     }
 
     /// Builds the `NgynResponse`.
@@ -81,18 +87,30 @@ impl NgynResponse {
     }
 
     /// Handles the `NgynResponse` from a route.
-    pub fn from_route(
-        mut self,
+    pub fn with_controller(
+        &mut self,
         controller: Arc<dyn NgynController>,
         handler: String,
-        request: NgynRequest,
+        request: &NgynRequest,
     ) -> Self {
         self.route = Some(NgynResponseRoute {
             controller,
             handler,
-            request,
+            request: request.clone(),
         });
-        self
+        self.clone()
+    }
+}
+
+impl Clone for NgynResponse {
+    fn clone(&self) -> Self {
+        Self {
+            route: self.route.clone(),
+            status_code: self.status_code,
+            raw_body: self.raw_body.clone(),
+            headers: self.headers.clone(),
+            cookies: self.cookies.clone(),
+        }
     }
 }
 
@@ -101,11 +119,12 @@ impl Future for NgynResponse {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.route.take() {
-            Some(route) => {
-                let handler = route.handler;
-                let controller = route.controller;
-                let request = route.request;
-                let response = Self::default(); // TODO: add response fields to this
+            Some(NgynResponseRoute {
+                handler,
+                controller,
+                request,
+            }) => {
+                let response = self.clone();
 
                 let result = controller
                     .handle(handler, request, response)
