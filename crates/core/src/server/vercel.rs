@@ -1,6 +1,4 @@
 use ngyn_shared::HttpMethod;
-
-#[cfg(feature = "vercel")]
 use vercel_runtime::{Body, Error, Request, Response};
 
 use super::{Handler, NgynEngine};
@@ -20,7 +18,6 @@ impl NgynEngine for VercelApplication {
     }
 }
 
-#[cfg(feature = "vercel")]
 impl VercelApplication {
     pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
         self.route(path, HttpMethod::Get, Box::new(handler))

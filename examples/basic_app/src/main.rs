@@ -1,14 +1,14 @@
 mod modules;
 
 use modules::sample::sample_module::SampleModule;
-use ngyn::{NgynFactory, Result};
+use ngyn::{server::NgynApplication, NgynFactory, NgynRequest, NgynResponse, Result};
 
-#[async_std::main]
+#[ngyn::main]
 async fn main() -> Result<()> {
-    let mut app = NgynFactory::create::<SampleModule>();
+    let mut app = NgynFactory::<NgynApplication>::create::<SampleModule>();
 
-    app.get("/author", |_req, res| {
-        res.body("Ngyn is created by @elcharitas.")
+    app.get("/author", |_req: &NgynRequest, res: &mut NgynResponse| {
+        res.body("Ngyn is created by @elcharitas.");
     });
 
     println!("Starting server at http://127.0.0.1:8080");

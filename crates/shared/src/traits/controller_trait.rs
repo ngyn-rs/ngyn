@@ -5,7 +5,7 @@ pub trait NgynControllerInit: Send + Sync {
     fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self;
 }
 
-#[tide::utils::async_trait]
+#[async_trait::async_trait]
 /// `NgynController` is a trait that defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
 pub trait NgynController: Send + Sync {

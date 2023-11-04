@@ -13,8 +13,9 @@ async-std = { version = "1.6.0", features = ["attributes"] }
 nject = "0.3.0"
 ngyn_macros = { path = "../macros", version = "0.2.4" }
 ngyn_shared = { path = "../shared", version = "0.2.4" }
-tide = "0.16.0"
+tide = { version = "0.16.0", optional = true }
 vercel_runtime = { version = "1.1.0", optional = true }
 
 [features]
+core = ["dep:tide", "ngyn_shared/core"]
 vercel = ["dep:vercel_runtime"]

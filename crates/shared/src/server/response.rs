@@ -4,6 +4,8 @@ use std::{
     sync::Arc,
     task::{Context, Poll},
 };
+
+#[cfg(feature = "core")]
 use tide::{Response, Result};
 
 use crate::{NgynController, NgynRequest};
@@ -80,6 +82,7 @@ impl NgynResponse {
         self.raw_body.clone()
     }
 
+    #[cfg(feature = "core")]
     /// Builds the `NgynResponse`.
     pub fn build(self) -> Result {
         let response = Response::builder(self.status_code).body(self.raw_body);
