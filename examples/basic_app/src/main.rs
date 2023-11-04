@@ -1,7 +1,7 @@
 mod modules;
 
 use modules::sample::sample_module::SampleModule;
-use ngyn::{server::NgynApplication, NgynFactory, NgynRequest, NgynResponse, Result};
+use ngyn::{platforms::NgynApplication, NgynFactory, NgynRequest, NgynResponse, Result};
 
 #[ngyn::main]
 async fn main() -> Result<()> {
