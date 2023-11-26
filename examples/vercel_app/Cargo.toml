@@ -5,7 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "all"
-path = "api/[...all].rs"
+path = "api/[[...all]].rs"
 
 [lib]
 path = "src/lib.rs"
