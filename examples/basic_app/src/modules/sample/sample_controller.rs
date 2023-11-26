@@ -9,13 +9,13 @@ pub struct SampleController {
 
 impl SampleController {
     #[get("/")]
-    fn say_hello(self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
+    fn say_hello(&self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
         self.sample_service.say_hello();
         res.send("Hello, Ngyn!").clone()
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
+    fn say_goodbye(&self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
         println!("Goodbye!");
         res.clone()
     }
