@@ -7,6 +7,11 @@ if ! command -v cargo-bump &> /dev/null; then
   cargo install cargo-bump
 fi
 
+# Install cocogitto if it's not already installed
+if ! command -v cog &> /dev/null; then
+  cargo install cocogitto
+fi
+
 # Find all subfolders in the crates directory
 crate_names=()
 crate_dirs=()
@@ -46,4 +51,8 @@ for ((i=0; i<${#crate_names[@]}; ++i)); do
     fi
   done
   echo ""
+
+  # bump, tag, create changelog, and push to github
+  echo "Bumping tag of $crate_name"
+  cog bump --version $new_version --package $crate_name --skip-untracked
 done
