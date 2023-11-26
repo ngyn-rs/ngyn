@@ -11,7 +11,7 @@ impl SampleController {
     #[get("/")]
     fn say_hello(self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
         self.sample_service.say_hello();
-        res.body("Hello, Ngyn!").clone()
+        res.send("Hello, Ngyn!").clone()
     }
 
     #[get(["/bye", "/goodbye"])]

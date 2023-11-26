@@ -72,13 +72,13 @@ impl NgynResponse {
     /// ### Returns
     ///
     /// * A mutable reference to the `NgynResponse`.
-    pub fn body(&mut self, data: &str) -> &mut Self {
+    pub fn send(&mut self, data: &str) -> &mut Self {
         self.raw_body = data.to_string();
         self
     }
 
     /// Gets the raw value for response body
-    pub fn raw(&self) -> String {
+    pub fn body_raw(&self) -> String {
         self.raw_body.clone()
     }
 
@@ -95,13 +95,12 @@ impl NgynResponse {
         controller: Arc<dyn NgynController>,
         handler: String,
         request: &NgynRequest,
-    ) -> Self {
+    ) {
         self.route = Some(NgynResponseRoute {
             controller,
             handler,
             request: request.clone(),
         });
-        self.clone()
     }
 }
 

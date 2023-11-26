@@ -27,23 +27,15 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
-        impl #ident {
-            pub fn new() -> Self {
+        impl ngyn::NgynInjectable for #ident {
+            fn new() -> Self {
                 #ident {
                     #(#keys: ngyn::NgynProvider.provide()),*
                 }
             }
-        }
 
-        impl ngyn::NgynInjectable for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
-            }
-        }
-
-        impl ngyn::NgynInjectableInit for #ident {
-            fn new() -> Self {
-                Self::new()
             }
         }
     };

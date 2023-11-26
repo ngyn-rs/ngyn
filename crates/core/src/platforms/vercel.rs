@@ -27,7 +27,7 @@ impl VercelApplication {
 
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
         let mut res = ngyn_shared::NgynResponse::from_status(404);
-        res.body("Route not found");
+        res.send("Route not found");
 
         let (parts, body) = request.into_parts();
 
@@ -54,15 +54,17 @@ impl VercelApplication {
                     body.to_vec(),
                 ));
                 // change the status code to 200 to prevent vercel from returning a 404
-                res.set_status(200).body("");
+                res.set_status(200).send("");
                 handler.handle(&req, &mut res);
+                // await the response and reassign
+                res = res.await;
                 break; // Exit the loop once a route is found
             }
         }
 
         Ok(Response::builder()
             .status(res.status())
-            .body(res.raw().into())
+            .body(res.body_raw().into())
             .unwrap())
     }
 }
