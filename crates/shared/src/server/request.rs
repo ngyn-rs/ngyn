@@ -50,18 +50,18 @@ impl NgynRequest {
     }
 
     /// Gets the HTTP method of the `NgynRequest`.
-    pub fn method(&self) -> HttpMethod {
-        self.method.clone()
+    pub fn method(&self) -> &HttpMethod {
+        &self.method
     }
 
     /// Gets the URL of the `NgynRequest`.
-    pub fn url(&self) -> String {
-        self.url.clone()
+    pub fn url(&self) -> &str {
+        self.url.as_str()
     }
 
     /// Gets the headers of the `NgynRequest`.
-    pub fn headers(&self) -> HashMap<String, String> {
-        self.headers.clone()
+    pub fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
     }
 }
 

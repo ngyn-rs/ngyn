@@ -95,13 +95,12 @@ impl NgynResponse {
         controller: Arc<dyn NgynController>,
         handler: String,
         request: &NgynRequest,
-    ) -> Self {
+    ) {
         self.route = Some(NgynResponseRoute {
             controller,
             handler,
             request: request.clone(),
         });
-        self.clone()
     }
 }
 
