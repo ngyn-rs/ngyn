@@ -101,7 +101,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         let path = str_to_ident(format!("register_{}", route));
         handle_routes.push(quote! {
             #route => {
-                Self::#route_ident(Self::new(self.middlewares.clone()), &req, &mut res).await
+                Self::#route_ident(self, &req, &mut res).await
             }
         });
         route_registry.push(quote! { controller.#path(); })
@@ -127,8 +127,9 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
-        impl #ident {
-            pub fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
+        #[ngyn::async_trait]
+        impl ngyn::NgynController for #ident {
+            fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
                 let mut controller = #ident {
                     routes: vec![],
@@ -138,40 +139,25 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 #(#route_registry)*
                 controller
             }
-        }
 
-        #[ngyn::async_trait]
-        impl ngyn::NgynController for #ident {
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
 
-            fn get_routes(&self) -> Vec<(
-                String,
-                String,
-                String,
-            )> {
-                self.routes.iter().map(|(path, http_method, handler)| {
-                    (path.clone(), http_method.clone(), handler.clone())
-                }).collect()
+            fn get_routes(&self) -> Vec<(String, String, String)> {
+                self.routes.clone()
             }
 
             async fn handle(&self, handler: String, req: ngyn::NgynRequest, mut res: ngyn::NgynResponse) -> ngyn::NgynResponse {
-                for middleware in self.middlewares.clone() {
-                    middleware.handle(&req, &res);
-                }
+                self.middlewares.iter().for_each(|middleware| {
+                    middleware.handle(&req, &mut res);
+                });
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
                         res.set_status(404).clone()
                     }
                 }
-            }
-        }
-
-        impl ngyn::NgynControllerInit for #ident {
-            fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
-                Self::new(middlewares)
             }
         }
     };
