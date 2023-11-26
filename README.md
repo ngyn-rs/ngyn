@@ -1,26 +1,45 @@
 # Ngyn
 
-Ngyn is a lightweight and powerful framework for creating robust applications in Rust. It provides a modern set of macros, and utilities that makes it easy to build performant and secure applications.
+> A progressive Rust Framework for building efficient and modularized backend applications
 
+Ngyn is a powerful and progressive Rust framework crafted for the development of efficient and modularized backend applications. With a focus on performance, reliability, and flexibility, Ngyn empowers developers to build robust server-side solutions with ease. Ngyn comes packed with powerful macros, utilities, and features that make it easy to build performant and secure applications.
 
 ## Features
 
-- **Modular Structure**: Ngyn uses a modular structure that makes it easy to organize your code and keep it maintainable.
-- **Powerful Macros**: Ngyn provides a set of powerful macros that simplify common tasks.
-- **Lightweight**: Ngyn is lightweight and has a minimal footprint, making it a great choice for projects of all sizes.
-- **High Performance**: Ngyn is built with performance in mind. It leverages the power of Rust to deliver fast, efficient web apps.
-- **Route Gates**: A simplified way to restrict access to a route based on a set condition
-- **Fully Extensible**: Ngyn allows you to build your own platform engines or make use of any of the built-in `vercel` or `tide` platform engines.
+- **Progressive Enhancement:** Ngyn embraces the philosophy of progressive enhancement, allowing developers to start with a foundational set of features and progressively enhance the application as needed. This ensures a smooth and adaptable development process.
 
-## Get Started
+- **Efficiency at Core:** Ngyn is designed to prioritize efficiency in resource utilization, providing a performant environment for backend applications. Whether handling data processing, managing business logic, or interfacing with databases, Ngyn ensures optimal performance.
 
-Ngyn is easy to get started with. All you need is a basic understanding of Rust and the basics of the Ngyn API. There is a comprehensive documentation available that covers all of the features of Ngyn, as well as sample code to help you get started quickly. 
+- **Modular Architecture:** Ngyn encourages a modularized approach to application development. Break down your backend logic into independent and reusable modules, promoting code organization, maintainability, and scalability. Ngyn's modular architecture facilitates collaboration among developers working on distinct components.
 
-Ngyn is a great choice for creating robust applications quickly and easily. With its flexible and powerful API, powerful macros, and robust security features, you can be sure that your applications are secure and performant. 
+- **Optional Async:** Ngyn provides support for async operations out of the box through controllers. However, it's 100% optional.
+
+- **Powerful Macros:** Ngyn provides a set of powerful macros that simplify common tasks. From defining routes to creating middleware, Ngyn's macros make it easy to build robust applications.
+
+- **Lightweight:** Ngyn is lightweight and leaves a minimal footprint, making it a great choice for projects of all sizes. Ngyn's lightweight nature ensures that your application is not bogged down by unnecessary bloat, yet still provides the features you need to build a robust backend.
+
+- **Fully Extensible:** Ngyn allows you to build your own platform engines or make use of any of the built-in `vercel` or `tide` platform engines.
+
+## Getting Started
+
+### Installation
+
+To get started with Ngyn, simply include the framework in your Rust project by adding the following to your `Cargo.toml`:
+
+```toml
+[dependencies]
+ngyn = "0.2.8"
+```
+
+### Example Usage
+
+Here is a simple example of a Ngyn application without any of the more advanced features.
 
 ```rust
-use modules::MyAppModule;
-use ngyn::{NgynFactory, NgynRequest, NgynResponse, Result};
+use ngyn::{module, NgynFactory, NgynRequest, NgynResponse, Result};
+
+#[module]
+struct MyAppModule;
 
 #[ngyn::main]
 async fn main() -> Result<()> {
@@ -36,20 +55,12 @@ async fn main() -> Result<()> {
 }
 ```
 
-```rust
-// my_gate.rs
-// Define a gate to restrict access to a resource
-use ngyn::NgynGate;
+## Contribution
 
-pub struct MyGate;
+Ngyn is an open-source project, and we welcome contributions from the community. Feel free to report issues, suggest enhancements, or submit pull requests to help us improve Ngyn.
 
-impl NgynGate for MyGate {
-    fn can_activate(&self, req: &NgynRequest) -> bool {
-        // Check if the user is authenticated
-        if req.user.is_authenticated() {
-            return true;
-        }
-        false
-    }
-}
-```
+## License
+
+Ngyn is licensed under the [MIT License](LICENSE), allowing you to use, modify, and distribute the framework freely.
+
+Start building efficient and modularized backend applications with Ngyn today!
