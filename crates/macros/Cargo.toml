@@ -9,7 +9,7 @@ license = "MIT"
 nject = "0.3.0"
 syn = "2.0.29"
 quote = "1.0.33"
-ngyn_shared = { path = "../shared", version = "0.2.8" }
+ngyn_shared = { version = "0.2.8", path = "../shared" }
 
 [lib]
 path = "src/lib.rs"
