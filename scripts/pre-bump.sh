@@ -41,8 +41,8 @@ for ((i=0; i<${#crate_names[@]}; ++i)); do
   for dir in "${crate_dirs[@]}" "${examples_dirs[@]}"; do
     cargo_toml="$dir/Cargo.toml"
     if [[ -f "$cargo_toml" ]]; then
-      # update the version which should be in format $crate_name = { version = "0.1.0", ... }
-      sed "s|\($crate_name = { version = \"\).*\(\",.*\)|\1$new_version\2|" $cargo_toml > $cargo_toml.tmp
+      # using perl, update the version which should be in format $crate_name = { version = "0.1.0", ... }
+      perl -i -pe "s/($crate_name = \{ version = )\".*?(\",.*)/\1\"$new_version\2/" "$cargo_toml"
     fi
   done
   echo ""
