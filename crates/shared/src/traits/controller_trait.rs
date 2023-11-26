@@ -1,14 +1,13 @@
-/// `NgynControllerInit` is a trait that defines the basic structure of a controller initializer in Ngyn.
-pub trait NgynControllerInit: Send + Sync {
-    /// Creates a new instance of the controller.
-    /// This is for internal use only.
-    fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self;
-}
-
 #[async_trait::async_trait]
 /// `NgynController` is a trait that defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
 pub trait NgynController: Send + Sync {
+    /// Creates a new instance of the controller.
+    /// This is for internal use only.
+    fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self
+    where
+        Self: Sized;
+
     /// Returns the name of the controller.
     fn name(&self) -> &str;
 

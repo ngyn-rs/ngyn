@@ -3,6 +3,8 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
+use crate::utils::{random_str_from, str_to_ident};
+
 struct ModuleArgs {
     imports: Vec<syn::Path>,
     controllers: Vec<syn::Path>,
@@ -96,7 +98,12 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
+    let controller_ident = str_to_ident(random_str_from(ident.clone().to_string()));
+
     let expanded = quote! {
+        // This is to make sure that the controller is imported
+        use ngyn::NgynController as #controller_ident;
+
         #(#attrs)*
         #[ngyn::dependency]
         #vis struct #ident {
