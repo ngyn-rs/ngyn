@@ -1,44 +1,37 @@
-name: Release Workflow
+name: Gituhb release
 on:
   push:
-    branches:
-      - main
+    branches: main
 
 jobs:
   release:
-    name: Release
+    name: Perform release
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-
-      - name: Build and Test
-        run: cargo build --release && cargo test
-
-      - name: Bump Version
-        run: cargo bump patch
-
-      - name: Commit and Push Changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -a -m "Bump version"
-          git push
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
         with:
-          tag_name: v${{ env.BUMPED_VERSION }}
-          release_name: Release ${{ env.BUMPED_VERSION }}
-          body: |
-            This is the release of the project.
-            Version: ${{ env.BUMPED_VERSION }}
-          draft: false
-          prerelease: false
+          fetch-depth: 0
+
+      - name: Cocogitto release
+        id: release
+        uses: oknozor/cocogitto-action@v3
+        with:
+          release: true
+          check-latest-tag-only: true
+          git-user: 'elcharitas'
+          git-user-email: 'jona'
+
+      - name: Print version
+        run: "echo '${{ steps.release.outputs.version }}'"
+
+      - name: Generate Changelog
+        run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > GITHUB_CHANGELOG.md
+
+      - name: Upload github release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: GITHUB_CHANGELOG.md
+          tag_name: ${{ steps.release.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
