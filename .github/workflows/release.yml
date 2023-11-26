@@ -20,8 +20,8 @@ jobs:
         with:
           release: true
           check-latest-tag-only: true
-          git-user: 'elcharitas'
-          git-user-email: 'jona'
+          git-user: ${{ github.actor}}
+          git-user-email: ${{ github.actor_id }}+${{ github.actor}}@users.noreply.github.com
 
       - name: Print version
         run: "echo '${{ steps.release.outputs.version }}'"

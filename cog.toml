@@ -8,16 +8,14 @@ post_bump_hooks = []
 pre_package_bump_hooks = []
 post_package_bump_hooks = []
 
-[git_hooks]
-
-[commit_types]
-
 [changelog]
 path = "CHANGELOG.md"
 authors = [
   { signature = "Jonathan Irhodia", username = "elcharitas" }
 ]
 
-[bump_profiles]
-
 [packages]
+ngyn = { path = "crates/core" }
+ngyn_cli = { path = "crates/cli" }
+ngyn_macros = { path = "crates/macros" }
+ngyn_shared = { path = "crates/shared" }
