@@ -4,10 +4,18 @@ mod common;
 mod core;
 mod utils;
 
+use crate::common::check_macro::check_macro;
 use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
 use crate::core::module_macro::*;
-use common::check_macro::check_macro;
+use crate::core::platform_macro::platform_macro;
+
 use proc_macro::TokenStream;
+
+#[proc_macro_attribute]
+/// `platform` is used to mark a struct as a platform engine.
+pub fn platform(args: TokenStream, input: TokenStream) -> TokenStream {
+    platform_macro(args, input)
+}
 
 #[proc_macro_attribute]
 /// `module` is a procedural macro that generates a struct and its implementation.
