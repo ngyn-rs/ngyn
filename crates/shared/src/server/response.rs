@@ -45,8 +45,8 @@ impl From<&str> for NgynBody {
     }
 }
 
-impl Into<NgynBody> for () {
-    fn into(self) -> NgynBody {
+impl From<()> for NgynBody {
+    fn from(_: ()) -> Self {
         NgynBody::None
     }
 }
@@ -137,7 +137,7 @@ impl NgynResponse {
         self.raw_headers
             .iter()
             .find(|header| header.starts_with(key))
-            .map(|header| header.split(":").nth(1).unwrap().trim().to_string())
+            .map(|header| header.split(':').nth(1).unwrap().trim().to_string())
     }
 
     pub fn headers(&self) -> Vec<String> {
@@ -177,24 +177,22 @@ impl Future for NgynResponse {
     type Output = NgynResponse;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        match self.as_mut().get_mut() {
-            NgynResponse { route, .. } => {
-                let NgynResponseRoute {
-                    controller,
-                    handler,
-                    request,
-                } = route.take().unwrap();
+        let NgynResponse { route, .. } = self.as_mut().get_mut();
 
-                let mut response = self.clone();
+        let NgynResponseRoute {
+            controller,
+            handler,
+            request,
+        } = route.take().unwrap();
 
-                let _ = controller
-                    .handle(handler, request, &mut response)
-                    .as_mut()
-                    .poll(cx);
+        let mut response = self.clone();
 
-                Poll::Ready(response)
-            }
-        }
+        let _ = controller
+            .handle(handler, request, &mut response)
+            .as_mut()
+            .poll(cx);
+
+        Poll::Ready(response)
     }
 }
 
