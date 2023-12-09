@@ -4,7 +4,4 @@ pub trait NgynInjectable: Send + Sync {
     /// Creates a new instance of the injectable.
     /// This is for internal use only.
     fn new() -> Self;
-
-    /// Returns the name of the injectable.
-    fn name(&self) -> &str;
 }

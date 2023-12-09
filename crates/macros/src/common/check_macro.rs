@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::ItemFn;
+use syn::{ItemFn, Signature};
 
 struct CheckArgs {
     gates: Vec<syn::Path>,
@@ -32,12 +32,20 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         block,
     } = syn::parse_macro_input!(input as ItemFn);
 
-    let req = match sig.inputs.iter().nth(1) {
+    let Signature {
+        ident,
+        inputs,
+        output,
+        fn_token,
+        ..
+    } = sig;
+
+    let req = match inputs.iter().nth(1) {
         Some(syn::FnArg::Typed(pat_type)) => &pat_type.pat,
         _ => panic!("Expected a valid request parameter"),
     };
 
-    let res = match sig.inputs.iter().nth(2) {
+    let res = match inputs.iter().nth(2) {
         Some(syn::FnArg::Typed(pat_type)) => &pat_type.pat,
         _ => panic!("Expected a valid response parameter"),
     };
@@ -48,7 +56,8 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 use ngyn::NgynGate;
                 let gate: #gate = ngyn::NgynProvider.provide();
                 if !gate.can_activate(&#req) {
-                    return #res.set_status(403).clone();
+                    #res.set_status(403);
+                    return ngyn::NgynBody::String("Forbidden".to_string());
                 }
             }
         }
@@ -56,7 +65,7 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let check_fn = quote! {
         #(#attrs)*
-        #vis #sig {
+        #vis async #fn_token #ident(#inputs) #output {
             #(#gates)*
             #block
         }

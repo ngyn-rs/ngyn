@@ -1,4 +1,4 @@
-use ngyn_shared::{Handler, HttpMethod, NgynEngine};
+use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest};
 use vercel_runtime::{Body, Error, Request, Response};
 
 pub struct VercelApplication {
@@ -27,8 +27,6 @@ impl VercelApplication {
 
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
         let mut res = ngyn_shared::NgynResponse::from_status(404);
-        res.send("Route not found");
-
         let (parts, body) = request.into_parts();
 
         for (path, method, handler) in self.routes {
@@ -47,20 +45,25 @@ impl VercelApplication {
                     }
                     entries
                 };
-                let req = ngyn_shared::NgynRequest::from((
+                let req = NgynRequest::from((
                     parts.method.to_string(),
                     uri.to_string(),
                     headers,
                     body.to_vec(),
                 ));
                 // change the status code to 200 to prevent vercel from returning a 404
-                res.set_status(200).send("");
+                res.set_status(200);
                 handler.handle(&req, &mut res);
-                // await the response and reassign
-                res = res.await;
                 break; // Exit the loop once a route is found
             }
         }
+
+        if res.status() == 404 && res.is_empty() {
+            res.send("Not Found");
+        }
+
+        // await the response and reassign
+        res = res.await;
 
         Ok(Response::builder()
             .status(res.status())

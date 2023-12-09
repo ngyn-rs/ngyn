@@ -62,7 +62,6 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let http_method = args.http_method;
 
     let Signature {
-        asyncness,
         ident,
         inputs,
         output,
@@ -70,11 +69,14 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         ..
     } = sig;
 
+    let return_val = match output {
+        syn::ReturnType::Type(_, _) => quote! {},
+        _ => quote! { return ngyn::NgynBody::None; },
+    };
+
     let output = match output {
-        syn::ReturnType::Default => {
-            panic!("Route handler must have a return type of NgynResponse")
-        }
-        syn::ReturnType::Type(_, ty) => quote! { #ty },
+        syn::ReturnType::Type(_, ty) => quote! { -> #ty }, // TODO: Handle other types aside NgynBody
+        _ => quote! { -> ngyn::NgynBody },
     };
 
     let mut expanded_methods: Vec<_> = Vec::new();
@@ -95,13 +97,16 @@ pub fn route_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         }
     }
 
-    let register_ident = str_to_ident(format!("register_{}", ident));
+    let register_ident = str_to_ident(format!("__{}", ident));
 
     let expanded = quote! {
         #(#attrs)*
-        #vis #asyncness #fn_token #ident(#inputs) -> #output #block
+        #vis async #fn_token #register_ident(#inputs) #output {
+            #block
+            #return_val
+        }
 
-        fn #register_ident(&mut self) {
+        fn #ident(&mut self) {
             #(#expanded_methods)*
         }
     };

@@ -1,10 +1,33 @@
-use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest, NgynResponse};
+use ngyn_shared::{Handler, HttpMethod, NgynBody, NgynEngine, NgynRequest, NgynResponse};
 use std::sync::Arc;
-use tide::{Result, Server};
+use tide::{Response, Result, Server};
 
 /// `NgynApplication` is a struct that represents a server instance in the Ngyn framework.
 pub struct NgynApplication {
     server: Server<()>,
+}
+
+impl NgynApplication {
+    fn build(res: NgynResponse) -> Result {
+        let mut response = Response::new(res.status());
+
+        match res.body_raw() {
+            NgynBody::String(body) => response.set_body(body),
+            NgynBody::Bool(body) => response.set_body(body.to_string()),
+            NgynBody::Number(body) => response.set_body(body.to_string()),
+            NgynBody::None => (),
+        }
+
+        for header in res.headers() {
+            let mut header = header.split(":");
+            let key = header.next().unwrap_or("").trim();
+            let value = header.next().unwrap_or("").trim();
+
+            response.insert_header(key, value);
+        }
+
+        Ok(response)
+    }
 }
 
 impl NgynEngine for NgynApplication {
@@ -24,7 +47,7 @@ impl NgynEngine for NgynApplication {
                     let request = NgynRequest::from(req);
                     let mut response = NgynResponse::new();
                     handler.handle(&request, &mut response);
-                    response.await.build()
+                    Self::build(response.await)
                 }
             }
         };
