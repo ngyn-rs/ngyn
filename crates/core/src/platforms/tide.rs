@@ -55,7 +55,7 @@ impl NgynEngine for NgynApplication {
                 let handler = Arc::clone(&handler);
                 async move {
                     let request = NgynRequest::from(req);
-                    let mut response = NgynResponse::new();
+                    let mut response = NgynResponse::from_status(200);
                     handler.handle(&request, &mut response);
                     Self::build(response.await)
                 }

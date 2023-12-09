@@ -68,11 +68,6 @@ pub struct NgynResponse {
 }
 
 impl NgynResponse {
-    /// Constructs a new `NgynResponse` with a default status code of 200.
-    pub fn new() -> Self {
-        Self::from_status(200)
-    }
-
     pub fn from_status(code: u16) -> Self {
         Self {
             status_code: code,
