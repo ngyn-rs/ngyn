@@ -1,8 +1,12 @@
+use ngyn_macros::platform;
 use ngyn_shared::{Handler, HttpMethod, NgynBody, NgynEngine, NgynRequest, NgynResponse};
 use std::sync::Arc;
-use tide::{Response, Result, Server};
+use tide::{Response, Server};
+
+pub type Result<T = Response> = tide::Result<T>;
 
 /// `NgynApplication` is a struct that represents a server instance in the Ngyn framework.
+#[platform]
 pub struct NgynApplication {
     server: Server<()>,
 }
@@ -19,7 +23,7 @@ impl NgynApplication {
         }
 
         for header in res.headers() {
-            let mut header = header.split(":");
+            let mut header = header.split(':');
             let key = header.next().unwrap_or("").trim();
             let value = header.next().unwrap_or("").trim();
 
@@ -27,6 +31,12 @@ impl NgynApplication {
         }
 
         Ok(response)
+    }
+
+    /// Starts listening for incoming connections on the specified address.
+    /// This function is asynchronous and returns a `tide::Result`.
+    pub async fn listen(self, address: &str) -> Result<()> {
+        self.server.listen(address).await.map_err(tide::Error::from)
     }
 }
 
@@ -61,49 +71,5 @@ impl NgynEngine for NgynApplication {
             _ => panic!("Unsupported HTTP method"),
         };
         self
-    }
-}
-
-impl NgynApplication {
-    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Get`.
-    pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Post`.
-    pub fn post(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Put`.
-    pub fn put(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Delete`.
-    pub fn delete(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Patch`.
-    pub fn patch(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    /// Adds a new route to the `NgynApplication` with the `HttpMethod::Head`.
-    pub fn head(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    /// Starts listening for incoming connections on the specified address.
-    /// This function is asynchronous and returns a `tide::Result`.
-    pub async fn listen(self, address: &str) -> Result<()> {
-        self.server.listen(address).await.map_err(tide::Error::from)
-    }
-}
-
-impl Default for NgynApplication {
-    fn default() -> Self {
-        Self::new()
     }
 }

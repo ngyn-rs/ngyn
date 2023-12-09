@@ -1,6 +1,8 @@
+use ngyn_macros::platform;
 use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest};
 use vercel_runtime::{Body, Error, Request, Response};
 
+#[platform]
 pub struct VercelApplication {
     routes: Vec<(String, HttpMethod, Box<dyn Handler>)>,
 }
@@ -17,14 +19,6 @@ impl NgynEngine for VercelApplication {
 }
 
 impl VercelApplication {
-    pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    pub fn post(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Post, Box::new(handler))
-    }
-
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
         let mut res = ngyn_shared::NgynResponse::from_status(404);
         let (parts, body) = request.into_parts();
@@ -35,12 +29,9 @@ impl VercelApplication {
                 let headers = {
                     let mut entries = std::collections::HashMap::new();
                     for (name, value) in parts.headers.clone().into_iter() {
-                        match name {
-                            Some(name) => {
-                                let value = value.to_str().unwrap();
-                                entries.insert(name.to_string(), value.to_string());
-                            }
-                            None => todo!(), // TODO: Figure out what to do if the header key is None
+                        if let Some(name) = name {
+                            let value = value.to_str().unwrap();
+                            entries.insert(name.to_string(), value.to_string());
                         }
                     }
                     entries

@@ -195,9 +195,3 @@ impl Future for NgynResponse {
         Poll::Ready(response)
     }
 }
-
-impl Default for NgynResponse {
-    fn default() -> Self {
-        Self::new()
-    }
-}
