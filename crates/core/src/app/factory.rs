@@ -42,7 +42,6 @@ impl<Application: NgynEngine> NgynFactory<Application> {
         let mut module = AppModule::new(vec![]);
         let mut server = Application::new();
         for controller in module.get_controllers() {
-            println!("Registering controller: {}", controller.name());
             for (path, http_method, handler) in controller.get_routes() {
                 let http_method = HttpMethod::from(http_method);
                 server.route(

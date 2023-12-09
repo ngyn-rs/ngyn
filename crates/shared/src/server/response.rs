@@ -5,43 +5,81 @@ use std::{
     task::{Context, Poll},
 };
 
-#[cfg(feature = "tide")]
-use tide::{Response, Result};
-
 use crate::{NgynController, NgynRequest};
 
+#[derive(Clone, PartialEq)]
+pub enum NgynBody {
+    String(String),
+    Bool(bool),
+    Number(usize),
+    None,
+}
+
+impl From<String> for NgynBody {
+    fn from(value: String) -> Self {
+        NgynBody::String(value)
+    }
+}
+
+impl From<bool> for NgynBody {
+    fn from(value: bool) -> Self {
+        NgynBody::Bool(value)
+    }
+}
+
+impl From<usize> for NgynBody {
+    fn from(value: usize) -> Self {
+        NgynBody::Number(value)
+    }
+}
+
+impl From<isize> for NgynBody {
+    fn from(value: isize) -> Self {
+        NgynBody::Number(value as usize)
+    }
+}
+
+impl From<&str> for NgynBody {
+    fn from(value: &str) -> Self {
+        NgynBody::String(value.to_string())
+    }
+}
+
+impl Into<NgynBody> for () {
+    fn into(self) -> NgynBody {
+        NgynBody::None
+    }
+}
+
 #[derive(Clone)]
-struct NgynResponseRoute {
+pub struct NgynResponseRoute {
     controller: Arc<dyn NgynController>,
     handler: String,
     request: NgynRequest,
 }
 
 /// NgynResponse is a struct that represents a server response.
+#[derive(Clone)]
 pub struct NgynResponse {
-    route: Option<NgynResponseRoute>,
     status_code: u16,
-    raw_body: String,
-    headers: Vec<(String, String)>,
-    cookies: Vec<(String, String)>,
+    raw_body: NgynBody,
+    raw_headers: Vec<String>,
+    route: Option<NgynResponseRoute>,
 }
 
 impl NgynResponse {
     /// Constructs a new `NgynResponse` with a default status code of 200.
     pub fn new() -> Self {
-        Self {
-            route: None,
-            status_code: 200,
-            raw_body: String::new(),
-            headers: Vec::new(),
-            cookies: Vec::new(),
-        }
+        Self::from_status(200)
     }
 
     pub fn from_status(code: u16) -> Self {
-        let mut response = Self::new();
-        response.status_code = code;
-        response
+        Self {
+            status_code: code,
+            raw_body: NgynBody::None,
+            raw_headers: Vec::new(),
+            route: None,
+        }
     }
 
     /// Sets the status code of the `NgynResponse`.
@@ -73,20 +111,51 @@ impl NgynResponse {
     ///
     /// * A mutable reference to the `NgynResponse`.
     pub fn send(&mut self, data: &str) -> &mut Self {
-        self.raw_body = data.to_string();
+        if self.raw_body == NgynBody::None {
+            self.raw_body = NgynBody::String(data.to_string());
+        } else {
+            panic!("Response body already set");
+        }
         self
     }
 
     /// Gets the raw value for response body
-    pub fn body_raw(&self) -> String {
+    pub fn body_raw(&self) -> NgynBody {
         self.raw_body.clone()
     }
 
-    #[cfg(feature = "tide")]
-    /// Builds the `NgynResponse`.
-    pub fn build(self) -> Result {
-        let response = Response::builder(self.status_code).body(self.raw_body);
-        Ok(response.build())
+    pub fn is_empty(&self) -> bool {
+        match self.raw_body {
+            NgynBody::String(ref value) => value.is_empty(),
+            NgynBody::None => true,
+            _ => false,
+        }
+    }
+
+    /// Gets a header value by key
+    pub fn header(&self, key: &str) -> Option<String> {
+        self.raw_headers
+            .iter()
+            .find(|header| header.starts_with(key))
+            .map(|header| header.split(":").nth(1).unwrap().trim().to_string())
+    }
+
+    pub fn headers(&self) -> Vec<String> {
+        self.raw_headers.clone()
+    }
+
+    pub fn set_header(&mut self, key: &str, value: &str) -> &mut Self {
+        self.raw_headers.push(format!("{}: {}", key, value));
+        self
+    }
+
+    pub fn peek(&mut self, item: NgynBody) -> &mut Self {
+        match item {
+            NgynBody::String(value) => self.send(&value),
+            NgynBody::Bool(value) => self.send(&value.to_string()),
+            NgynBody::Number(value) => self.send(&value.to_string()),
+            _ => self,
+        }
     }
 
     /// Handles the `NgynResponse` from a route.
@@ -104,41 +173,27 @@ impl NgynResponse {
     }
 }
 
-impl Clone for NgynResponse {
-    fn clone(&self) -> Self {
-        Self {
-            route: self.route.clone(),
-            status_code: self.status_code,
-            raw_body: self.raw_body.clone(),
-            headers: self.headers.clone(),
-            cookies: self.cookies.clone(),
-        }
-    }
-}
-
 impl Future for NgynResponse {
     type Output = NgynResponse;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        match self.route.take() {
-            Some(NgynResponseRoute {
-                handler,
-                controller,
-                request,
-            }) => {
-                let response = self.clone();
+        match self.as_mut().get_mut() {
+            NgynResponse { route, .. } => {
+                let NgynResponseRoute {
+                    controller,
+                    handler,
+                    request,
+                } = route.take().unwrap();
 
-                let result = controller
-                    .handle(handler, request, response)
+                let mut response = self.clone();
+
+                let _ = controller
+                    .handle(handler, request, &mut response)
                     .as_mut()
                     .poll(cx);
 
-                match result {
-                    Poll::Ready(result) => Poll::Ready(result),
-                    Poll::Pending => Poll::Pending,
-                }
+                Poll::Ready(response)
             }
-            None => Poll::Ready(self.clone()),
         }
     }
 }

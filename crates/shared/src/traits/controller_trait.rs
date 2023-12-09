@@ -8,18 +8,10 @@ pub trait NgynController: Send + Sync {
     where
         Self: Sized;
 
-    /// Returns the name of the controller.
-    fn name(&self) -> &str;
-
     /// Returns a vector of routes for the controller.
     fn get_routes(&self) -> Vec<(String, String, String)>;
 
     /// Returns a `NgynResponse` for the controller.
     /// This is for internal use only.
-    async fn handle(
-        &self,
-        handler: String,
-        req: crate::NgynRequest,
-        res: crate::NgynResponse,
-    ) -> crate::NgynResponse;
+    async fn handle(&self, handler: String, req: crate::NgynRequest, res: &mut crate::NgynResponse);
 }

@@ -33,10 +33,6 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
                     #(#keys: ngyn::NgynProvider.provide()),*
                 }
             }
-
-            fn name(&self) -> &str {
-                stringify!(#ident)
-            }
         }
     };
     expanded.into()

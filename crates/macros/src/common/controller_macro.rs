@@ -98,13 +98,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
     args.routes.iter().for_each(|route| {
         let route_ident = str_to_ident(route.to_string());
-        let path = str_to_ident(format!("register_{}", route));
+        let path = str_to_ident(format!("__{}", route));
         handle_routes.push(quote! {
             #route => {
-                Self::#route_ident(self, &req, &mut res).await
+                let body = self.#path(&req, res).await;
+                res.peek(body);
             }
         });
-        route_registry.push(quote! { controller.#path(); })
+        route_registry.push(quote! { controller.#route_ident(); })
     });
 
     let add_middlewares: Vec<_> = args
@@ -140,22 +141,18 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 controller
             }
 
-            fn name(&self) -> &str {
-                stringify!(#ident)
-            }
-
             fn get_routes(&self) -> Vec<(String, String, String)> {
                 self.routes.clone()
             }
 
-            async fn handle(&self, handler: String, req: ngyn::NgynRequest, mut res: ngyn::NgynResponse) -> ngyn::NgynResponse {
+            async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
                 self.middlewares.iter().for_each(|middleware| {
-                    middleware.handle(&req, &mut res);
+                    middleware.handle(&req, res);
                 });
                 match handler.as_str() {
                     #(#handle_routes)*
                     _ => {
-                        res.set_status(404).clone()
+                        res.set_status(404);
                     }
                 }
             }
