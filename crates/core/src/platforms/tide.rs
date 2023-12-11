@@ -1,6 +1,6 @@
 use ngyn_macros::platform;
 use ngyn_shared::{Handler, HttpMethod, NgynBody, NgynEngine, NgynRequest, NgynResponse};
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tide::{Response, Server};
 
 pub type Result<T = Response> = tide::Result<T>;
@@ -19,7 +19,7 @@ impl NgynApplication {
             NgynBody::String(body) => response.set_body(body),
             NgynBody::Bool(body) => response.set_body(body.to_string()),
             NgynBody::Number(body) => response.set_body(body.to_string()),
-            NgynBody::None => (),
+            NgynBody::None => {}
         }
 
         for header in res.headers() {
@@ -54,7 +54,8 @@ impl NgynEngine for NgynApplication {
             move |req: tide::Request<()>| {
                 let handler = Arc::clone(&handler);
                 async move {
-                    let request = NgynRequest::from(req);
+                    let values = request_to_values(req).await;
+                    let request = NgynRequest::from(values);
                     let mut response = NgynResponse::from_status(200);
                     handler.handle(&request, &mut response);
                     Self::build(response.await)
@@ -73,3 +74,22 @@ impl NgynEngine for NgynApplication {
         self
     }
 }
+
+async fn request_to_values(
+    mut request: tide::Request<()>,
+) -> (String, String, HashMap<String, String>, Vec<u8>) {
+    let method = request.method().to_string();
+    let url = request.url().to_string();
+    let headers = {
+        let mut headers_map = HashMap::new();
+        for name in request.header_names() {
+            if let Some(value) = request.header(name.as_str()) {
+                headers_map.insert(name.to_string(), value.last().to_string());
+            }
+        }
+        headers_map
+    };
+    let body = request.body_bytes().await.unwrap();
+    (method, url, headers, body)
+}
+

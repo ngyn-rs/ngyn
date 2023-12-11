@@ -1458,7 +1458,6 @@ version = "0.2.8"
 dependencies = [
  "async-trait",
  "nject",
- "tide",
 ]
 
 [[package]]

@@ -5,51 +5,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use crate::{NgynController, NgynRequest};
-
-#[derive(Clone, PartialEq)]
-pub enum NgynBody {
-    String(String),
-    Bool(bool),
-    Number(usize),
-    None,
-}
-
-impl From<String> for NgynBody {
-    fn from(value: String) -> Self {
-        NgynBody::String(value)
-    }
-}
-
-impl From<bool> for NgynBody {
-    fn from(value: bool) -> Self {
-        NgynBody::Bool(value)
-    }
-}
-
-impl From<usize> for NgynBody {
-    fn from(value: usize) -> Self {
-        NgynBody::Number(value)
-    }
-}
-
-impl From<isize> for NgynBody {
-    fn from(value: isize) -> Self {
-        NgynBody::Number(value as usize)
-    }
-}
-
-impl From<&str> for NgynBody {
-    fn from(value: &str) -> Self {
-        NgynBody::String(value.to_string())
-    }
-}
-
-impl From<()> for NgynBody {
-    fn from(_: ()) -> Self {
-        NgynBody::None
-    }
-}
+use crate::{NgynBody, NgynController, NgynRequest};
 
 #[derive(Clone)]
 pub struct NgynResponseRoute {
@@ -174,19 +130,22 @@ impl Future for NgynResponse {
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let NgynResponse { route, .. } = self.as_mut().get_mut();
 
-        let NgynResponseRoute {
+        if let Some(NgynResponseRoute {
             controller,
             handler,
             request,
-        } = route.take().unwrap();
+        }) = route.clone()
+        {
+            let mut response = self.clone();
 
-        let mut response = self.clone();
+            let _ = controller
+                .handle(handler, request, &mut response)
+                .as_mut()
+                .poll(cx);
 
-        let _ = controller
-            .handle(handler, request, &mut response)
-            .as_mut()
-            .poll(cx);
-
-        Poll::Ready(response)
+            Poll::Ready(response)
+        } else {
+            Poll::Ready(self.clone())
+        }
     }
 }
