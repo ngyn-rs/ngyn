@@ -1,5 +1,5 @@
 use ngyn_macros::platform;
-use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest};
+use ngyn_shared::{Handler, HttpMethod, NgynBody, NgynEngine, NgynRequest};
 use vercel_runtime::{Body, Error, Request, Response};
 
 #[platform]
@@ -49,16 +49,19 @@ impl VercelApplication {
             }
         }
 
+        res = res.await;
+
         if res.status() == 404 && res.is_empty() {
             res.send("Not Found");
         }
 
-        // await the response and reassign
-        res = res.await;
-
-        Ok(Response::builder()
-            .status(res.status())
-            .body(res.body_raw().into())
-            .unwrap())
+        if let NgynBody::String(body) = res.body_raw() {
+            Ok(Response::builder()
+                .status(res.status())
+                .body(body.into())
+                .unwrap())
+        } else {
+            Err(Error::from("Response body is not a string"))
+        }
     }
 }

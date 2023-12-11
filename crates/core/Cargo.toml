@@ -17,5 +17,5 @@ tide = { version = "0.16.0", optional = true }
 vercel_runtime = { version = "1.1.0", optional = true }
 
 [features]
-tide = ["dep:tide", "ngyn_shared/tide"]
+tide = ["dep:tide"]
 vercel = ["dep:vercel_runtime"]
