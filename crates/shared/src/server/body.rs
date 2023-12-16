@@ -1,4 +1,6 @@
-#[derive(Clone, PartialEq)]
+use std::collections::HashMap;
+
+#[derive(Clone, Debug, PartialEq)]
 /// Represents the body of a response in Ngyn
 ///
 /// # Examples
@@ -18,6 +20,8 @@ pub enum NgynBody {
     Bool(bool),
     /// Represents a numeric body
     Number(usize),
+    /// Represents a struct body
+    Map(HashMap<String, NgynBody>),
     /// Represents no body
     None,
 }
@@ -28,9 +32,27 @@ impl From<String> for NgynBody {
     }
 }
 
+impl From<NgynBody> for String {
+    fn from(value: NgynBody) -> Self {
+        match value {
+            NgynBody::String(value) => value,
+            _ => panic!("Cannot convert {:?} to String", value),
+        }
+    }
+}
+
 impl From<bool> for NgynBody {
     fn from(value: bool) -> Self {
         NgynBody::Bool(value)
+    }
+}
+
+impl From<NgynBody> for bool {
+    fn from(value: NgynBody) -> Self {
+        match value {
+            NgynBody::Bool(value) => value,
+            _ => panic!("Cannot convert {:?} to bool", value),
+        }
     }
 }
 
@@ -40,9 +62,42 @@ impl From<usize> for NgynBody {
     }
 }
 
+impl From<NgynBody> for usize {
+    fn from(value: NgynBody) -> Self {
+        match value {
+            NgynBody::Number(value) => value,
+            _ => panic!("Cannot convert {:?} to usize", value),
+        }
+    }
+}
+
 impl From<isize> for NgynBody {
     fn from(value: isize) -> Self {
         NgynBody::Number(value as usize)
+    }
+}
+
+impl From<NgynBody> for isize {
+    fn from(value: NgynBody) -> Self {
+        match value {
+            NgynBody::Number(value) => value as isize,
+            _ => panic!("Cannot convert {:?} to isize", value),
+        }
+    }
+}
+
+impl From<HashMap<String, NgynBody>> for NgynBody {
+    fn from(value: HashMap<String, NgynBody>) -> Self {
+        NgynBody::Map(value)
+    }
+}
+
+impl From<NgynBody> for HashMap<String, NgynBody> {
+    fn from(value: NgynBody) -> Self {
+        match value {
+            NgynBody::Map(value) => value,
+            _ => panic!("Cannot convert {:?} to HashMap<String, NgynBody>", value),
+        }
     }
 }
 

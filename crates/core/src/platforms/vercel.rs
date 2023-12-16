@@ -20,7 +20,8 @@ impl NgynEngine for VercelApplication {
 
 impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
-        let mut res = ngyn_shared::NgynResponse::from_status(404);
+        let mut is_found = false;
+        let mut res = ngyn_shared::NgynResponse::from_status(200);
         let (parts, body) = request.into_parts();
 
         for (path, method, handler) in self.routes {
@@ -42,26 +43,45 @@ impl VercelApplication {
                     headers,
                     body.to_vec(),
                 ));
-                // change the status code to 200 to prevent vercel from returning a 404
-                res.set_status(200);
                 handler.handle(&req, &mut res);
+
+                // Wait for the response to be ready
+                res = res.await;
+                is_found = true;
                 break; // Exit the loop once a route is found
             }
         }
 
-        res = res.await;
-
-        if res.status() == 404 && res.is_empty() {
+        // if the response is a 404 and has no body, send "Not Found"
+        if !is_found {
+            res.set_status(404);
             res.send("Not Found");
         }
 
-        if let NgynBody::String(body) = res.body_raw() {
-            Ok(Response::builder()
-                .status(res.status())
-                .body(body.into())
-                .unwrap())
-        } else {
-            Err(Error::from("Response body is not a string"))
+        let mut body_str = String::new();
+
+        match res.body_raw() {
+            NgynBody::String(body) => {
+                body_str = body;
+            }
+            NgynBody::Bool(body) => {
+                body_str = body.to_string();
+            }
+            NgynBody::Number(body) => {
+                body_str = body.to_string();
+            }
+            NgynBody::Map(body) => {
+                for (key, value) in body {
+                    let value_str: String = value.into();
+                    body_str.push_str(&format!("{}: {}\n", key, value_str));
+                }
+            }
+            NgynBody::None => {}
         }
+
+        Ok(Response::builder()
+            .status(res.status())
+            .body(body_str.into())
+            .unwrap())
     }
 }
