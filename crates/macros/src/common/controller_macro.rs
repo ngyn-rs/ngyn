@@ -1,10 +1,9 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::{parse_macro_data, str_to_ident};
+use crate::utils::parse_macro_data;
 
 struct ControllerArgs {
-    routes: Vec<String>,
     middlewares: Vec<syn::Path>,
 }
 
@@ -12,36 +11,13 @@ impl syn::parse::Parse for ControllerArgs {
     /// Parses a string like `routes = "get_location, get_location_weather", middlewares = [WeatherGate]`
     /// into a `ControllerArgs` struct.
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let mut routes = vec![];
         let mut middlewares = vec![];
 
-        if input.to_string().starts_with('"') {
-            let route = input.parse::<syn::LitStr>()?;
-            routes = route
-                .value()
-                .split(',')
-                .map(|r| r.trim().to_string())
-                .collect();
-            if !input.is_empty() {
-                input.parse::<syn::Token![,]>()?;
-            }
-        }
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
             input.parse::<syn::Token![=]>()?;
 
             match ident.to_string().as_str() {
-                "routes" => {
-                    if !routes.is_empty() {
-                        panic!("routes already registered");
-                    }
-                    let route = input.parse::<syn::LitStr>()?;
-                    routes = route
-                        .value()
-                        .split(',')
-                        .map(|r| r.trim().to_string())
-                        .collect();
-                }
                 "middlewares" => {
                     let content;
                     syn::bracketed!(content in input);
@@ -65,10 +41,7 @@ impl syn::parse::Parse for ControllerArgs {
             }
         }
 
-        Ok(ControllerArgs {
-            routes,
-            middlewares,
-        })
+        Ok(ControllerArgs { middlewares })
     }
 }
 
@@ -93,21 +66,6 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let mut route_registry: Vec<_> = Vec::new();
-    let mut handle_routes: Vec<_> = Vec::new();
-
-    args.routes.iter().for_each(|route| {
-        let route_ident = str_to_ident(route.to_string());
-        let path = str_to_ident(format!("__{}", route));
-        handle_routes.push(quote! {
-            #route => {
-                let body = self.#path(&req, res).await;
-                res.peek(body);
-            }
-        });
-        route_registry.push(quote! { controller.#route_ident(); })
-    });
-
     let add_middlewares: Vec<_> = args
         .middlewares
         .iter()
@@ -123,7 +81,6 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         #(#attrs)*
         #[ngyn::dependency]
         #vis struct #ident {
-            routes: Vec<(String, String, String)>,
             middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
             #(#fields),*
         }
@@ -133,28 +90,23 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
                 let mut controller = #ident {
-                    routes: vec![],
                     middlewares,
                     #(#keys: ngyn::NgynProvider.provide()),*
                 };
-                #(#route_registry)*
                 controller
             }
 
             fn get_routes(&self) -> Vec<(String, String, String)> {
-                self.routes.clone()
+                Self::ROUTES.iter().map(|(path, method, handler)| {
+                    (path.to_string(), method.to_string(), handler.to_string())
+                }).collect()
             }
 
             async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
                 self.middlewares.iter().for_each(|middleware| {
                     middleware.handle(&req, res);
                 });
-                match handler.as_str() {
-                    #(#handle_routes)*
-                    _ => {
-                        res.set_status(404);
-                    }
-                }
+                self.__handle_route(handler, req, res).await;
             }
         }
     };
