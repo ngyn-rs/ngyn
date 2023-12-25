@@ -5,7 +5,7 @@ mod core;
 mod utils;
 
 use crate::common::check_macro::check_macro;
-use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
+use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
 use crate::core::module_macro::*;
 use crate::core::platform_macro::platform_macro;
 
@@ -34,6 +34,12 @@ pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
 /// The `controller` attribute is used to mark a struct as a controller.
 pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
     controller_macro(args, input)
+}
+
+#[proc_macro_attribute]
+/// The `routes` attribute is used to mark a struct impl as a routes container.
+pub fn routes(_args: TokenStream, input: TokenStream) -> TokenStream {
+    routes_macro(input)
 }
 
 #[proc_macro_attribute]

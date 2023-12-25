@@ -1,8 +1,9 @@
-use ngyn::{controller, get, NgynRequest, NgynResponse};
+use ngyn::{controller, get, routes, NgynRequest, NgynResponse};
 
-#[controller("get_home")]
+#[controller]
 pub struct HomeController;
 
+#[routes]
 impl HomeController {
     #[get("/")]
     fn get_home(&self, _req: &NgynRequest, res: &mut NgynResponse) {
