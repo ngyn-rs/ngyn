@@ -1,13 +1,14 @@
-use ngyn::{check, controller, get, NgynBody, NgynRequest, NgynResponse};
+use ngyn::{check, controller, get, routes, NgynBody, NgynRequest, NgynResponse};
 
 use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
 
-#[controller("get_location", middlewares = [])]
+#[controller(middlewares = [])]
 pub struct WeatherController {
     weather_service: WeatherService,
 }
 
+#[routes]
 impl WeatherController {
     #[check(WeatherGate)]
     #[get("/weather")]
