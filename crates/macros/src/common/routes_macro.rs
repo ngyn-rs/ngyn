@@ -141,7 +141,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #defaultness #unsafety #(#attrs)*
         #impl_token #generics #self_ty {
-            const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[
+            const routes: &'static [(&'static str, &'static str, &'static str)] = &[
                 #(#route_defs),*
             ];
             #(#items)*
