@@ -37,13 +37,13 @@ impl VercelApplication {
                     }
                     entries
                 };
-                let req = NgynRequest::from((
+                let mut req = NgynRequest::from((
                     parts.method.to_string(),
                     uri.to_string(),
                     headers,
                     body.to_vec(),
                 ));
-                handler.handle(&req, &mut res);
+                handler.handle(&mut req, &mut res);
 
                 // Wait for the response to be ready
                 res = res.await;

@@ -114,7 +114,7 @@ impl NgynResponse {
         &mut self,
         controller: Arc<dyn NgynController>,
         handler: String,
-        request: &NgynRequest,
+        request: &mut NgynRequest,
     ) {
         self.route = Some(NgynResponseRoute {
             controller,
@@ -133,13 +133,13 @@ impl Future for NgynResponse {
         if let Some(NgynResponseRoute {
             controller,
             handler,
-            request,
+            mut request,
         }) = route.clone()
         {
             let mut response = self.clone();
 
             let _ = controller
-                .handle(handler, request, &mut response)
+                .handle(handler, &mut request, &mut response)
                 .as_mut()
                 .poll(cx);
 

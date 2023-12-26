@@ -11,5 +11,5 @@ pub trait NgynGate: NgynInjectable {
     /// ### Returns
     ///
     /// Returns `true` if the route can activate, `false` otherwise.
-    fn can_activate(self, request: &NgynRequest) -> bool;
+    fn can_activate(self, request: &mut NgynRequest) -> bool;
 }

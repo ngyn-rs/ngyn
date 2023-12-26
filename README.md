@@ -45,7 +45,7 @@ struct MyAppModule;
 async fn main() -> Result<()> {
     let app = NgynFactory::create::<MyAppModule>();
 
-    app.get("/", |req: &NgynRequest, res: &mut NgynResponse| {
+    app.get("/", |req: &mut NgynRequest, res: &mut NgynResponse| {
         res.send("Hello World!");
     });
 
