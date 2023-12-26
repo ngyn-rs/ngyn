@@ -22,7 +22,7 @@ impl NgynApplication {
             NgynBody::Map(body) => {
                 let mut body_string = String::new();
                 for (key, value) in body {
-                    let value_str: String = value.into();
+                    let value_str: String = value.parse();
                     body_string.push_str(&format!("{}: {}\n", key, value_str));
                 }
                 response.set_body(body_string);

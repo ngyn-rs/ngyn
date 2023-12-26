@@ -5,7 +5,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use crate::{NgynBody, NgynController, NgynRequest};
+use crate::{body::IntoNgynBody, NgynBody, NgynController, NgynRequest};
 
 #[derive(Clone)]
 pub struct NgynResponseRoute {
@@ -100,8 +100,8 @@ impl NgynResponse {
         self
     }
 
-    pub fn peek(&mut self, item: NgynBody) -> &mut Self {
-        match item {
+    pub fn peek(&mut self, item: impl IntoNgynBody) -> &mut Self {
+        match item.parse_body() {
             NgynBody::String(value) => self.send(&value),
             NgynBody::Bool(value) => self.send(&value.to_string()),
             NgynBody::Number(value) => self.send(&value.to_string()),
