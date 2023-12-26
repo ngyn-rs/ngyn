@@ -12,17 +12,23 @@ pub trait NgynController: Send + Sync {
     fn get_routes(&self) -> Vec<(String, String, String)>;
 
     /// This is for internal use only. It handles the routing logic of the controller.
-    async fn handle(&self, handler: String, req: crate::NgynRequest, res: &mut crate::NgynResponse);
+    async fn handle(
+        &self,
+        handler: String,
+        req: &mut crate::NgynRequest,
+        res: &mut crate::NgynResponse,
+    );
 }
 
 #[async_trait::async_trait]
 /// `NgynControllerRoutePlaceholder` defines placeholders for routing logic of a controller.
 pub trait NgynControllerRoutePlaceholder {
+    #[allow(non_upper_case_globals)]
     const routes: &'static [(&'static str, &'static str, &'static str)];
     async fn __handle_route(
         &self,
         handler: String,
-        req: crate::NgynRequest,
+        req: &mut crate::NgynRequest,
         res: &mut crate::NgynResponse,
     );
 }

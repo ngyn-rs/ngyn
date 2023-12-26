@@ -32,7 +32,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
                     http_method,
                     Box::new({
                         let controller = controller.clone();
-                        move |req: &NgynRequest, res: &mut NgynResponse| {
+                        move |req: &mut NgynRequest, res: &mut NgynResponse| {
                             res.with_controller(controller.clone(), handler.clone(), req);
                         }
                     }),

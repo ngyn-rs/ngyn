@@ -55,7 +55,7 @@ pub fn check_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             {
                 use ngyn::NgynGate;
                 let gate: #gate = ngyn::NgynProvider.provide();
-                if !gate.can_activate(&#req) {
+                if !gate.can_activate(#req) {
                     #res.set_status(403);
                     return ngyn::NgynBody::String("Forbidden".to_string());
                 }

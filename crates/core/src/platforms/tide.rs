@@ -63,9 +63,9 @@ impl NgynEngine for NgynApplication {
                 let handler = Arc::clone(&handler);
                 async move {
                     let values = request_to_values(req).await;
-                    let request = NgynRequest::from(values);
+                    let mut request = NgynRequest::from(values);
                     let mut response = NgynResponse::from_status(200);
-                    handler.handle(&request, &mut response);
+                    handler.handle(&mut request, &mut response);
                     Self::build(response.await)
                 }
             }

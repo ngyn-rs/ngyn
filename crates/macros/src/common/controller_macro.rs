@@ -87,12 +87,13 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
         #[ngyn::async_trait]
         impl ngyn::NgynControllerRoutePlaceholder for #ident {
+            #[allow(non_upper_case_globals)]
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
 
             async fn __handle_route(
                 &self,
                 handler: String,
-                req: ngyn::NgynRequest,
+                req: &mut ngyn::NgynRequest,
                 res: &mut ngyn::NgynResponse,
             ) {
                 // TODO: Handle routes
@@ -117,10 +118,10 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
+            async fn handle(&self, handler: String, req: &mut ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
                 use ngyn::NgynControllerRoutePlaceholder;
                 self.middlewares.iter().for_each(|middleware| {
-                    middleware.handle(&req, res);
+                    middleware.handle(req, res);
                 });
                 self.__handle_route(handler, req, res).await;
             }

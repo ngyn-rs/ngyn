@@ -111,7 +111,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 )});
                                 handle_routes.push(quote! {
                                     #ident_str => {
-                                        let body = self.#ident(&req, res).await;
+                                        let body = self.#ident(req, res).await;
                                         res.peek(body);
                                     }
                                 });
@@ -127,7 +127,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             )});
                             handle_routes.push(quote! {
                                 #ident_str => {
-                                    let body = self.#ident(&req, res).await;
+                                    let body = self.#ident(req, res).await;
                                     res.peek(body);
                                 }
                             });
@@ -141,12 +141,13 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #defaultness #unsafety #(#attrs)*
         #impl_token #generics #self_ty {
+            #[allow(non_upper_case_globals)]
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[
                 #(#route_defs),*
             ];
             #(#items)*
 
-            async fn __handle_route(&self, handler: String, req: ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
+            async fn __handle_route(&self, handler: String, req: &mut ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
                 match handler.as_str() {
                     #(#handle_routes),*
                     _ => {
