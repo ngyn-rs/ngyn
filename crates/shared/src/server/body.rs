@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// ```
 /// use ngyn_shared::{IntoNgynBody, NgynBody};
 ///
-/// let string_body: NgynBody = "Hello, world!".parse_body();
+/// let string_body: NgynBody = "Hello, world!".to_string().parse_body();
 /// ```
 pub trait IntoNgynBody {
     /// Converts the type into a `NgynBody`
