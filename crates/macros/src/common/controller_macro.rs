@@ -86,6 +86,20 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[ngyn::async_trait]
+        impl ngyn::NgynControllerRoutePlaceholder for #ident {
+            const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
+
+            async fn __handle_route(
+                &self,
+                handler: String,
+                req: ngyn::NgynRequest,
+                res: &mut ngyn::NgynResponse,
+            ) {
+                // TODO: Handle routes
+            }
+        }
+
+        #[ngyn::async_trait]
         impl ngyn::NgynController for #ident {
             fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
@@ -97,12 +111,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             }
 
             fn get_routes(&self) -> Vec<(String, String, String)> {
-                Self::ROUTES.iter().map(|(path, method, handler)| {
+                use ngyn::NgynControllerRoutePlaceholder;
+                Self::routes.iter().map(|(path, method, handler)| {
                     (path.to_string(), method.to_string(), handler.to_string())
                 }).collect()
             }
 
             async fn handle(&self, handler: String, req: ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
+                use ngyn::NgynControllerRoutePlaceholder;
                 self.middlewares.iter().for_each(|middleware| {
                     middleware.handle(&req, res);
                 });
