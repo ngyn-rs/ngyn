@@ -72,7 +72,7 @@ impl VercelApplication {
             }
             NgynBody::Map(body) => {
                 for (key, value) in body {
-                    let value_str: String = value.into();
+                    let value_str: String = value.parse();
                     body_str.push_str(&format!("{}: {}\n", key, value_str));
                 }
             }
