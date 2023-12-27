@@ -2,6 +2,54 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## ngyn_macros-0.3.0 - 2023-12-27
+#### Bug Fixes
+- re-export common modules into prelude (#75) - (e653403) - elcharitas
+- improve response body peeking and conversion (#74) - (0322480) - elcharitas
+-  make requests partially mutable (#72) - (311bf5a) - elcharitas
+- handle errors in abstract controllers (#71) - (7e6f29f) - elcharitas
+- improve controller/injectable patterns (#56) - (c0314bc) - elcharitas
+- status/set_status fixes (#40) - (242fc15) - elcharitas
+- readme symlinking final fix - (5559c5b) - elcharitas
+- sub crates readme symlinks (#37) - (0922eb3) - elcharitas
+- further macro improvements (#28) - (8ef8bbc) - elcharitas
+- support attrs inheritance in  common macros (#27) - (f8ca5da) - elcharitas
+- temp clean out all macro tests (#10) - (36eb0a0) - elcharitas
+- address all clippy errors (#9) - (68f7c6e) - elcharitas
+#### Features
+- **(structure)** use crates to contain all crates - (647e4b7) - elcharitas
+- support grouped routes gates (#73) - (80bc126) - elcharitas
+- controller/routes macro v2 (#70) - (16fd433) - elcharitas
+- add platform macro (#67) - (f54e955) - elcharitas
+- support body returns to match specs (#65) - (7fc7233) - elcharitas
+- proper response handling (#33) - (cd46101) - elcharitas
+- add support for route specific gates (#26) - (70df61f) - elcharitas
+- add support for gates and middlewares (#19) - (966087e) - elcharitas
+- add support for module interop (#13) - (fc75be9) - elcharitas
+- add support for async routes (#11) - (e5cdc19) - elcharitas
+- support multiple http methods (#2) - (3f6c8bb) - elcharitas
+#### Miscellaneous Chores
+- **(bump)** ngyn@0.2.0 -> ngyn@0.2.1 (#36) - (ab3e43e) - *elcharitas*
+- **(bump)** ngyn_macros@v0.2.1 -> ngyn_macros@v0.2.2 (#35) - (f0ecded) - *elcharitas*
+- **(version)** ngyn_shared-0.3.0 - (042e4b0) - elcharitas
+- **(version)** ngyn_macros-0.2.8 - (81d28d3) - elcharitas
+- add pre-bump script (#64) - (f1473d9) - elcharitas
+- sync cargo.toml - (bf38fc9) - elcharitas
+- bump version to 0.2.7 - (19dfb6b) - elcharitas
+- bump version to 0.2.6 - (e016500) - elcharitas
+- bump version to 0.2.5 (#48) - (cf04092) - elcharitas
+- bump version to 0.2.4 (#41) - (0b36fc1) - elcharitas
+- bump version to 0.2.3 - (b3c0c20) - elcharitas
+- bump versions to 0.2.2 (#39) - (452d3f6) - elcharitas
+- clean unused code or parts (#32) - (8c83312) - elcharitas
+- bump crates version - (ada1c92) - elcharitas
+- bump crates version number (#22) - (d55b86a) - elcharitas
+- lean out macro outputs (#15) - (a944f92) - elcharitas
+- do not allow dead code (#6) - (a7471b9) - elcharitas
+- Rename to ngyn (#4) - (c81adc9) - elcharitas
+
+- - -
+
 ## ngyn_macros-0.2.8 - 2023-11-26
 
 - - -

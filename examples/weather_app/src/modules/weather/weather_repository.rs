@@ -1,4 +1,4 @@
-use ngyn::injectable;
+use ngyn::prelude::*;
 use std::env;
 
 #[injectable]

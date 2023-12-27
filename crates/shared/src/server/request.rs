@@ -1,35 +1,7 @@
-use std::{
-    collections::HashMap,
-    future::Future,
-    task::{Context, Poll},
-};
-#[cfg(feature = "tide")]
-use tide::Request;
+use std::collections::HashMap;
 
+use super::context::NgynContext;
 use crate::enums::HttpMethod;
-
-#[derive(Clone)]
-pub enum Body {
-    Raw(Vec<u8>),
-}
-
-impl From<Vec<u8>> for Body {
-    fn from(raw: Vec<u8>) -> Self {
-        Self::Raw(raw)
-    }
-}
-
-impl Future for Body {
-    type Output = Result<String, std::io::Error>;
-    fn poll(
-        self: std::pin::Pin<&mut Self>,
-        _: &mut Context<'_>,
-    ) -> Poll<Result<String, std::io::Error>> {
-        match self.get_mut() {
-            Body::Raw(raw) => Poll::Ready(Ok(String::from_utf8(raw.clone()).unwrap())),
-        }
-    }
-}
 
 /// A struct that represents a request.
 #[derive(Clone)]
@@ -40,13 +12,24 @@ pub struct NgynRequest {
     url: String,
     /// The headers of the request.
     headers: HashMap<String, String>,
-    body: Body,
+    /// bytes format
+    body: Option<Vec<u8>>,
+    /// context for the request
+    pub context: NgynContext,
 }
 
 impl NgynRequest {
+    fn read_body(&mut self) -> Result<Vec<u8>, std::io::Error> {
+        if let Some(body) = &self.body {
+            return Ok(body.clone());
+        }
+        self.body = None;
+        panic!("Body has already been read");
+    }
+
     /// Gets the body of the `NgynRequest`.
-    pub async fn body_string(&mut self) -> Result<String, std::io::Error> {
-        self.body.clone().await
+    pub fn body_string(&mut self) -> Result<String, std::io::Error> {
+        Ok(String::from_utf8(self.read_body()?).unwrap())
     }
 
     /// Gets the HTTP method of the `NgynRequest`.
@@ -65,34 +48,15 @@ impl NgynRequest {
     }
 }
 
-#[cfg(feature = "tide")]
-impl From<Request<()>> for NgynRequest {
-    fn from(request: Request<()>) -> Self {
-        Self {
-            method: HttpMethod::from(request.method().to_string()),
-            url: request.url().to_string(),
-            headers: {
-                let mut headers_map = HashMap::new();
-                for name in request.header_names() {
-                    if let Some(value) = request.header(name.as_str()) {
-                        headers_map.insert(name.to_string(), value.last().to_string());
-                    }
-                }
-                headers_map
-            },
-            body: Body::Raw(Vec::new()),
-        }
-    }
-}
-
 impl From<(String, String, HashMap<String, String>, Vec<u8>)> for NgynRequest {
     fn from(value: (String, String, HashMap<String, String>, Vec<u8>)) -> Self {
         let (method, url, headers, body) = value;
         Self {
-            method: HttpMethod::from(method),
+            method: method.into(),
             url,
             headers,
-            body: Body::Raw(body),
+            body: Some(body),
+            context: NgynContext::default(),
         }
     }
 }

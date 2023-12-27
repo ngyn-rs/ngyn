@@ -1,18 +1,18 @@
-use ngyn::{check, controller, get, NgynRequest, NgynResponse};
+use ngyn::prelude::*;
 
 use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
 
-#[controller("get_location", middlewares = [])]
+#[controller(middlewares = [])]
 pub struct WeatherController {
     weather_service: WeatherService,
 }
 
+#[routes]
 impl WeatherController {
-    #[get("/weather")]
     #[check(WeatherGate)]
-    async fn get_location(&self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
-        let weather = self.weather_service.get_location_weather("London").await;
-        res.send(weather.as_str()).clone()
+    #[get("/weather")]
+    async fn get_location(&self, _req: &mut NgynRequest, res: &mut NgynResponse) -> String {
+        self.weather_service.get_location_weather("London").await
     }
 }

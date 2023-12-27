@@ -1,10 +1,10 @@
-use ngyn::{injectable, NgynGate};
+use ngyn::prelude::*;
 
 #[injectable]
 pub struct WeatherGate;
 
 impl NgynGate for WeatherGate {
-    fn can_activate(self, _request: &ngyn::NgynRequest) -> bool {
+    fn can_activate(self, _request: &mut NgynRequest) -> bool {
         true
     }
 }

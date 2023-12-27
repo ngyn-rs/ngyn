@@ -3,9 +3,12 @@ mod modules;
 
 use dotenv::dotenv;
 use modules::AppModule;
-use ngyn::{platforms::NgynApplication, NgynFactory, Result};
+use ngyn::{
+    platforms::{NgynApplication, Result},
+    prelude::*,
+};
 
-#[ngyn::main]
+#[ngyn::macros::main]
 async fn main() -> Result<()> {
     dotenv().ok();
     let app = NgynFactory::<NgynApplication>::create::<AppModule>();

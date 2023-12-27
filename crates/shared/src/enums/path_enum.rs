@@ -9,3 +9,15 @@ pub enum Path {
     /// Represents multiple paths as a Vector of Strings
     Multiple(Vec<String>),
 }
+
+impl Path {
+    pub fn each<F>(&self, mut f: F)
+    where
+        F: FnMut(&str),
+    {
+        match self {
+            Path::Single(path) => f(path),
+            Path::Multiple(paths) => paths.iter().for_each(|path| f(path)),
+        }
+    }
+}

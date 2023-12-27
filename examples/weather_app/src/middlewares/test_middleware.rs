@@ -1,10 +1,10 @@
-use ngyn::{injectable, NgynMiddleware, NgynRequest, NgynResponse};
+use ngyn::prelude::*;
 
 #[injectable]
 pub struct TestMiddleware;
 
 impl NgynMiddleware for TestMiddleware {
-    fn handle(&self, _request: &NgynRequest, _response: &mut NgynResponse) {
+    fn handle(&self, _request: &mut NgynRequest, _response: &mut NgynResponse) {
         println!("middleware works");
     }
 }

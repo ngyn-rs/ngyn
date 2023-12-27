@@ -1,22 +1,22 @@
-use ngyn::{controller, get, NgynRequest, NgynResponse};
+use ngyn::prelude::*;
 
 use super::sample_service::SampleService;
 
-#[controller("say_hello, say_goodbye")]
+#[controller]
 pub struct SampleController {
     sample_service: SampleService,
 }
 
+#[routes]
 impl SampleController {
     #[get("/hello")]
-    fn say_hello(&self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
+    fn say_hello(&self, _req: &NgynRequest, res: &mut NgynResponse) {
         self.sample_service.say_hello();
-        res.send("Hello, Ngyn!").clone()
+        res.send("Hello, Ngyn from Vercel!");
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(&self, _req: &NgynRequest, res: &mut NgynResponse) -> NgynResponse {
-        println!("Goodbye!");
-        res.clone()
+    fn say_goodbye(&self, _req: &NgynRequest, _res: &mut NgynResponse) {
+        println!("Goodbye from Vercel!");
     }
 }

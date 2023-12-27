@@ -1,5 +1,5 @@
 #[async_trait::async_trait]
-/// `NgynController` is a trait that defines the basic structure of a controller in Ngyn.
+/// `NgynController` defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
 pub trait NgynController: Send + Sync {
     /// Creates a new instance of the controller.
@@ -8,18 +8,27 @@ pub trait NgynController: Send + Sync {
     where
         Self: Sized;
 
-    /// Returns the name of the controller.
-    fn name(&self) -> &str;
-
     /// Returns a vector of routes for the controller.
     fn get_routes(&self) -> Vec<(String, String, String)>;
 
-    /// Returns a `NgynResponse` for the controller.
-    /// This is for internal use only.
+    /// This is for internal use only. It handles the routing logic of the controller.
     async fn handle(
         &self,
         handler: String,
-        req: crate::NgynRequest,
-        res: crate::NgynResponse,
-    ) -> crate::NgynResponse;
+        req: &mut crate::NgynRequest,
+        res: &mut crate::NgynResponse,
+    );
+}
+
+#[async_trait::async_trait]
+/// `NgynControllerRoutePlaceholder` defines placeholders for routing logic of a controller.
+pub trait NgynControllerRoutePlaceholder {
+    #[allow(non_upper_case_globals)]
+    const routes: &'static [(&'static str, &'static str, &'static str)];
+    async fn __handle_route(
+        &self,
+        handler: String,
+        req: &mut crate::NgynRequest,
+        res: &mut crate::NgynResponse,
+    );
 }

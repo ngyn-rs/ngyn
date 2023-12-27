@@ -1,6 +1,4 @@
-use ngyn::injectable;
-
-#[injectable]
+#[ngyn::macros::injectable]
 pub struct SampleRepository;
 
 impl SampleRepository {

@@ -1,6 +1,6 @@
 [package]
 name = "ngyn_shared"
-version = "0.2.8"
+version = "0.3.0"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
@@ -10,7 +10,3 @@ license = "MIT"
 [dependencies]
 async-trait = "0.1.74"
 nject = "0.3.0"
-tide = { version = "0.16.0", optional = true }
-
-[features]
-tide = ["dep:tide"]

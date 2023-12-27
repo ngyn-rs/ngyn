@@ -1,6 +1,8 @@
-use ngyn_shared::{Handler, HttpMethod, NgynEngine};
+use ngyn_macros::platform;
+use ngyn_shared::{Handler, HttpMethod, NgynBody, NgynEngine, NgynRequest};
 use vercel_runtime::{Body, Error, Request, Response};
 
+#[platform]
 pub struct VercelApplication {
     routes: Vec<(String, HttpMethod, Box<dyn Handler>)>,
 }
@@ -17,18 +19,9 @@ impl NgynEngine for VercelApplication {
 }
 
 impl VercelApplication {
-    pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Get, Box::new(handler))
-    }
-
-    pub fn post(&mut self, path: &str, handler: impl Handler) -> &mut Self {
-        self.route(path, HttpMethod::Post, Box::new(handler))
-    }
-
     pub async fn handle(self, request: Request) -> Result<Response<Body>, Error> {
-        let mut res = ngyn_shared::NgynResponse::from_status(404);
-        res.send("Route not found");
-
+        let mut is_found = false;
+        let mut res = ngyn_shared::NgynResponse::from_status(200);
         let (parts, body) = request.into_parts();
 
         for (path, method, handler) in self.routes {
@@ -37,34 +30,58 @@ impl VercelApplication {
                 let headers = {
                     let mut entries = std::collections::HashMap::new();
                     for (name, value) in parts.headers.clone().into_iter() {
-                        match name {
-                            Some(name) => {
-                                let value = value.to_str().unwrap();
-                                entries.insert(name.to_string(), value.to_string());
-                            }
-                            None => todo!(), // TODO: Figure out what to do if the header key is None
+                        if let Some(name) = name {
+                            let value = value.to_str().unwrap();
+                            entries.insert(name.to_string(), value.to_string());
                         }
                     }
                     entries
                 };
-                let req = ngyn_shared::NgynRequest::from((
+                let mut req = NgynRequest::from((
                     parts.method.to_string(),
                     uri.to_string(),
                     headers,
                     body.to_vec(),
                 ));
-                // change the status code to 200 to prevent vercel from returning a 404
-                res.set_status(200).send("");
-                handler.handle(&req, &mut res);
-                // await the response and reassign
+                handler.handle(&mut req, &mut res);
+
+                // Wait for the response to be ready
                 res = res.await;
+                is_found = true;
                 break; // Exit the loop once a route is found
             }
         }
 
+        // if the response is a 404 and has no body, send "Not Found"
+        if !is_found {
+            res.set_status(404);
+            res.send("Not Found");
+        }
+
+        let mut body_str = String::new();
+
+        match res.body_raw() {
+            NgynBody::String(body) => {
+                body_str = body;
+            }
+            NgynBody::Bool(body) => {
+                body_str = body.to_string();
+            }
+            NgynBody::Number(body) => {
+                body_str = body.to_string();
+            }
+            NgynBody::Map(body) => {
+                for (key, value) in body {
+                    let value_str: String = value.parse();
+                    body_str.push_str(&format!("{}: {}\n", key, value_str));
+                }
+            }
+            NgynBody::None => {}
+        }
+
         Ok(Response::builder()
             .status(res.status())
-            .body(res.body_raw().into())
+            .body(body_str.into())
             .unwrap())
     }
 }

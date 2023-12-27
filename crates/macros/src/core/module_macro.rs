@@ -1,4 +1,3 @@
-extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
@@ -68,7 +67,7 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|middleware| {
             quote! {
-                let middleware: #middleware = ngyn::NgynProvider.provide();
+                let middleware: #middleware = ngyn::prelude::NgynProvider.provide();
                 self.middlewares.push(std::sync::Arc::new(middleware));
             }
         })
@@ -102,17 +101,17 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         // This is to make sure that the controller is imported
-        use ngyn::NgynController as #controller_ident;
+        use ngyn::prelude::NgynController as #controller_ident;
 
         #(#attrs)*
-        #[ngyn::dependency]
+        #[ngyn::macros::dependency]
         #vis struct #ident {
-            middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
+            middlewares:  Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>,
         }
 
-        impl ngyn::NgynModule for #ident {
+        impl ngyn::prelude::NgynModule for #ident {
 
-            fn new(middlewares:  Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
+            fn new(middlewares:  Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
                 Self { middlewares }
             }
 
@@ -120,9 +119,9 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 stringify!(#ident)
             }
 
-            fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::NgynController>> {
-                let mut modules: Vec<std::sync::Arc<dyn ngyn::NgynModule>> = vec![];
-                let mut controllers: Vec<std::sync::Arc<dyn ngyn::NgynController>> = vec![];
+            fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> {
+                let mut modules: Vec<std::sync::Arc<dyn ngyn::prelude::NgynModule>> = vec![];
+                let mut controllers: Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> = vec![];
                 #(#add_middlewares)*
                 #(#add_controllers)*
                 #(#add_imported_modules_controllers)*

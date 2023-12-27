@@ -21,21 +21,17 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #(#attrs)*
-        #[ngyn::dependency]
+        #[ngyn::macros::dependency]
         #[derive(Clone)]
         #vis struct #ident {
             #(#fields),*
         }
 
-        impl ngyn::NgynInjectable for #ident {
+        impl ngyn::prelude::NgynInjectable for #ident {
             fn new() -> Self {
                 #ident {
-                    #(#keys: ngyn::NgynProvider.provide()),*
+                    #(#keys: ngyn::prelude::NgynProvider.provide()),*
                 }
-            }
-
-            fn name(&self) -> &str {
-                stringify!(#ident)
             }
         }
     };

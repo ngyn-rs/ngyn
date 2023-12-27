@@ -4,10 +4,19 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*};
+use crate::common::check_macro::check_fn_macro;
+use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
 use crate::core::module_macro::*;
-use common::check_macro::check_macro;
+use crate::core::platform_macro::platform_macro;
+
+use common::check_macro::check_impl_macro;
 use proc_macro::TokenStream;
+
+#[proc_macro_attribute]
+/// `platform` is used to mark a struct as a platform engine.
+pub fn platform(args: TokenStream, input: TokenStream) -> TokenStream {
+    platform_macro(args, input)
+}
 
 #[proc_macro_attribute]
 /// `module` is a procedural macro that generates a struct and its implementation.
@@ -26,6 +35,12 @@ pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
 /// The `controller` attribute is used to mark a struct as a controller.
 pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
     controller_macro(args, input)
+}
+
+#[proc_macro_attribute]
+/// The `routes` attribute is used to mark a struct impl as a routes container.
+pub fn routes(_args: TokenStream, input: TokenStream) -> TokenStream {
+    routes_macro(input)
 }
 
 #[proc_macro_attribute]
@@ -89,5 +104,10 @@ pub fn head(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 /// `check` macro is used to determine if a route should be executed.
 pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
-    check_macro(args, input)
+    let parsed_input = syn::parse::<syn::Item>(input.clone());
+    match parsed_input {
+        Ok(syn::Item::Fn(_)) => check_fn_macro(args, input),
+        Ok(syn::Item::Impl(impl_item)) => check_impl_macro(impl_item, args),
+        _ => panic!("`check` attribute can only be used on methods or impl blocks"),
+    }
 }

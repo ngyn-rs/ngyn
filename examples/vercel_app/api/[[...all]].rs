@@ -1,4 +1,4 @@
-use ngyn::{platforms::VercelApplication, NgynFactory};
+use ngyn::{app::NgynFactory, platforms::VercelApplication};
 use vercel_app::modules::sample::sample_module::SampleModule;
 use vercel_runtime::{run, Body, Error, Request, Response};
 
