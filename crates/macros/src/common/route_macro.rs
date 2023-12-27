@@ -26,12 +26,12 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
 
     let return_val = match output {
         syn::ReturnType::Type(_, _) => quote! {},
-        _ => quote! { return ngyn::NgynBody::None; },
+        _ => quote! { return ngyn::prelude::NgynBody::None; },
     };
 
     let output = match output {
         syn::ReturnType::Type(_, ty) => quote! { -> #ty }, // TODO: Handle other types aside NgynBody
-        _ => quote! { -> ngyn::NgynBody },
+        _ => quote! { -> ngyn::prelude::NgynBody },
     };
 
     let expanded = quote! {

@@ -5,10 +5,10 @@ use dotenv::dotenv;
 use modules::AppModule;
 use ngyn::{
     platforms::{NgynApplication, Result},
-    NgynFactory,
+    prelude::*,
 };
 
-#[ngyn::main]
+#[ngyn::macros::main]
 async fn main() -> Result<()> {
     dotenv().ok();
     let app = NgynFactory::<NgynApplication>::create::<AppModule>();

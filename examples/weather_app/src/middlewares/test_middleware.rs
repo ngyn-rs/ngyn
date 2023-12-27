@@ -1,4 +1,4 @@
-use ngyn::{injectable, NgynMiddleware, NgynRequest, NgynResponse};
+use ngyn::prelude::*;
 
 #[injectable]
 pub struct TestMiddleware;

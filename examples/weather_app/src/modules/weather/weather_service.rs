@@ -1,4 +1,4 @@
-use ngyn::injectable;
+use ngyn::prelude::*;
 
 use super::weather_repository::WeatherRepository;
 

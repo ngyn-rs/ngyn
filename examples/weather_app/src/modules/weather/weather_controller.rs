@@ -1,4 +1,4 @@
-use ngyn::{check, controller, get, routes, NgynRequest, NgynResponse};
+use ngyn::prelude::*;
 
 use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
