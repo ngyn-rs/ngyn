@@ -28,7 +28,7 @@ To get started with Ngyn, simply include the framework in your Rust project by a
 
 ```toml
 [dependencies]
-ngyn = "0.2.8"
+ngyn = "0.3.0"
 ```
 
 ### Example Usage
