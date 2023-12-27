@@ -1,6 +1,4 @@
-use ngyn::module;
-
 use super::sample_controller::SampleController;
 
-#[module(controllers = [SampleController])]
+#[ngyn::macros::module(controllers = [SampleController])]
 pub struct SampleModule {}
