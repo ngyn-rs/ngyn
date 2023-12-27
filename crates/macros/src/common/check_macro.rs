@@ -83,11 +83,11 @@ pub fn check_fn_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let gates = gates.iter().map(|gate| {
         quote! {
             {
-                use ngyn::NgynGate;
-                let gate: #gate = ngyn::NgynProvider.provide();
+                use ngyn::prelude::NgynGate;
+                let gate: #gate = ngyn::prelude::NgynProvider.provide();
                 if !gate.can_activate(#req) {
                     #res.set_status(403);
-                    return ngyn::NgynBody::String("Forbidden".to_string()).parse();
+                    return ngyn::prelude::NgynBody::String("Forbidden".to_string()).parse();
                 }
             }
         }

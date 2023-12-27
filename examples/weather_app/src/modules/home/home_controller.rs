@@ -1,4 +1,4 @@
-use ngyn::{controller, get, routes, NgynRequest, NgynResponse};
+use ngyn::prelude::*;
 
 #[controller]
 pub struct HomeController;

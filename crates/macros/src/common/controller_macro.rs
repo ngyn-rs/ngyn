@@ -71,7 +71,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|m| {
             quote! {
-                let middleware: #m = ngyn::NgynProvider.provide();
+                let middleware: #m = ngyn::prelude::NgynProvider.provide();
                 middlewares.push(std::sync::Arc::new(middleware));
             }
         })
@@ -79,47 +79,47 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #(#attrs)*
-        #[ngyn::dependency]
+        #[ngyn::macros::dependency]
         #vis struct #ident {
-            middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>,
+            middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>,
             #(#fields),*
         }
 
-        #[ngyn::async_trait]
-        impl ngyn::NgynControllerRoutePlaceholder for #ident {
+        #[ngyn::prelude::async_trait]
+        impl ngyn::prelude::NgynControllerRoutePlaceholder for #ident {
             #[allow(non_upper_case_globals)]
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
 
             async fn __handle_route(
                 &self,
                 handler: String,
-                req: &mut ngyn::NgynRequest,
-                res: &mut ngyn::NgynResponse,
+                req: &mut ngyn::prelude::NgynRequest,
+                res: &mut ngyn::prelude::NgynResponse,
             ) {
                 // TODO: Handle routes
             }
         }
 
-        #[ngyn::async_trait]
-        impl ngyn::NgynController for #ident {
-            fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::NgynMiddleware>>) -> Self {
+        #[ngyn::prelude::async_trait]
+        impl ngyn::prelude::NgynController for #ident {
+            fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
                 let mut controller = #ident {
                     middlewares,
-                    #(#keys: ngyn::NgynProvider.provide()),*
+                    #(#keys: ngyn::prelude::NgynProvider.provide()),*
                 };
                 controller
             }
 
             fn get_routes(&self) -> Vec<(String, String, String)> {
-                use ngyn::NgynControllerRoutePlaceholder;
+                use ngyn::prelude::NgynControllerRoutePlaceholder;
                 Self::routes.iter().map(|(path, method, handler)| {
                     (path.to_string(), method.to_string(), handler.to_string())
                 }).collect()
             }
 
-            async fn handle(&self, handler: String, req: &mut ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
-                use ngyn::NgynControllerRoutePlaceholder;
+            async fn handle(&self, handler: String, req: &mut ngyn::prelude::NgynRequest, res: &mut ngyn::prelude::NgynResponse) {
+                use ngyn::prelude::NgynControllerRoutePlaceholder;
                 self.middlewares.iter().for_each(|middleware| {
                     middleware.handle(req, res);
                 });

@@ -1,9 +1,14 @@
 pub mod app;
 pub mod platforms;
 
-pub use crate::app::factory::*;
-pub use crate::app::provider::*;
-pub use async_std::main;
-pub use ngyn_macros::*;
-pub use ngyn_shared::*;
-pub use nject::injectable as dependency;
+pub mod macros {
+    pub use async_std::main;
+    pub use ngyn_macros::*;
+    pub use nject::injectable as dependency;
+}
+
+pub mod prelude {
+    pub use crate::app::*;
+    pub use crate::macros::*;
+    pub use ngyn_shared::*;
+}

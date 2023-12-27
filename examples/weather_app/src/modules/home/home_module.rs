@@ -1,4 +1,4 @@
-use ngyn::module;
+use ngyn::macros::module;
 
 use super::home_controller::HomeController;
 

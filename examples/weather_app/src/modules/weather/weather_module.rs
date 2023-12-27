@@ -1,4 +1,4 @@
-use ngyn::module;
+use ngyn::macros::*;
 
 use super::weather_controller::WeatherController;
 

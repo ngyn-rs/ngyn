@@ -99,40 +99,21 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             (path, http_method)
                         }
                     };
-                    match path.unwrap() {
-                        Path::Multiple(paths) => {
-                            for path in paths {
-                                let ident = method.sig.ident.clone();
-                                let ident_str = ident.to_string();
-                                route_defs.push(quote! {(
-                                    #path,
-                                    #http_method,
-                                    #ident_str,
-                                )});
-                                handle_routes.push(quote! {
-                                    #ident_str => {
-                                        let body = self.#ident(req, res).await;
-                                        res.peek(body);
-                                    }
-                                });
+                    path.unwrap().each(|path| {
+                        let ident = method.sig.ident.clone();
+                        let ident_str = ident.to_string();
+                        route_defs.push(quote! {(
+                            #path,
+                            #http_method,
+                            #ident_str,
+                        )});
+                        handle_routes.push(quote! {
+                            #ident_str => {
+                                let body = self.#ident(req, res).await;
+                                res.peek(body);
                             }
-                        }
-                        Path::Single(path) => {
-                            let ident = method.sig.ident.clone();
-                            let ident_str = ident.to_string();
-                            route_defs.push(quote! {(
-                                #path,
-                                #http_method,
-                                #ident_str,
-                            )});
-                            handle_routes.push(quote! {
-                                #ident_str => {
-                                    let body = self.#ident(req, res).await;
-                                    res.peek(body);
-                                }
-                            });
-                        }
-                    }
+                        });
+                    })
                 }
             }
         }
@@ -147,7 +128,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
             ];
             #(#items)*
 
-            async fn __handle_route(&self, handler: String, req: &mut ngyn::NgynRequest, res: &mut ngyn::NgynResponse) {
+            async fn __handle_route(&self, handler: String, req: &mut ngyn::prelude::NgynRequest, res: &mut ngyn::prelude::NgynResponse) {
                 match handler.as_str() {
                     #(#handle_routes),*
                     _ => {

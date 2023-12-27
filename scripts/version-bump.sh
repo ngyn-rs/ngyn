@@ -12,6 +12,8 @@ if ! command -v cog &> /dev/null; then
   cargo install cocogitto
 fi
 
+root_dir=$(git rev-parse --show-toplevel)
+
 # Find all subfolders in the crates directory
 crate_names=()
 crate_dirs=()
@@ -23,15 +25,17 @@ done < <(find examples -maxdepth 1 -type d -print0)
 
 while IFS= read -r -d $'\0' crate_dir; do
   if [[ "$crate_dir" != "crates" ]]; then
-    cargo_toml="$crate_dir/Cargo.toml"
+    cargo_toml="./Cargo.toml"
+    cd $crate_dir
     # Bump the version of each crate 
-    cargo bump $new_version --manifest-path "$cargo_toml"
+    cargo bump $new_version
     # read the name of the crate from the Cargo.toml file (the very first).
     crate_name=$(grep -m 1 "name =" "$cargo_toml" | sed -e 's/.*= "//' -e 's/"//' | tr -d '[:space:]')
     echo "Found crate: $crate_name"
 
     crate_names+=("$crate_name")
     crate_dirs+=("$crate_dir")
+    cd $root_dir
   fi
 done < <(find crates -maxdepth 1 -type d -print0)
 
