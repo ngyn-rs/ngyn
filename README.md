@@ -18,6 +18,45 @@ More information about Ngyn can be found in the [documentation](https://docs.rs/
 
 Please note that Ngyn is still in its early stages of development, and the API is subject to change.
 
+## Example
+
+This example demonstrates how to create a simple web server using Ngyn and [Tide](https://docs.rs/tide). To use Ngyn with Tide, you must enable the `tide` feature in your `Cargo.toml` file.
+
+```toml
+[dependencies]
+ngyn = { version = "0.3.0", features = ["tide"] }
+nject = "0.3.0"
+```
+
+And here's the code:
+
+```rust
+use ngyn::prelude::*;
+
+#[controller]
+struct MyController;
+
+#[routes]
+impl MyController {
+    #[get("/")]
+    async fn index(&self, _req: &mut NgynRequest, res: &mut NgynResponse) {
+        res.send("Hello World!");
+    }
+}
+
+#[module]
+struct MyAppModule;
+
+#[ngyn::main]
+async fn main() -> Result<()> {
+    let app = NgynFactory::create::<MyAppModule>();
+
+    app.listen("127.0.0.1:8080").await?;
+
+    Ok(())
+}
+```
+
 ## Philosophy
 
 ### Description
@@ -29,42 +68,6 @@ Ngyn proposes an opinionated, modular, and scalable architecture, largely inspir
 A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your application using [Actix](https://actix.rs/) or [Warp](https://docs.rs/warp) or [Tide](https://docs.rs/tide), and each of these platforms would provide a different set of features for building your application.
 
 By default, Ngyn uses [Tide](https://docs.rs/tide) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
-
-## Getting Started
-
-### Installation
-
-To get started with Ngyn, simply include the framework in your Rust project by adding the following to your `Cargo.toml`:
-
-```toml
-[dependencies]
-ngyn = "0.3.0"
-nject = "0.3.0"
-```
-
-### Example Usage
-
-Here is a simple example of a Ngyn application without any of the more advanced features.
-
-```rust
-use ngyn::{module, NgynFactory, NgynRequest, NgynResponse, Result};
-
-#[module]
-struct MyAppModule;
-
-#[ngyn::main]
-async fn main() -> Result<()> {
-    let app = NgynFactory::create::<MyAppModule>();
-
-    app.get("/", |req: &mut NgynRequest, res: &mut NgynResponse| {
-        res.send("Hello World!");
-    });
-
-    app.listen("127.0.0.1:8080").await?;
-
-    Ok(())
-}
-```
 
 ## Contribution
 
