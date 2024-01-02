@@ -1,42 +1,55 @@
-# Ngyn
+# ngyn
 
-> A progressive Rust Framework for building efficient and modularized backend applications
+[![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
+[![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://ngyn.rs)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+![MSRV](https://img.shields.io/badge/MSRV-1.63-blue)
 
-Ngyn is a powerful and progressive Rust framework crafted for the development of efficient and modularized backend applications. With a focus on performance, reliability, and flexibility, Ngyn empowers developers to build robust server-side solutions with ease. Ngyn comes packed with powerful macros, utilities, and features that make it easy to build performant and secure applications.
+A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web applications through an opinionated architecture.
+
+More information about Ngyn can be found in the [documentation](https://ngyn.rs).
 
 ## Features
 
-- **Progressive Enhancement:** Ngyn embraces the philosophy of progressive enhancement, allowing developers to start with a foundational set of features and progressively enhance the application as needed. This ensures a smooth and adaptable development process.
+- Macro API for organizing your application into reusable components
+- Built-in dependency injection for managing your application's dependencies
+- Asynchronous middleware for handling requests and responses
+- Asynchronous routing for defining your application's endpoints
+- [Platform-agnostic](#platform-agnosticism) for supporting multiple platforms
 
-- **Efficiency at Core:** Ngyn is designed to prioritize efficiency in resource utilization, providing a performant environment for backend applications. Whether handling data processing, managing business logic, or interfacing with databases, Ngyn ensures optimal performance.
+Please note that Ngyn is still in its early stages of development, and the API is subject to change.
 
-- **Modular Architecture:** Ngyn encourages a modularized approach to application development. Break down your backend logic into independent and reusable modules, promoting code organization, maintainability, and scalability. Ngyn's modular architecture facilitates collaboration among developers working on distinct components.
+## Example
 
-- **Optional Async:** Ngyn provides support for async operations out of the box through controllers. However, it's 100% optional.
-
-- **Powerful Macros:** Ngyn provides a set of powerful macros that simplify common tasks. From defining routes to creating middleware, Ngyn's macros make it easy to build robust applications.
-
-- **Lightweight:** Ngyn is lightweight and leaves a minimal footprint, making it a great choice for projects of all sizes. Ngyn's lightweight nature ensures that your application is not bogged down by unnecessary bloat, yet still provides the features you need to build a robust backend.
-
-- **Fully Extensible:** Ngyn allows you to build your own platform engines or make use of any of the built-in `vercel` or `tide` platform engines.
-
-## Getting Started
-
-### Installation
-
-To get started with Ngyn, simply include the framework in your Rust project by adding the following to your `Cargo.toml`:
+This example demonstrates how to create a simple web server using Ngyn and [Tide](https://docs.rs/tide). To use Ngyn with Tide, you must enable the `tide` feature in your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-ngyn = "0.3.0"
+ngyn = { version = "0.3.0", features = ["tide"] }
+nject = "0.3.0"
 ```
 
-### Example Usage
-
-Here is a simple example of a Ngyn application without any of the more advanced features.
+And here's the code:
 
 ```rust
-use ngyn::{module, NgynFactory, NgynRequest, NgynResponse, Result};
+use ngyn::prelude::*;
+
+#[controller]
+struct MyController;
+
+#[routes]
+impl MyController {
+    #[get("/")]
+    async fn index(&self, _req: &mut NgynRequest, res: &mut NgynResponse) {
+        res.send("Hello World!");
+    }
+
+    #[get("/hello/:name")]
+    async fn hello(&self, req: &mut NgynRequest, res: &mut NgynResponse) {
+        let name = req.param("name").unwrap();
+        res.send(format!("Hello, {}!", name));
+    }
+}
 
 #[module]
 struct MyAppModule;
@@ -45,15 +58,23 @@ struct MyAppModule;
 async fn main() -> Result<()> {
     let app = NgynFactory::create::<MyAppModule>();
 
-    app.get("/", |req: &mut NgynRequest, res: &mut NgynResponse| {
-        res.send("Hello World!");
-    });
-
     app.listen("127.0.0.1:8080").await?;
 
     Ok(())
 }
 ```
+
+## Philosophy
+
+### Description
+
+Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by [NestJS](https://nestjs.com/), and structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies application organization and enhances reusability across various projects.
+
+### Platform Agnosticism
+
+A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your application using [Actix](https://actix.rs/) or [Warp](https://docs.rs/warp) or [Tide](https://docs.rs/tide), and each of these platforms would provide a different set of features for building your application.
+
+By default, Ngyn uses [Tide](https://docs.rs/tide) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
 
 ## Contribution
 
@@ -61,6 +82,6 @@ Ngyn is an open-source project, and we welcome contributions from the community.
 
 ## License
 
-Ngyn is licensed under the [MIT License](LICENSE), allowing you to use, modify, and distribute the framework freely.
+Ngyn is licensed under the [MIT License](LICENSE.md), allowing you to use, modify, and distribute the framework freely.
 
 Start building efficient and modularized backend applications with Ngyn today!
