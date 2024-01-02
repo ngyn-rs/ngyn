@@ -1,12 +1,12 @@
 # ngyn
 
 [![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
-[![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://docs.rs/ngyn)
+[![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://ngyn.rs)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 
 A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web applications through an opinionated architecture.
 
-More information about Ngyn can be found in the [documentation](https://docs.rs/ngyn).
+More information about Ngyn can be found in the [documentation](https://ngyn.rs).
 
 ## Features
 
