@@ -1,4 +1,4 @@
-# ngyn
+# ngyn (`en·jn`)
 
 [![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
 [![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://ngyn.rs)
@@ -15,7 +15,7 @@ More information about Ngyn can be found in the [documentation](https://ngyn.rs)
 - Built-in dependency injection for managing your application's dependencies
 - Asynchronous middleware for handling requests and responses
 - Asynchronous routing for defining your application's endpoints
-- [Platform-agnostic](#platform-agnosticism) for supporting multiple platforms
+- [Platform-agnostic](#platform-agnosticism) for supporting multiple libraries and frameworks
 
 Please note that Ngyn is still in its early stages of development, and the API is subject to change.
 
@@ -51,7 +51,7 @@ impl MyController {
     }
 }
 
-#[module]
+#[module(controllers = [MyController])]
 struct MyAppModule;
 
 #[ngyn::main]
@@ -68,7 +68,7 @@ async fn main() -> Result<()> {
 
 ### Description
 
-Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by [NestJS](https://nestjs.com/), and structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies application organization and enhances reusability across various projects.
+Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by [NestJS](https://nestjs.com/) and structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies application organization and enhances reusability across various projects.
 
 ### Platform Agnosticism
 
@@ -83,5 +83,3 @@ Ngyn is an open-source project, and we welcome contributions from the community.
 ## License
 
 Ngyn is licensed under the [MIT License](LICENSE.md), allowing you to use, modify, and distribute the framework freely.
-
-Start building efficient and modularized backend applications with Ngyn today!
