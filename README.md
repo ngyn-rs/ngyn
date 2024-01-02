@@ -4,17 +4,6 @@
 
 A progressive [platform-agnostic]() framework in [Rust](https://www.rust-lang.org/) for building scalable web applications through an opinionated architecture.
 
-## Philosophy
-
-What sets Ngyn apart from other web frameworks is its opinionated architecture that promotes modularity and scalability.
-Ngyn is built around the concept of modules, which are reusable components that can be composed together to form an application. Each module is responsible for handling a specific set of features, and modules can be nested within other modules to create a hierarchy of functionality. This allows you to easily organize your application into smaller components that can be reused across multiple projects.
-
-## Platform Agnosticism
-
-A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your application using [Actix](https://actix.rs/) or [Warp]() or [Tide](), and each of these platforms would provide a different set of features for building your application.
-
-By default, Ngyn uses [Actix](https://actix.rs/) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
-
 ## Features
 
 - Macro-based module system for organizing your application into reusable components
@@ -24,6 +13,16 @@ By default, Ngyn uses [Actix](https://actix.rs/) as its underlying platform. How
 - Platform-agnostic for supporting multiple platforms
 
 Please note that Ngyn is still in its early stages of development, and the API is subject to change.
+
+## Philosophy
+
+Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by NestJS. It is structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies application organization and enhances reusability across various projects.
+
+## Platform Agnosticism
+
+A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your application using [Actix](https://actix.rs/) or [Warp]() or [Tide](), and each of these platforms would provide a different set of features for building your application.
+
+By default, Ngyn uses [Tide](https://docs.rs/tide) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
 
 ## Getting Started
 
