@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
 [![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://docs.rs/ngyn)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 
 A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web applications through an opinionated architecture.
 
@@ -42,6 +42,12 @@ impl MyController {
     async fn index(&self, _req: &mut NgynRequest, res: &mut NgynResponse) {
         res.send("Hello World!");
     }
+
+    #[get("/hello/:name")]
+    async fn hello(&self, req: &mut NgynRequest, res: &mut NgynResponse) {
+        let name = req.param("name").unwrap();
+        res.send(format!("Hello, {}!", name));
+    }
 }
 
 #[module]
@@ -75,6 +81,6 @@ Ngyn is an open-source project, and we welcome contributions from the community.
 
 ## License
 
-Ngyn is licensed under the [MIT License](LICENSE), allowing you to use, modify, and distribute the framework freely.
+Ngyn is licensed under the [MIT License](LICENSE.md), allowing you to use, modify, and distribute the framework freely.
 
 Start building efficient and modularized backend applications with Ngyn today!
