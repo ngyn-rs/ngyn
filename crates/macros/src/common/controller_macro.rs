@@ -91,12 +91,11 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
 
             async fn __handle_route(
-                &self,
-                handler: String,
-                req: &mut ngyn::prelude::NgynRequest,
-                res: &mut ngyn::prelude::NgynResponse,
+                _handler: &str,
+                _req: &mut ngyn::prelude::NgynRequest,
+                _res: &mut ngyn::prelude::NgynResponse,
             ) {
-                // TODO: Handle routes
+                // This is a placeholder for the routing logic of the controller.
             }
         }
 
@@ -111,14 +110,14 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 controller
             }
 
-            fn get_routes(&self) -> Vec<(String, String, String)> {
+            fn routes(&self) -> Vec<(String, String, String)> {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
                 Self::routes.iter().map(|(path, method, handler)| {
                     (path.to_string(), method.to_string(), handler.to_string())
                 }).collect()
             }
 
-            async fn handle(&self, handler: String, req: &mut ngyn::prelude::NgynRequest, res: &mut ngyn::prelude::NgynResponse) {
+            async fn handle(&self, handler: &str, req: &mut ngyn::prelude::NgynRequest, res: &mut ngyn::prelude::NgynResponse) {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
                 self.middlewares.iter().for_each(|middleware| {
                     middleware.handle(req, res);

@@ -10,3 +10,6 @@ license = "MIT"
 [dependencies]
 async-trait = "0.1.74"
 nject = "0.3.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+url = "2.5.0"

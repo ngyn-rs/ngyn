@@ -54,7 +54,7 @@ impl MyController {
 #[module(controllers = [MyController])]
 struct MyAppModule;
 
-#[ngyn::main]
+#[main]
 async fn main() -> Result<()> {
     let app = NgynFactory::create::<MyAppModule>();
 
