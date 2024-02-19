@@ -32,7 +32,10 @@ nject = "0.3.0"
 And here's the code:
 
 ```rust
-use ngyn::prelude::*;
+use ngyn::{
+	platforms::{NgynApplication, Result},
+	prelude::*
+};
 
 #[controller]
 struct MyController;
@@ -56,7 +59,7 @@ struct MyAppModule;
 
 #[main]
 async fn main() -> Result<()> {
-    let app = NgynFactory::create::<MyAppModule>();
+    let app = NgynFactory::<NgynApplication>::create::<MyAppModule>();
 
     app.listen("127.0.0.1:8080").await?;
 

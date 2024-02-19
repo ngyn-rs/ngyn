@@ -28,6 +28,6 @@ impl WeatherController {
     #[check(WeatherGate)]
     async fn post_location(&self, weather: WeatherDto) -> String {
         let location = weather.location;
-		self.weather_service.get_location_weather("London").await
+		self.weather_service.get_location_weather(&location).await
 	}
 }

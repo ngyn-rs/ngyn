@@ -139,7 +139,7 @@ impl Future for NgynResponse {
             let mut response = self.clone();
 
             let _ = controller
-                .handle(handler, &mut request, &mut response)
+                .handle(&handler, &mut request, &mut response)
                 .as_mut()
                 .poll(cx);
 

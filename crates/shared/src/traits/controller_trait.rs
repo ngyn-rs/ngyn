@@ -26,6 +26,7 @@ pub trait NgynControllerRoutePlaceholder {
     #[allow(non_upper_case_globals)]
     const routes: &'static [(&'static str, &'static str, &'static str)];
     async fn __handle_route(
+    	&self,
         handler: &str,
         req: &mut crate::NgynRequest,
         res: &mut crate::NgynResponse,
