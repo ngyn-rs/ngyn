@@ -52,34 +52,39 @@ impl NgynRequest {
     }
 
     pub fn params(&self) -> &HashMap<String, String> {
-		&self.params
-	}
+        &self.params
+    }
 
-	pub fn set_params(&mut self, params: HashMap<String, String>) {
-		if !self.params.is_empty() {
-			panic!("Params have already been set");
-		}
-		self.params = params;
-	}
+    pub fn set_params(&mut self, params: HashMap<String, String>) {
+        if !self.params.is_empty() {
+            panic!("Params have already been set");
+        }
+        self.params = params;
+    }
 
-	pub fn from_method(method: HttpMethod, url: &str, body: Option<Vec<u8>>, headers: HashMap<String, String>) -> Self {
-		Self {
-			method,
-			url: Url::parse(url).unwrap(),
-			headers,
-			body,
-			context: NgynContext::default(),
-			params: HashMap::new(),
-		}
-	}
+    pub fn from_method(
+        method: HttpMethod,
+        url: &str,
+        body: Option<Vec<u8>>,
+        headers: HashMap<String, String>,
+    ) -> Self {
+        Self {
+            method,
+            url: Url::parse(url).unwrap(),
+            headers,
+            body,
+            context: NgynContext::default(),
+            params: HashMap::new(),
+        }
+    }
 
     pub fn from_get(url: &str, headers: HashMap<String, String>) -> Self {
-		Self::from_method(HttpMethod::Get, url, None, headers)
-	}
+        Self::from_method(HttpMethod::Get, url, None, headers)
+    }
 
-	pub fn from_post(url: &str, body: Vec<u8>, headers: HashMap<String, String>) -> Self {
-		Self::from_method(HttpMethod::Post, url, Some(body), headers)
-	}
+    pub fn from_post(url: &str, body: Vec<u8>, headers: HashMap<String, String>) -> Self {
+        Self::from_method(HttpMethod::Post, url, Some(body), headers)
+    }
 }
 
 impl From<(String, String, HashMap<String, String>, Vec<u8>)> for NgynRequest {
@@ -90,7 +95,7 @@ impl From<(String, String, HashMap<String, String>, Vec<u8>)> for NgynRequest {
 }
 
 impl Transformer for NgynRequest {
-	fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Self {
-		req.clone()
-	}
+    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Self {
+        req.clone()
+    }
 }

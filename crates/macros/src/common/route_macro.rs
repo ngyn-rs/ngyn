@@ -45,22 +45,26 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
 		.collect();
 
     // initial self varn obtained from the first input
-    let self_var = match inputs.iter().nth(0) {
-		Some(syn::FnArg::Receiver(receiver)) => {
-			let Receiver { reference, mutability, self_token, .. } = receiver;
-			if reference.is_some() {
-				if mutability.is_some() {
-					quote! { &mut #self_token }
-				} else {
-					quote! { &#self_token }
-				}
-			} else {
-				quote! { #self_token }
-			}
-
-		},
-		_ => quote! {},
-	};
+    let self_var = match inputs.iter().next() {
+        Some(syn::FnArg::Receiver(receiver)) => {
+            let Receiver {
+                reference,
+                mutability,
+                self_token,
+                ..
+            } = receiver;
+            if reference.is_some() {
+                if mutability.is_some() {
+                    quote! { &mut #self_token }
+                } else {
+                    quote! { &#self_token }
+                }
+            } else {
+                quote! { #self_token }
+            }
+        }
+        _ => quote! {},
+    };
 
     let return_val = match output {
         syn::ReturnType::Type(_, _) => quote! {},
@@ -75,7 +79,7 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #(#attrs)*
         #vis async #fn_token #ident(#self_var, request: &mut ngyn::prelude::NgynRequest, response: &mut ngyn::prelude::NgynResponse) #output {
-        	#(#transducers)*
+            #(#transducers)*
             #block
             #return_val
         }

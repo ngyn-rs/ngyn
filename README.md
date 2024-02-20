@@ -43,14 +43,14 @@ struct MyController;
 #[routes]
 impl MyController {
     #[get("/")]
-    async fn index(&self, _req: &mut NgynRequest, res: &mut NgynResponse) {
-        res.send("Hello World!");
+    fn index(&self) {
+        "Hello World!".to_string()
     }
 
     #[get("/hello/:name")]
-    async fn hello(&self, req: &mut NgynRequest, res: &mut NgynResponse) {
-        let name = req.param("name").unwrap();
-        res.send(format!("Hello, {}!", name));
+    fn hello(&self) {
+        let name = request.param("name").unwrap();
+        format!("Hello, {}!", name)
     }
 }
 

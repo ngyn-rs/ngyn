@@ -4,58 +4,65 @@ use url::Url;
 use crate::{NgynRequest, NgynResponse};
 
 pub trait Transformer {
-	fn transform(req: &mut NgynRequest, res: &mut NgynResponse) -> Self;
+    fn transform(req: &mut NgynRequest, res: &mut NgynResponse) -> Self;
 }
 
 pub struct Transducer;
 
 impl Transducer {
-	#[allow(dead_code)]
-	pub fn reduce<S: Transformer>(req: &mut NgynRequest, res: &mut NgynResponse) -> S {
-		S::transform(req, res)
-	}
+    #[allow(dead_code)]
+    pub fn reduce<S: Transformer>(req: &mut NgynRequest, res: &mut NgynResponse) -> S {
+        S::transform(req, res)
+    }
 }
 
 pub struct Param {
-	data: Vec<(Cow<'static, str>, Cow<'static, str>)>,
+    data: Vec<(Cow<'static, str>, Cow<'static, str>)>,
 }
 
 impl Param {
-	#[allow(dead_code)]
-	pub fn get(&self, id: &str) -> Option<String> {
-		for (key, value) in &self.data {
-			if key == id {
-				return Some(value.to_string());
-			}
-		}
-		None
-	}
+    #[allow(dead_code)]
+    pub fn get(&self, id: &str) -> Option<String> {
+        for (key, value) in &self.data {
+            if key == id {
+                return Some(value.to_string());
+            }
+        }
+        None
+    }
 }
 
 impl Transformer for Param {
-	fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Param {
-		let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = req.params().into_iter()
-			.map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
-			.collect();
-		Param { data }
-	}
+    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Param {
+        let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = req
+            .params()
+            .iter()
+            .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
+            .collect();
+        Param { data }
+    }
 }
 
-
 pub struct Query {
-   url: Url,
+    url: Url,
 }
 
 impl Query {
     #[allow(dead_code)]
     pub fn get(&self, id: &str) -> Option<String> {
-        self.url.query_pairs().filter(|(key, _)| key == id).map(|(_, value)| value.to_string()).next()
+        self.url
+            .query_pairs()
+            .filter(|(key, _)| key == id)
+            .map(|(_, value)| value.to_string())
+            .next()
     }
 }
 
 impl Transformer for Query {
-	fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Query {
-		Query { url: req.url().clone() }
+    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Query {
+        Query {
+            url: req.url().clone(),
+        }
     }
 }
 
@@ -71,10 +78,9 @@ impl Dto {
     }
 }
 
-
 impl Transformer for Dto {
-	fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Dto {
-		let data = req.body_string().unwrap_or("{}".to_string());
-		Dto { data }
-	}
+    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Dto {
+        let data = req.body_string().unwrap_or("{}".to_string());
+        Dto { data }
+    }
 }

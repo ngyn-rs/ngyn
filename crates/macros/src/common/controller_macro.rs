@@ -91,7 +91,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
 
             async fn __handle_route(
-            	&self,
+                &self,
                 _handler: &str,
                 _req: &mut ngyn::prelude::NgynRequest,
                 _res: &mut ngyn::prelude::NgynResponse,

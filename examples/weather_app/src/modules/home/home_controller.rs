@@ -7,7 +7,7 @@ pub struct HomeController;
 impl HomeController {
     #[get("/")]
     fn get_home(&self, query: Query) -> String {
-    	println!("{:?}", query.get("location"));
+        println!("{:?}", query.get("location"));
         "Welcome to the weather app! Try /weather?location=London".to_string()
     }
 }

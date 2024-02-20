@@ -14,7 +14,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::prelude::*;
+    /// use ngyn::{platforms::NgynApplication, prelude::*};
     ///
     /// #[module]
     /// pub struct YourAppModule;

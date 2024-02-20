@@ -151,7 +151,7 @@ impl Future for NgynResponse {
 }
 
 impl Transformer for NgynResponse {
-	fn transform(_req: &mut NgynRequest, res: &mut NgynResponse) -> Self {
-		res.clone()
-	}
+    fn transform(_req: &mut NgynRequest, res: &mut NgynResponse) -> Self {
+        res.clone()
+    }
 }

@@ -129,10 +129,10 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
             #(#items)*
 
             async fn __handle_route(
-            	&self,
-             	handler: &str,
-              	req: &mut ngyn::prelude::NgynRequest,
-               	res: &mut ngyn::prelude::NgynResponse
+                &self,
+                 handler: &str,
+                  req: &mut ngyn::prelude::NgynRequest,
+                   res: &mut ngyn::prelude::NgynResponse
             ) {
                 match handler {
                     #(#handle_routes),*
