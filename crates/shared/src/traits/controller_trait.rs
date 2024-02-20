@@ -9,12 +9,12 @@ pub trait NgynController: Send + Sync {
         Self: Sized;
 
     /// Returns a vector of routes for the controller.
-    fn get_routes(&self) -> Vec<(String, String, String)>;
+    fn routes(&self) -> Vec<(String, String, String)>;
 
     /// This is for internal use only. It handles the routing logic of the controller.
     async fn handle(
         &self,
-        handler: String,
+        handler: &str,
         req: &mut crate::NgynRequest,
         res: &mut crate::NgynResponse,
     );
@@ -27,7 +27,7 @@ pub trait NgynControllerRoutePlaceholder {
     const routes: &'static [(&'static str, &'static str, &'static str)];
     async fn __handle_route(
         &self,
-        handler: String,
+        handler: &str,
         req: &mut crate::NgynRequest,
         res: &mut crate::NgynResponse,
     );

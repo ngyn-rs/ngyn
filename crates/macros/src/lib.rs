@@ -6,6 +6,7 @@ mod utils;
 
 use crate::common::check_macro::check_fn_macro;
 use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
+use crate::core::dto_macro::dto_macro;
 use crate::core::module_macro::*;
 use crate::core::platform_macro::platform_macro;
 
@@ -110,4 +111,10 @@ pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
         Ok(syn::Item::Impl(impl_item)) => check_impl_macro(impl_item, args),
         _ => panic!("`check` attribute can only be used on methods or impl blocks"),
     }
+}
+
+#[proc_macro_derive(Dto)]
+/// The `Dto` derive macro is used to generate a DTO struct.
+pub fn dto(input: TokenStream) -> TokenStream {
+    dto_macro(input)
 }

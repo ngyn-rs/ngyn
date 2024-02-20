@@ -31,8 +31,11 @@ nject = "0.3.0"
 
 And here's the code:
 
-```rust
-use ngyn::prelude::*;
+```rust ignore
+use ngyn::{
+	platforms::{NgynApplication, Result},
+	prelude::*
+};
 
 #[controller]
 struct MyController;
@@ -40,23 +43,23 @@ struct MyController;
 #[routes]
 impl MyController {
     #[get("/")]
-    async fn index(&self, _req: &mut NgynRequest, res: &mut NgynResponse) {
-        res.send("Hello World!");
+    fn index(&self) {
+        "Hello World!".to_string()
     }
 
     #[get("/hello/:name")]
-    async fn hello(&self, req: &mut NgynRequest, res: &mut NgynResponse) {
-        let name = req.param("name").unwrap();
-        res.send(format!("Hello, {}!", name));
+    fn hello(&self) {
+        let name = request.param("name").unwrap();
+        format!("Hello, {}!", name)
     }
 }
 
 #[module(controllers = [MyController])]
 struct MyAppModule;
 
-#[ngyn::main]
+#[main]
 async fn main() -> Result<()> {
-    let app = NgynFactory::create::<MyAppModule>();
+    let app = NgynFactory::<NgynApplication>::create::<MyAppModule>();
 
     app.listen("127.0.0.1:8080").await?;
 

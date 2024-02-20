@@ -5,7 +5,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use crate::{body::IntoNgynBody, NgynBody, NgynController, NgynRequest};
+use crate::{body::IntoNgynBody, transformer::Transformer, NgynBody, NgynController, NgynRequest};
 
 #[derive(Clone)]
 pub struct NgynResponseRoute {
@@ -139,7 +139,7 @@ impl Future for NgynResponse {
             let mut response = self.clone();
 
             let _ = controller
-                .handle(handler, &mut request, &mut response)
+                .handle(&handler, &mut request, &mut response)
                 .as_mut()
                 .poll(cx);
 
@@ -147,5 +147,11 @@ impl Future for NgynResponse {
         } else {
             Poll::Ready(self.clone())
         }
+    }
+}
+
+impl Transformer for NgynResponse {
+    fn transform(_req: &mut NgynRequest, res: &mut NgynResponse) -> Self {
+        res.clone()
     }
 }

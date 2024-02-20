@@ -14,7 +14,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::{module, NgynFactory, platforms::NgynApplication};
+    /// use ngyn::{platforms::NgynApplication, prelude::*};
     ///
     /// #[module]
     /// pub struct YourAppModule;
@@ -25,7 +25,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
         let mut module = AppModule::new(vec![]);
         let mut server = Application::new();
         for controller in module.get_controllers() {
-            for (path, http_method, handler) in controller.get_routes() {
+            for (path, http_method, handler) in controller.routes() {
                 let http_method = HttpMethod::from(http_method);
                 server.route(
                     path.as_str(),
