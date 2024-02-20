@@ -31,7 +31,7 @@ nject = "0.3.0"
 
 And here's the code:
 
-```rust
+```rust ignore
 use ngyn::{
 	platforms::{NgynApplication, Result},
 	prelude::*
