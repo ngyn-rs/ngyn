@@ -1,5 +1,5 @@
 use ngyn_macros::platform;
-use ngyn_shared::{Handler, HttpMethod, NgynBody, NgynEngine, NgynRequest, NgynResponse};
+use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest, NgynResponse, ParseBytes};
 use std::{collections::HashMap, sync::Arc};
 use tide::{Response, Server};
 
@@ -15,19 +15,8 @@ impl NgynApplication {
     fn build(res: NgynResponse) -> Result {
         let mut response = Response::new(res.status());
 
-        match res.body_raw() {
-            NgynBody::String(body) => response.set_body(body),
-            NgynBody::Bool(body) => response.set_body(body.to_string()),
-            NgynBody::Number(body) => response.set_body(body.to_string()),
-            NgynBody::Map(body) => {
-                let mut body_string = String::new();
-                for (key, value) in body {
-                    let value_str: String = value.parse();
-                    body_string.push_str(&format!("{}: {}\n", key, value_str));
-                }
-                response.set_body(body_string);
-            }
-            NgynBody::None => {}
+        if !res.body_raw().is_empty() {
+            response.set_body(res.body_raw().parse_bytes::<String>());
         }
 
         for header in res.headers() {

@@ -1,4 +1,4 @@
-use ngyn_shared::{enums::HttpMethod, NgynEngine, NgynModule, NgynRequest, NgynResponse};
+use ngyn_shared::{NgynEngine, NgynModule, NgynRequest, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {
@@ -26,14 +26,15 @@ impl<Application: NgynEngine> NgynFactory<Application> {
         let mut server = Application::new();
         for controller in module.get_controllers() {
             for (path, http_method, handler) in controller.routes() {
-                let http_method = HttpMethod::from(http_method);
                 server.route(
                     path.as_str(),
-                    http_method,
+                    http_method.into(),
                     Box::new({
                         let controller = controller.clone();
                         move |req: &mut NgynRequest, res: &mut NgynResponse| {
-                            res.with_controller(controller.clone(), handler.clone(), req);
+                            tokio::runtime::Runtime::new()
+                                .unwrap()
+                                .block_on(controller.handle(&handler, req, res));
                         }
                     }),
                 );

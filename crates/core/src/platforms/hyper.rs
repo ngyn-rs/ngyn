@@ -2,7 +2,7 @@ use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request, Response};
-use ngyn_shared::{Handler, HttpMethod, NgynEngine, Transformer};
+use ngyn_shared::{Handler, HttpMethod, NgynEngine, ToParts};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 
@@ -26,16 +26,16 @@ impl HyperApplication {
         let server = TcpListener::bind(&address).await?;
 
         let service = service_fn(|req: Request<Incoming>| async move {
-            let mut response = Response::new(Full::new(Bytes::default()));
+            let mut res = Response::new(Full::new(Bytes::default()));
 
             for (path, method, handler) in self.routes.iter() {
-                if req.uri().path() == *path && req.method().to_string() == *method.as_str().to_string() {
-                    let res = handler.handle(req).await;
-                    response = res;
+                let (is_match, parts) = req.uri().parts(path);
+                if is_match {
+                    handler.handle(req, res);
                 }
             }
 
-            Ok::<_, hyper::Error>(response)
+            Ok::<_, hyper::Error>(res)
         });
 
         loop {

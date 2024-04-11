@@ -110,7 +110,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         handle_routes.push(quote! {
                             #ident_str => {
                                 let body = self.#ident(req, res).await;
-                                res.peek(body);
+                                res.peek(body.parse_body());
                             }
                         });
                     })

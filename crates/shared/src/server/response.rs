@@ -5,7 +5,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use crate::{body::IntoNgynBody, transformer::Transformer, NgynBody, NgynController, NgynRequest};
+use crate::{body::ParseBytes, transformer::Transformer, Bytes, NgynController, NgynRequest, ParseBody};
 
 #[derive(Clone)]
 pub struct NgynResponseRoute {
@@ -18,7 +18,7 @@ pub struct NgynResponseRoute {
 #[derive(Clone)]
 pub struct NgynResponse {
     status_code: u16,
-    raw_body: NgynBody,
+    raw_body: Bytes,
     raw_headers: Vec<String>,
     route: Option<NgynResponseRoute>,
 }
@@ -27,7 +27,7 @@ impl NgynResponse {
     pub fn from_status(code: u16) -> Self {
         Self {
             status_code: code,
-            raw_body: NgynBody::None,
+            raw_body: Bytes::default(),
             raw_headers: Vec::new(),
             route: None,
         }
@@ -62,8 +62,8 @@ impl NgynResponse {
     ///
     /// * A mutable reference to the `NgynResponse`.
     pub fn send(&mut self, data: &str) -> &mut Self {
-        if self.raw_body == NgynBody::None {
-            self.raw_body = NgynBody::String(data.to_string());
+        if self.raw_body.is_empty() {
+            self.raw_body = Bytes::from(data.to_string());
         } else {
             panic!("Response body already set");
         }
@@ -71,16 +71,12 @@ impl NgynResponse {
     }
 
     /// Gets the raw value for response body
-    pub fn body_raw(&self) -> NgynBody {
+    pub fn body_raw(&self) -> Bytes {
         self.raw_body.clone()
     }
 
     pub fn is_empty(&self) -> bool {
-        match self.raw_body {
-            NgynBody::String(ref value) => value.is_empty(),
-            NgynBody::None => true,
-            _ => false,
-        }
+        self.raw_body.is_empty()
     }
 
     /// Gets a header value by key
@@ -100,13 +96,8 @@ impl NgynResponse {
         self
     }
 
-    pub fn peek(&mut self, item: impl IntoNgynBody) -> &mut Self {
-        match item.parse_body() {
-            NgynBody::String(value) => self.send(&value),
-            NgynBody::Bool(value) => self.send(&value.to_string()),
-            NgynBody::Number(value) => self.send(&value.to_string()),
-            _ => self,
-        }
+    pub fn peek(&mut self, item: impl ParseBody) -> &mut Self {
+        self.send(&item.parse_body().parse_bytes::<String>())
     }
 
     /// Handles the `NgynResponse` from a route.
