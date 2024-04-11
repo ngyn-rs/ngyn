@@ -1,18 +1,10 @@
 use std::{
     future::Future,
     pin::Pin,
-    sync::Arc,
     task::{Context, Poll},
 };
 
-use crate::{body::ParseBytes, transformer::Transformer, Bytes, NgynController, NgynRequest, ParseBody};
-
-#[derive(Clone)]
-pub struct NgynResponseRoute {
-    controller: Arc<dyn NgynController>,
-    handler: String,
-    request: NgynRequest,
-}
+use crate::{body::ParseBytes, context::NgynContext, transformer::Transformer, Bytes, ParseBody};
 
 /// NgynResponse is a struct that represents a server response.
 #[derive(Clone)]
@@ -20,7 +12,6 @@ pub struct NgynResponse {
     status_code: u16,
     raw_body: Bytes,
     raw_headers: Vec<String>,
-    route: Option<NgynResponseRoute>,
 }
 
 impl NgynResponse {
@@ -29,7 +20,6 @@ impl NgynResponse {
             status_code: code,
             raw_body: Bytes::default(),
             raw_headers: Vec::new(),
-            route: None,
         }
     }
 
@@ -100,49 +90,18 @@ impl NgynResponse {
         self.send(&item.parse_body().parse_bytes::<String>())
     }
 
-    /// Handles the `NgynResponse` from a route.
-    pub fn with_controller(
-        &mut self,
-        controller: Arc<dyn NgynController>,
-        handler: String,
-        request: &mut NgynRequest,
-    ) {
-        self.route = Some(NgynResponseRoute {
-            controller,
-            handler,
-            request: request.clone(),
-        });
-    }
 }
 
 impl Future for NgynResponse {
     type Output = NgynResponse;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let NgynResponse { route, .. } = self.as_mut().get_mut();
-
-        if let Some(NgynResponseRoute {
-            controller,
-            handler,
-            mut request,
-        }) = route.clone()
-        {
-            let mut response = self.clone();
-
-            let _ = controller
-                .handle(&handler, &mut request, &mut response)
-                .as_mut()
-                .poll(cx);
-
-            Poll::Ready(response)
-        } else {
-            Poll::Ready(self.clone())
-        }
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        Poll::Ready(self.clone())
     }
 }
 
 impl Transformer for NgynResponse {
-    fn transform(_req: &mut NgynRequest, res: &mut NgynResponse) -> Self {
+    fn transform(_cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
         res.clone()
     }
 }

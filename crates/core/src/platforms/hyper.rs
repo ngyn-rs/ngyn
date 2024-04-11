@@ -28,12 +28,12 @@ impl HyperApplication {
         let service = service_fn(|req: Request<Incoming>| async move {
             let mut res = Response::new(Full::new(Bytes::default()));
 
-            for (path, method, handler) in self.routes.iter() {
-                let (is_match, parts) = req.uri().parts(path);
-                if is_match {
-                    handler.handle(req, res);
-                }
-            }
+            // for (path, method, handler) in self.routes.iter() {
+            //     let (is_match, parts) = req.uri().parts(path);
+            //     if is_match {
+            //         handler.handle(&mut req, &mut res);
+            //     }
+            // }
 
             Ok::<_, hyper::Error>(res)
         });

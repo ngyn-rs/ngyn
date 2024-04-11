@@ -1,5 +1,5 @@
 use ngyn_macros::platform;
-use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest, NgynResponse, ParseBytes};
+use ngyn_shared::{Handler, HttpMethod, NgynEngine, NgynRequest, NgynResponse};
 use std::{collections::HashMap, sync::Arc};
 use tide::{Response, Server};
 
@@ -52,7 +52,7 @@ impl NgynEngine for NgynApplication {
                 let handler = Arc::clone(&handler);
                 async move {
                     let values = request_to_values(req).await;
-                    let mut request = NgynRequest::from(values);
+                    let mut request = NgynRequest::from_parts(req);
                     let mut response = NgynResponse::from_status(200);
                     handler.handle(&mut request, &mut response);
                     Self::build(response.await)

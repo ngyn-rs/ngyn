@@ -2,6 +2,7 @@
 //
 
 use std::collections::HashMap;
+use hyper::{body::Incoming, Request};
 
 /// Represents the value of a context in Ngyn
 ///
@@ -104,8 +105,9 @@ impl From<NgynContextValue> for String {
     }
 }
 
-#[derive(Clone, Default)]
 pub struct NgynContext {
+    pub request: Request<Incoming>,
+    pub params: Vec<(String, String)>,
     store: HashMap<String, NgynContextValue>,
 }
 
@@ -145,5 +147,13 @@ impl NgynContext {
     pub fn is(&self, key: &str) -> bool {
         let stored_value = self.get(key);
         !stored_value.is_empty() || stored_value.clone().into()
+    }
+
+    pub fn from_request(request: Request<Incoming>) -> Self {
+        NgynContext {
+            request,
+            store: HashMap::new(),
+            params: Vec::new(),
+        }
     }
 }
