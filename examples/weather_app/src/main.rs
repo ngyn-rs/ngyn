@@ -3,10 +3,7 @@ mod modules;
 
 use dotenv::dotenv;
 use modules::AppModule;
-use ngyn::{
-    platforms::HyperApplication,
-    prelude::*,
-};
+use ngyn::{platforms::HyperApplication, prelude::*};
 
 #[ngyn::macros::main]
 async fn main() {

@@ -1,8 +1,8 @@
 // a context extends hashmap to provide some extra functionality
 //
 
-use std::collections::HashMap;
 use hyper::{body::Incoming, Request};
+use std::collections::HashMap;
 
 use crate::ToParts;
 

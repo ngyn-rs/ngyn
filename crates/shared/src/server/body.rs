@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use hyper::body::Bytes;
+use std::str::FromStr;
 
 /// `ParseBody` can be used to convert a type into a `Bytes`
 ///
@@ -21,7 +21,9 @@ pub trait ParseBytes {
 
 impl ParseBytes for Bytes {
     fn parse_bytes<T: FromStr + Default>(self) -> T {
-        String::from_utf8_lossy(&self).parse::<T>().unwrap_or_default()
+        String::from_utf8_lossy(&self)
+            .parse::<T>()
+            .unwrap_or_default()
     }
 }
 

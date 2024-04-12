@@ -1,4 +1,4 @@
-use crate::{NgynInjectable, NgynContext};
+use crate::{NgynContext, NgynInjectable};
 
 /// Trait for implementing a gate.
 pub trait NgynGate: NgynInjectable {

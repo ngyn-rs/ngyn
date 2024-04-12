@@ -19,11 +19,11 @@ fn match_paths(path_a: &str, path_b: &str) -> (bool, Vec<(String, String)>) {
                 return None;
             }
             let (name, [path]) = capture.extract();
-            return Some((name.to_string(), path.to_string()));
+            Some((name.to_string(), path.to_string()))
         })
         .collect();
 
-    return (true, named_matches_with_values);
+    (true, named_matches_with_values)
 }
 
 impl ToParts for Uri {
@@ -35,11 +35,11 @@ impl ToParts for Uri {
         let has_named = parts_path.contains('<');
 
         if has_wildcard || has_named {
-            let parts_path = parts_path.replace("*", "(.*)");
-            let parts_path = parts_path.replace("<", "(?P<").replace(">", ">[^/]+)");
-            return match_paths(&parts_path, &uri_path);
+            let parts_path = parts_path.replace('*', "(.*)");
+            let parts_path = parts_path.replace('<', "(?P<").replace('>', ">[^/]+)");
+            return match_paths(&parts_path, uri_path);
         }
-        
-        match_paths(&parts_path, &uri_path)
+
+        match_paths(parts_path, uri_path)
     }
 }
