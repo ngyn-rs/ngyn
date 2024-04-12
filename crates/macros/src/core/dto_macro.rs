@@ -7,8 +7,8 @@ pub fn dto_macro(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl ngyn::prelude::Transformer for #ident {
-            fn transform(req: &mut NgynRequest, res: &mut NgynResponse) -> Self {
-                let dto = ngyn::prelude::Dto::transform(req, res);
+            fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Self {
+                let dto = ngyn::prelude::Dto::transform(cx, res);
                 dto.parse::<#ident>().unwrap()
             }
         }

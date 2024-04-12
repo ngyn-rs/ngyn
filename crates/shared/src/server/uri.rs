@@ -15,6 +15,9 @@ fn match_paths(path_a: &str, path_b: &str) -> (bool, Vec<(String, String)>) {
     let named_matches_with_values: Vec<(String, String)> = path_b
         .captures_iter(path_a)
         .filter_map(|capture| {
+            if capture.len() < 2 {
+                return None;
+            }
             let (name, [path]) = capture.extract();
             return Some((name.to_string(), path.to_string()));
         })

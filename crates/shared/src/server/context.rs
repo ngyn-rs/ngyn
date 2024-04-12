@@ -4,6 +4,8 @@
 use std::collections::HashMap;
 use hyper::{body::Incoming, Request};
 
+use crate::ToParts;
+
 /// Represents the value of a context in Ngyn
 ///
 /// # Examples
@@ -154,6 +156,16 @@ impl NgynContext {
             request,
             store: HashMap::new(),
             params: Vec::new(),
+        }
+    }
+
+    pub fn with(&mut self, path: &str) -> Option<&mut Self> {
+        let (is_match, params) = self.request.uri().parts(path);
+        if is_match {
+            self.params = params;
+            Some(self)
+        } else {
+            None
         }
     }
 }

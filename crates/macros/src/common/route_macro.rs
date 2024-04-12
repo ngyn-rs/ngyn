@@ -33,7 +33,7 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
 				if let syn::Type::Path(path) = *ty.clone() {
 					let path = &path.path;
 					quote! {
-						let mut #pat: #path = ngyn::prelude::Transducer::reduce::<#path>(request, response);
+						let mut #pat: #path = ngyn::prelude::Transducer::reduce::<#path>(cx, response);
 					}
 				} else {
 					panic!("Expected a valid struct");
@@ -78,7 +78,7 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #(#attrs)*
-        #vis async #fn_token #ident(#self_var, request: &mut ngyn::prelude::NgynRequest, response: &mut ngyn::prelude::NgynResponse) #output {
+        #vis async #fn_token #ident(#self_var, cx: &mut ngyn::prelude::NgynContext, response: &mut ngyn::prelude::NgynResponse) #output {
             #(#transducers)*
             #block
             #return_val
