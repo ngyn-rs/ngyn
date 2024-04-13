@@ -32,7 +32,10 @@ impl<Application: NgynEngine> NgynFactory<Application> {
                     Box::new({
                         let controller = controller.clone();
                         move |cx: &mut NgynContext, res: &mut NgynResponse| {
-                            let _ = controller.handle(&handler, cx, res);
+                            let handle = tokio::runtime::Handle::current();
+                            handle.block_on(async move {
+                                controller.handle(&handler, cx, res).await;
+                            });
                         }
                     }),
                 );

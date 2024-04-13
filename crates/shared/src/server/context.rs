@@ -4,7 +4,7 @@
 use hyper::{body::Incoming, Request};
 use std::collections::HashMap;
 
-use crate::ToParts;
+use crate::{HttpMethod, ToParts};
 
 /// Represents the value of a context in Ngyn
 ///
@@ -159,7 +159,7 @@ impl NgynContext {
         }
     }
 
-    pub fn with(&mut self, path: &str) -> Option<&mut Self> {
+    pub fn with(&mut self, path: &str, _method: &HttpMethod) -> Option<&mut Self> {
         let (is_match, params) = self.request.uri().parts(path);
         if is_match {
             self.params = params;

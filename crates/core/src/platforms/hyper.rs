@@ -1,24 +1,28 @@
-use std::sync::Arc;
-
 use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request, Response};
 use hyper_util::rt::TokioIo;
-use ngyn_shared::{Handler, HttpMethod, NgynContext, NgynEngine};
+use ngyn_shared::{FullResponse, Handler, HttpMethod, NgynContext, NgynEngine};
+use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
 
 pub struct HyperApplication {
-    routes: Vec<(String, HttpMethod, Box<dyn Handler>)>,
+    routes: Arc<Mutex<Vec<(String, HttpMethod, Option<Box<Handler>>)>>>,
 }
 
 impl NgynEngine for HyperApplication {
     fn new() -> Self {
-        HyperApplication { routes: Vec::new() }
+        HyperApplication {
+            routes: Arc::new(Mutex::new(vec![])),
+        }
     }
 
-    fn route(&mut self, path: &str, method: HttpMethod, handler: Box<impl Handler>) -> &mut Self {
-        self.routes.push((path.to_string(), method, handler));
+    fn route(&mut self, path: &str, method: HttpMethod, handler: Box<Handler>) -> &mut Self {
+        self.routes
+            .lock()
+            .unwrap()
+            .push((path.to_string(), method, Some(handler)));
         self
     }
 }
@@ -37,11 +41,17 @@ impl HyperApplication {
                 let mut cx = NgynContext::from_request(req);
                 let mut res = Response::new(Full::new(Bytes::default()));
 
-                for (path, _, handler) in routes_copy.iter() {
-                    if let Some(cx) = cx.with(path) {
-                        handler.handle(cx, &mut res);
-                        break;
-                    }
+                let routes = routes_copy.lock().unwrap();
+                let handler = routes
+                    .iter()
+                    .find(|(path, method, _)| cx.with(path, method).is_some())
+                    .map(|(_, _, handler)| handler);
+
+                if let Some(handler) = handler {
+                    // handler(&mut cx, &mut res);
+                } else {
+                    res.set_status(404);
+                    res.peek("Not Found".to_string());
                 }
 
                 Ok::<_, hyper::Error>(res)
