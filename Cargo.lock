@@ -422,7 +422,7 @@ name = "basic_app"
 version = "0.1.0"
 dependencies = [
  "async-std",
- "ngyn 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nject",
 ]
 
@@ -1504,14 +1504,14 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "async-std",
  "http-body-util",
  "hyper 1.1.0",
  "hyper-util",
- "ngyn_macros 0.3.0",
- "ngyn_shared 0.3.0",
+ "ngyn_macros 0.3.1",
+ "ngyn_shared 0.3.1",
  "nject",
  "tokio",
  "vercel_runtime",
@@ -1519,13 +1519,13 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb5f10a9346b32bb383b8483644484e39628db850654c28b76ea26ae15845fd7"
+checksum = "14d60007fdf1ee508c009ac6cfde9578dba68072e4c8fff776650991dbafb9be"
 dependencies = [
  "async-std",
- "ngyn_macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ngyn_shared 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_macros 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_shared 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nject",
  "tide",
  "vercel_runtime",
@@ -1550,9 +1550,9 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
- "ngyn_shared 0.3.0",
+ "ngyn_shared 0.3.1",
  "nject",
  "quote",
  "syn 2.0.32",
@@ -1560,11 +1560,11 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9f8303fe568f2c5f7aa1eda6b89737b580c6c1a24bd490fde1821191b55b5ea"
+checksum = "146a2f3fed9fd02f1a093c5f194c773612d2ebbd3760b61b8e8bff8eb605d554"
 dependencies = [
- "ngyn_shared 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_shared 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nject",
  "quote",
  "syn 2.0.32",
@@ -1572,7 +1572,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "async-trait",
  "http-body-util",
@@ -1587,12 +1587,15 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65add942a696d5d0627b08080150994328b8949d829facaba7a706cadc515edb"
+checksum = "b221b14d889b5500dde44958a14fe4f8ec21ab5cb738450b2136065260da061e"
 dependencies = [
  "async-trait",
  "nject",
+ "serde",
+ "serde_json",
+ "url",
 ]
 
 [[package]]
@@ -2774,7 +2777,7 @@ dependencies = [
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nject",
  "tokio",
  "vercel_runtime",
@@ -2941,7 +2944,7 @@ version = "0.1.2"
 dependencies = [
  "async-std",
  "dotenv",
- "ngyn 0.3.0",
+ "ngyn 0.3.1",
  "nject",
  "serde",
  "serde_json",
