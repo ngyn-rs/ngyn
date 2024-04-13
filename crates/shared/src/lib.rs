@@ -7,5 +7,6 @@ pub use crate::core::*;
 pub use crate::enums::*;
 pub use crate::server::*;
 pub use crate::traits::*;
+pub use hyper::http::Method;
 
 pub use async_trait::async_trait;
