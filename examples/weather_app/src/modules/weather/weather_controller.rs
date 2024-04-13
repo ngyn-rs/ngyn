@@ -18,10 +18,12 @@ pub struct WeatherController {
 
 #[routes]
 impl WeatherController {
-    #[get("/weather")]
+    #[get("/weather/<location>/<city>")]
     #[check(WeatherGate)]
-    async fn get_location(&self) -> String {
-        self.weather_service.get_location_weather("London").await
+    async fn get_location(&self, params: Param) -> String {
+        self.weather_service
+            .get_location_weather(params.get("location").unwrap().as_str())
+            .await
     }
 
     #[post("/weather")]

@@ -6,20 +6,21 @@ pub trait ToParts {
 
 fn match_paths(path_a: &str, path_b: &str) -> (bool, Vec<(String, String)>) {
     let path_b = format!("^{}$", path_b);
-    let path_b = regex::Regex::new(&path_b).unwrap();
+    let path_r = regex::Regex::new(&path_b).unwrap();
 
-    if !path_b.is_match(path_a) {
+    if !path_r.is_match(path_a) {
         return (false, Vec::new());
     }
 
-    let named_matches_with_values: Vec<(String, String)> = path_b
+    let named_matches_with_values: Vec<(String, String)> = path_r
         .captures_iter(path_a)
         .filter_map(|capture| {
             if capture.len() < 2 {
                 return None;
             }
-            let (name, [path]) = capture.extract();
-            Some((name.to_string(), path.to_string()))
+            let (_, [value]) = capture.extract();
+            let name = path_r.capture_names().nth(1).unwrap().unwrap();
+            Some((name.to_string(), value.to_string()))
         })
         .collect();
 
@@ -35,11 +36,13 @@ impl ToParts for Uri {
         let has_named = parts_path.contains('<');
 
         if has_wildcard || has_named {
+            let parts_path = parts_path.replace('/', r"\/");
             let parts_path = parts_path.replace('*', "(.*)");
-            let parts_path = parts_path.replace('<', "(?P<").replace('>', ">[^/]+)");
-            return match_paths(&parts_path, uri_path);
+            let parts_path = parts_path.replace('<', "(?P<").replace('>', r">[^\/]+)");
+
+            return match_paths(uri_path, &parts_path);
         }
 
-        match_paths(parts_path, uri_path)
+        match_paths(uri_path, parts_path)
     }
 }

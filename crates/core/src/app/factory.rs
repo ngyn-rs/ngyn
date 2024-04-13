@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ngyn_shared::{NgynContext, NgynEngine, NgynModule, NgynResponse};
+use ngyn_shared::{Method, NgynContext, NgynEngine, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {
@@ -30,7 +30,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
             for (path, http_method, handler) in controller.routes() {
                 server.route(
                     path.as_str(),
-                    http_method.into(),
+                    Method::from_bytes(http_method.to_uppercase().as_bytes()).unwrap(),
                     Box::new({
                         let controller = controller.clone();
                         move |cx: &mut NgynContext, _res: &mut NgynResponse| {

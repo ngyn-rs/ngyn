@@ -1,11 +1,11 @@
 use http_body_util::Full;
 use hyper::{body::Incoming, Request, Response};
 use ngyn_macros::platform;
-use ngyn_shared::{Bytes, FullResponse, Handler, HttpMethod, NgynContext, NgynEngine};
+use ngyn_shared::{Bytes, FullResponse, Handler, Method, NgynContext, NgynEngine};
 use vercel_runtime::{Body, Error, Response as VercelResponse};
 
 pub struct VercelApplication {
-    routes: Vec<(String, HttpMethod, Box<Handler>)>,
+    routes: Vec<(String, Method, Box<Handler>)>,
 }
 
 impl NgynEngine for VercelApplication {
@@ -13,7 +13,7 @@ impl NgynEngine for VercelApplication {
         Self { routes: Vec::new() }
     }
 
-    fn route(&mut self, path: &str, method: HttpMethod, handler: Box<Handler>) -> &mut Self {
+    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) -> &mut Self {
         self.routes.push((path.to_string(), method, handler));
         self
     }

@@ -10,34 +10,34 @@ pub fn platform_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         #input
 
         impl #ident {
-            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Get`.
+            /// Adds a new route to the `NgynApplication` with the `Method::Get`.
             pub fn get<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, HttpMethod::Get, Box::new(handler))
+                self.route(path, Method::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Post`.
+            /// Adds a new route to the `NgynApplication` with the `Method::Post`.
             pub fn post<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, HttpMethod::Get, Box::new(handler))
+                self.route(path, Method::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Put`.
+            /// Adds a new route to the `NgynApplication` with the `Method::Put`.
             pub fn put<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, HttpMethod::Get, Box::new(handler))
+                self.route(path, Method::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Delete`.
+            /// Adds a new route to the `NgynApplication` with the `Method::Delete`.
             pub fn delete<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, HttpMethod::Get, Box::new(handler))
+                self.route(path, Method::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Patch`.
+            /// Adds a new route to the `NgynApplication` with the `Method::Patch`.
             pub fn patch<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, HttpMethod::Get, Box::new(handler))
+                self.route(path, Method::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Head`.
+            /// Adds a new route to the `NgynApplication` with the `Method::Head`.
             pub fn head<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, HttpMethod::Get, Box::new(handler))
+                self.route(path, Method::Get, Box::new(handler))
             }
         }
     };

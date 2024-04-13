@@ -3,12 +3,12 @@ use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request, Response};
 use hyper_util::rt::TokioIo;
-use ngyn_shared::{FullResponse, Handler, HttpMethod, NgynContext, NgynEngine};
+use ngyn_shared::{FullResponse, Handler, Method, NgynContext, NgynEngine};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 pub struct HyperApplication {
-    routes: Vec<(String, HttpMethod, Option<Box<Handler>>)>,
+    routes: Vec<(String, Method, Option<Box<Handler>>)>,
 }
 
 impl NgynEngine for HyperApplication {
@@ -16,7 +16,7 @@ impl NgynEngine for HyperApplication {
         HyperApplication { routes: vec![] }
     }
 
-    fn route(&mut self, path: &str, method: HttpMethod, handler: Box<Handler>) -> &mut Self {
+    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) -> &mut Self {
         self.routes.push((path.to_string(), method, Some(handler)));
         self
     }
@@ -38,8 +38,14 @@ impl HyperApplication {
 
                 let handler = routes
                     .iter()
-                    .find(|(path, method, _)| cx.with(path, method).is_some())
-                    .map(|(_, _, handler)| handler);
+                    .filter_map(|(path, method, handler)| {
+                        if cx.with(path, method).is_some() {
+                            Some(handler)
+                        } else {
+                            None
+                        }
+                    })
+                    .next();
 
                 if let Some(Some(handler)) = handler {
                     handler(&mut cx, &mut res);

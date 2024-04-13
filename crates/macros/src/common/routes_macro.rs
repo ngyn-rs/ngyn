@@ -1,4 +1,4 @@
-use ngyn_shared::{HttpMethod, Path};
+use ngyn_shared::{Method, Path};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::ItemImpl;
@@ -41,7 +41,7 @@ impl syn::parse::Parse for Args {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let http_method = input.parse::<syn::LitStr>()?.value();
 
-        if HttpMethod::from(&http_method) == HttpMethod::Unknown {
+        if !Method::from_bytes(http_method.as_bytes()).is_ok() {
             panic!("Unsupported HTTP method: {}", http_method)
         } else {
             input.parse::<syn::Token![,]>()?;
