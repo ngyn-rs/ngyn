@@ -16,12 +16,12 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::{platforms::NgynApplication, prelude::*};
+    /// use ngyn::{platforms::HyperApplication, prelude::*};
     ///
     /// #[module]
     /// pub struct YourAppModule;
     ///
-    /// let server = NgynFactory::<NgynApplication>::create::<YourAppModule>();
+    /// let server = NgynFactory::<HyperApplication>::create::<YourAppModule>();
     /// ```
     pub fn create<AppModule: NgynModule>() -> Application {
         let mut module = AppModule::new(vec![]);

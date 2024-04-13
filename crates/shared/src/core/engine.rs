@@ -2,10 +2,10 @@ use super::Handler;
 use crate::HttpMethod;
 
 pub trait NgynEngine {
-    /// Creates a new instance of `NgynApplication` with a new `Server`
+    /// Creates a new instance of the `App` with a new `Server`
     fn new() -> Self;
 
-    /// Adds a new route to the `NgynApplication`.
+    /// Adds a new route to the `App`.
     /// This function is chainable.
     ///
     /// ### Arguments
