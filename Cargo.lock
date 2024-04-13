@@ -423,6 +423,7 @@ version = "0.1.0"
 dependencies = [
  "async-std",
  "ngyn 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nject",
 ]
 

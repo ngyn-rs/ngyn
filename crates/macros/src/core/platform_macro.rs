@@ -10,33 +10,33 @@ pub fn platform_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
         #input
 
         impl #ident {
-            /// Adds a new route to the App with the `HttpMethod::Get`.
-            pub fn get(&mut self, path: &str, handler: impl Handler) -> &mut Self {
+            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Get`.
+            pub fn get<F>(&mut self, path: &str, handler: F) -> &mut Self {
                 self.route(path, HttpMethod::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the App with the `HttpMethod::Post`.
-            pub fn post(&mut self, path: &str, handler: impl Handler) -> &mut Self {
+            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Post`.
+            pub fn post<F>(&mut self, path: &str, handler: F) -> &mut Self {
                 self.route(path, HttpMethod::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the App with the `HttpMethod::Put`.
-            pub fn put(&mut self, path: &str, handler: impl Handler) -> &mut Self {
+            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Put`.
+            pub fn put<F>(&mut self, path: &str, handler: F) -> &mut Self {
                 self.route(path, HttpMethod::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the App with the `HttpMethod::Delete`.
-            pub fn delete(&mut self, path: &str, handler: impl Handler) -> &mut Self {
+            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Delete`.
+            pub fn delete<F>(&mut self, path: &str, handler: F) -> &mut Self {
                 self.route(path, HttpMethod::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the App with the `HttpMethod::Patch`.
-            pub fn patch(&mut self, path: &str, handler: impl Handler) -> &mut Self {
+            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Patch`.
+            pub fn patch<F>(&mut self, path: &str, handler: F) -> &mut Self {
                 self.route(path, HttpMethod::Get, Box::new(handler))
             }
 
-            /// Adds a new route to the App with the `HttpMethod::Head`.
-            pub fn head(&mut self, path: &str, handler: impl Handler) -> &mut Self {
+            /// Adds a new route to the `NgynApplication` with the `HttpMethod::Head`.
+            pub fn head<F>(&mut self, path: &str, handler: F) -> &mut Self {
                 self.route(path, HttpMethod::Get, Box::new(handler))
             }
         }
