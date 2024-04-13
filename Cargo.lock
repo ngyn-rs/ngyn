@@ -1513,7 +1513,6 @@ dependencies = [
  "ngyn_macros 0.3.0",
  "ngyn_shared 0.3.0",
  "nject",
- "tide",
  "tokio",
  "vercel_runtime",
 ]
