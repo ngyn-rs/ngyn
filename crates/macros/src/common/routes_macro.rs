@@ -41,7 +41,7 @@ impl syn::parse::Parse for Args {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let http_method = input.parse::<syn::LitStr>()?.value();
 
-        if !Method::from_bytes(http_method.as_bytes()).is_ok() {
+        if Method::from_bytes(http_method.as_bytes()).is_err() {
             panic!("Unsupported HTTP method: {}", http_method)
         } else {
             input.parse::<syn::Token![,]>()?;
