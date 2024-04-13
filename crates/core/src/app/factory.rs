@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ngyn_shared::{NgynContext, NgynEngine, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
@@ -33,8 +35,13 @@ impl<Application: NgynEngine> NgynFactory<Application> {
                         let controller = controller.clone();
                         move |cx: &mut NgynContext, res: &mut NgynResponse| {
                             let handle = tokio::runtime::Handle::current();
+                            let controller_clone = Arc::clone(&controller);
+                            let handler_clone = handler.clone();
+
                             handle.block_on(async move {
-                                controller.handle(&handler, cx, res).await;
+                                controller_clone
+                                    .handle(handler_clone.as_str(), cx, res)
+                                    .await;
                             });
                         }
                     }),

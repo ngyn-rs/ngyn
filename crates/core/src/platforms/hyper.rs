@@ -47,8 +47,8 @@ impl HyperApplication {
                     .find(|(path, method, _)| cx.with(path, method).is_some())
                     .map(|(_, _, handler)| handler);
 
-                if let Some(handler) = handler {
-                    // handler(&mut cx, &mut res);
+                if let Some(Some(handler)) = handler {
+                    handler(&mut cx, &mut res);
                 } else {
                     res.set_status(404);
                     res.peek("Not Found".to_string());

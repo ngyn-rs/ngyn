@@ -168,4 +168,12 @@ impl NgynContext {
             None
         }
     }
+
+    pub fn from_parts(request: Request<Incoming>, params: Vec<(String, String)>) -> Self {
+        NgynContext {
+            request,
+            store: HashMap::new(),
+            params,
+        }
+    }
 }
