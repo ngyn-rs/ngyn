@@ -43,7 +43,7 @@ impl HyperApplication {
 
                 if let Some(Some(handler)) = handler {
                     handler(&mut cx, &mut res);
-                    cx.execute(&mut res.clone()).await;
+                    cx.execute(&mut res).await;
                 } else {
                     res.set_status(404);
                     res.peek("Not Found".to_string());
