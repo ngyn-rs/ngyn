@@ -2,9 +2,9 @@
 //
 
 use hyper::{body::Incoming, Request};
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use crate::{HttpMethod, ToParts};
+use crate::{HttpMethod, NgynController, NgynResponse, ToParts};
 
 /// Represents the value of a context in Ngyn
 ///
@@ -110,6 +110,7 @@ impl From<NgynContextValue> for String {
 pub struct NgynContext {
     pub request: Request<Incoming>,
     pub params: Vec<(String, String)>,
+    route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, NgynContextValue>,
 }
 
@@ -156,6 +157,7 @@ impl NgynContext {
             request,
             store: HashMap::new(),
             params: Vec::new(),
+            route_info: None,
         }
     }
 
@@ -169,11 +171,13 @@ impl NgynContext {
         }
     }
 
-    pub fn from_parts(request: Request<Incoming>, params: Vec<(String, String)>) -> Self {
-        NgynContext {
-            request,
-            store: HashMap::new(),
-            params,
+    pub fn prepare(&mut self, controller: Arc<dyn NgynController>, handler: String) {
+        self.route_info = Some((handler, controller));
+    }
+
+    pub async fn execute(&mut self, res: &mut NgynResponse) {
+        if let Some((handler, controller)) = self.route_info.clone() {
+            controller.handle(handler.as_str(), self, res).await;
         }
     }
 }

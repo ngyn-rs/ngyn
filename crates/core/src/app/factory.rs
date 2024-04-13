@@ -33,16 +33,8 @@ impl<Application: NgynEngine> NgynFactory<Application> {
                     http_method.into(),
                     Box::new({
                         let controller = controller.clone();
-                        move |cx: &mut NgynContext, res: &mut NgynResponse| {
-                            let handle = tokio::runtime::Handle::current();
-                            let controller_clone = Arc::clone(&controller);
-                            let handler_clone = handler.clone();
-
-                            handle.block_on(async move {
-                                controller_clone
-                                    .handle(handler_clone.as_str(), cx, res)
-                                    .await;
-                            });
+                        move |cx: &mut NgynContext, _res: &mut NgynResponse| {
+                            cx.prepare(Arc::clone(&controller), handler.clone());
                         }
                     }),
                 );
