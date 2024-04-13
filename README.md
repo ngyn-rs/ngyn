@@ -21,12 +21,12 @@ Please note that Ngyn is still in its early stages of development, and the API i
 
 ## Example
 
-This example demonstrates how to create a simple web server using Ngyn and [Tide](https://docs.rs/tide). To use Ngyn with Tide, you must enable the `tide` feature in your `Cargo.toml` file.
+This example demonstrates how to create a simple web server using Ngyn and [Hyper](https://hyper.rs) Platform.
 
 ```toml
 [dependencies]
-ngyn = { version = "0.3" }
-nject = "0.3.0"
+ngyn = { version = "0.4" }
+nject = "0.3"
 ```
 
 And here's the code:
