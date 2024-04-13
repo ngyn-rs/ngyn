@@ -10,13 +10,13 @@ pub struct SampleController {
 #[routes]
 impl SampleController {
     #[get("/hello")]
-    fn say_hello(&self, _req: &NgynRequest, res: &mut NgynResponse) {
+    fn say_hello(&self) {
         self.sample_service.say_hello();
-        res.send("Hello, Ngyn from Vercel!");
+        "Hello, Ngyn from Vercel!".to_string();
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(&self, _req: &NgynRequest, _res: &mut NgynResponse) {
-        println!("Goodbye from Vercel!");
+    fn say_goodbye(&self) {
+        "Goodbye from Vercel!".to_string();
     }
 }
