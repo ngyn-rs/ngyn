@@ -15,7 +15,7 @@ pub trait NgynController: Send + Sync {
     async fn handle(
         &self,
         handler: &str,
-        req: &mut crate::NgynRequest,
+        cx: &mut crate::NgynContext,
         res: &mut crate::NgynResponse,
     );
 }
@@ -28,7 +28,7 @@ pub trait NgynControllerRoutePlaceholder {
     async fn __handle_route(
         &self,
         handler: &str,
-        req: &mut crate::NgynRequest,
+        cx: &mut crate::NgynContext,
         res: &mut crate::NgynResponse,
     );
 }

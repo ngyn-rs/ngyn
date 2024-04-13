@@ -5,16 +5,16 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 ![MSRV](https://img.shields.io/badge/MSRV-1.63-blue)
 
-A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web applications through an opinionated architecture.
+A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web servers through an opinionated architecture.
 
 More information about Ngyn can be found in the [documentation](https://ngyn.rs).
 
 ## Features
 
 - Macro API for organizing your application into reusable components
-- Built-in dependency injection for managing your application's dependencies
+- Built-in dependency injection for managing dependencies
 - Asynchronous middleware for handling requests and responses
-- Asynchronous routing for defining your application's endpoints
+- Asynchronous routing support for defining routes
 - [Platform-agnostic](#platform-agnosticism) for supporting multiple libraries and frameworks
 
 Please note that Ngyn is still in its early stages of development, and the API is subject to change.
@@ -25,17 +25,14 @@ This example demonstrates how to create a simple web server using Ngyn and [Tide
 
 ```toml
 [dependencies]
-ngyn = { version = "0.3.0", features = ["tide"] }
+ngyn = { version = "0.3" }
 nject = "0.3.0"
 ```
 
 And here's the code:
 
 ```rust ignore
-use ngyn::{
-	platforms::{NgynApplication, Result},
-	prelude::*
-};
+use ngyn::{platforms::HyperApplication, prelude::*};
 
 #[controller]
 struct MyController;
@@ -47,7 +44,7 @@ impl MyController {
         "Hello World!".to_string()
     }
 
-    #[get("/hello/:name")]
+    #[get("/hello/<name>")]
     fn hello(&self) {
         let name = request.param("name").unwrap();
         format!("Hello, {}!", name)
@@ -58,12 +55,9 @@ impl MyController {
 struct MyAppModule;
 
 #[main]
-async fn main() -> Result<()> {
-    let app = NgynFactory::<NgynApplication>::create::<MyAppModule>();
-
-    app.listen("127.0.0.1:8080").await?;
-
-    Ok(())
+async fn main() {
+    let app = NgynFactory::<HyperApplication>::create::<MyAppModule>();
+    let _ = app.listen("127.0.0.1:8080").await;
 }
 ```
 
@@ -71,13 +65,13 @@ async fn main() -> Result<()> {
 
 ### Description
 
-Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by [NestJS](https://nestjs.com/) and structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies application organization and enhances reusability across various projects.
+Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by [NestJS](https://nestjs.com/) and structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies organization and enhances reusability across various projects.
 
 ### Platform Agnosticism
 
-A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your application using [Actix](https://actix.rs/) or [Warp](https://docs.rs/warp) or [Tide](https://docs.rs/tide), and each of these platforms would provide a different set of features for building your application.
+A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your web server using [Actix](https://actix.rs/) or [Warp](https://docs.rs/warp) or [Tide](https://docs.rs/tide), and each of these platforms would provide a different set of features for building your web server.
 
-By default, Ngyn uses [Tide](https://docs.rs/tide) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
+By default, Ngyn uses [Hyper](https://hyper.rs) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
 
 ## Contribution
 

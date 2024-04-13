@@ -109,7 +109,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         )});
                         handle_routes.push(quote! {
                             #ident_str => {
-                                let body = self.#ident(req, res).await;
+                                let body = self.#ident(cx, res).await;
                                 res.peek(body);
                             }
                         });
@@ -131,7 +131,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
             async fn __handle_route(
                 &self,
                 handler: &str,
-                req: &mut ngyn::prelude::NgynRequest,
+                cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse
             ) {
                 match handler {

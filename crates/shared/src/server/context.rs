@@ -1,7 +1,10 @@
 // a context extends hashmap to provide some extra functionality
 //
 
-use std::collections::HashMap;
+use hyper::{body::Incoming, Request};
+use std::{collections::HashMap, sync::Arc};
+
+use crate::{HttpMethod, NgynController, NgynResponse, ToParts};
 
 /// Represents the value of a context in Ngyn
 ///
@@ -104,8 +107,10 @@ impl From<NgynContextValue> for String {
     }
 }
 
-#[derive(Clone, Default)]
 pub struct NgynContext {
+    pub request: Request<Incoming>,
+    pub params: Vec<(String, String)>,
+    route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, NgynContextValue>,
 }
 
@@ -145,5 +150,34 @@ impl NgynContext {
     pub fn is(&self, key: &str) -> bool {
         let stored_value = self.get(key);
         !stored_value.is_empty() || stored_value.clone().into()
+    }
+
+    pub fn from_request(request: Request<Incoming>) -> Self {
+        NgynContext {
+            request,
+            store: HashMap::new(),
+            params: Vec::new(),
+            route_info: None,
+        }
+    }
+
+    pub fn with(&mut self, path: &str, _method: &HttpMethod) -> Option<&mut Self> {
+        let (is_match, params) = self.request.uri().parts(path);
+        if is_match {
+            self.params = params;
+            Some(self)
+        } else {
+            None
+        }
+    }
+
+    pub fn prepare(&mut self, controller: Arc<dyn NgynController>, handler: String) {
+        self.route_info = Some((handler, controller));
+    }
+
+    pub async fn execute(&mut self, res: &mut NgynResponse) {
+        if let Some((handler, controller)) = self.route_info.clone() {
+            controller.handle(handler.as_str(), self, res).await;
+        }
     }
 }

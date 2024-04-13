@@ -1,9 +1,7 @@
-#[cfg(feature = "tide")]
-pub mod tide;
+pub(crate) mod hyper;
 #[cfg(feature = "vercel")]
-pub mod vercel;
+pub(crate) mod vercel;
 
-#[cfg(feature = "tide")]
-pub use tide::*;
+pub use hyper::*;
 #[cfg(feature = "vercel")]
 pub use vercel::*;

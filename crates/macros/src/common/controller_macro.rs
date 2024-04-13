@@ -93,7 +93,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             async fn __handle_route(
                 &self,
                 _handler: &str,
-                _req: &mut ngyn::prelude::NgynRequest,
+                _cx: &mut ngyn::prelude::NgynContext,
                 _res: &mut ngyn::prelude::NgynResponse,
             ) {
                 // This is a placeholder for the routing logic of the controller.
@@ -118,12 +118,12 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            async fn handle(&self, handler: &str, req: &mut ngyn::prelude::NgynRequest, res: &mut ngyn::prelude::NgynResponse) {
+            async fn handle(&self, handler: &str, cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
                 self.middlewares.iter().for_each(|middleware| {
-                    middleware.handle(req, res);
+                    middleware.handle(cx, res);
                 });
-                self.__handle_route(handler, req, res).await;
+                self.__handle_route(handler, cx, res).await;
             }
         }
     };

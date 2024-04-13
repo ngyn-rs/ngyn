@@ -1,4 +1,6 @@
-use ngyn_shared::{enums::HttpMethod, NgynEngine, NgynModule, NgynRequest, NgynResponse};
+use std::sync::Arc;
+
+use ngyn_shared::{NgynContext, NgynEngine, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {
@@ -14,26 +16,25 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// ### Example
     ///
     /// ```
-    /// use ngyn::{platforms::NgynApplication, prelude::*};
+    /// use ngyn::{platforms::HyperApplication, prelude::*};
     ///
     /// #[module]
     /// pub struct YourAppModule;
     ///
-    /// let server = NgynFactory::<NgynApplication>::create::<YourAppModule>();
+    /// let server = NgynFactory::<HyperApplication>::create::<YourAppModule>();
     /// ```
     pub fn create<AppModule: NgynModule>() -> Application {
         let mut module = AppModule::new(vec![]);
         let mut server = Application::new();
         for controller in module.get_controllers() {
             for (path, http_method, handler) in controller.routes() {
-                let http_method = HttpMethod::from(http_method);
                 server.route(
                     path.as_str(),
-                    http_method,
+                    http_method.into(),
                     Box::new({
                         let controller = controller.clone();
-                        move |req: &mut NgynRequest, res: &mut NgynResponse| {
-                            res.with_controller(controller.clone(), handler.clone(), req);
+                        move |cx: &mut NgynContext, _res: &mut NgynResponse| {
+                            cx.prepare(Arc::clone(&controller), handler.clone());
                         }
                     }),
                 );

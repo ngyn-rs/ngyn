@@ -1,18 +1,20 @@
 use std::borrow::Cow;
-use url::Url;
 
-use crate::{NgynRequest, NgynResponse};
+use http_body_util::BodyExt;
+use hyper::body::Bytes;
+
+use crate::{context::NgynContext, NgynResponse};
 
 pub trait Transformer {
-    fn transform(req: &mut NgynRequest, res: &mut NgynResponse) -> Self;
+    fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self;
 }
 
 pub struct Transducer;
 
 impl Transducer {
     #[allow(dead_code)]
-    pub fn reduce<S: Transformer>(req: &mut NgynRequest, res: &mut NgynResponse) -> S {
-        S::transform(req, res)
+    pub fn reduce<S: Transformer>(cx: &mut NgynContext, res: &mut NgynResponse) -> S {
+        S::transform(cx, res)
     }
 }
 
@@ -33,10 +35,11 @@ impl Param {
 }
 
 impl Transformer for Param {
-    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Param {
-        let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = req
-            .params()
-            .iter()
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Param {
+        let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
+            .params
+            .clone()
+            .into_iter()
             .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
             .collect();
         Param { data }
@@ -44,24 +47,27 @@ impl Transformer for Param {
 }
 
 pub struct Query {
-    url: Url,
+    url: hyper::http::uri::Uri,
 }
 
 impl Query {
     #[allow(dead_code)]
     pub fn get(&self, id: &str) -> Option<String> {
-        self.url
-            .query_pairs()
-            .filter(|(key, _)| key == id)
-            .map(|(_, value)| value.to_string())
-            .next()
+        let query = self.url.query().unwrap_or("");
+        let query = url::form_urlencoded::parse(query.as_bytes());
+        for (key, value) in query {
+            if key == id {
+                return Some(value.to_string());
+            }
+        }
+        None
     }
 }
 
 impl Transformer for Query {
-    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Query {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Query {
         Query {
-            url: req.url().clone(),
+            url: cx.request.uri().clone(),
         }
     }
 }
@@ -79,8 +85,18 @@ impl Dto {
 }
 
 impl Transformer for Dto {
-    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Dto {
-        let data = req.body_string().unwrap_or("{}".to_string());
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Dto {
+        let mut data = String::new();
+        cx.request.body_mut().map_frame(|frame| {
+            let frame = if let Ok(data) = frame.into_data() {
+                data
+            } else {
+                Bytes::new()
+            };
+            data.push_str(&String::from_utf8(frame.clone().into()).unwrap());
+            hyper::body::Frame::data(frame)
+        });
+
         Dto { data }
     }
 }

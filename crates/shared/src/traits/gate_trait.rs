@@ -1,4 +1,4 @@
-use crate::{NgynInjectable, NgynRequest};
+use crate::{NgynContext, NgynInjectable};
 
 /// Trait for implementing a gate.
 pub trait NgynGate: NgynInjectable {
@@ -6,10 +6,10 @@ pub trait NgynGate: NgynInjectable {
     ///
     /// ### Arguments
     ///
-    /// * `request` - The request to check.
+    /// * `cx` - The request context to check.
     ///
     /// ### Returns
     ///
     /// Returns `true` if the route can activate, `false` otherwise.
-    fn can_activate(self, request: &mut NgynRequest) -> bool;
+    fn can_activate(self, cx: &mut NgynContext) -> bool;
 }

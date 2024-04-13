@@ -17,3 +17,7 @@ pub mod prelude {
     pub use crate::macros::*;
     pub use ngyn_shared::*;
 }
+
+pub mod http {
+    pub use hyper::http::*;
+}
