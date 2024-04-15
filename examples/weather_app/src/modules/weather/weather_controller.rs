@@ -21,9 +21,11 @@ impl WeatherController {
     #[get("/weather/<location>/<city>")]
     #[check(WeatherGate)]
     async fn get_location(&self, params: Param) -> String {
-        self.weather_service
-            .get_location_weather(params.get("location").unwrap().as_str())
-            .await
+        let location = params.get("location").unwrap_or_default();
+        if location.is_empty() {
+            eject!("Location is required");
+        }
+        self.weather_service.get_location_weather(&location).await
     }
 
     #[post("/weather")]
