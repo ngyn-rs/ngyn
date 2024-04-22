@@ -38,10 +38,12 @@ pub mod http {
 /// ```
 #[macro_export]
 macro_rules! eject {
-    ($status_code:expr) => {
-        return ngyn::prelude::Bytes::from($status_code.to_string()).parse_bytes();
+    ($res:expr, $status_code:expr) => {
+        *$res.status_mut() = $status_code;
+        return ngyn::prelude::Bytes::from("".to_string()).parse_bytes();
     };
-    ($status_code:expr, $message:expr) => {
-        return ngyn::prelude::Bytes::from(format!("{} - {}", $status_code, $message)).parse_bytes();
+    ($res:expr, $status_code:expr, $message:expr) => {
+        *$res.status_mut() = ngyn::http::StatusCode::try_from($status_code).unwrap();
+        return ngyn::prelude::Bytes::from($message).parse_bytes();
     };
 }
