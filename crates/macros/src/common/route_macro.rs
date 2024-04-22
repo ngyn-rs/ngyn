@@ -25,24 +25,24 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
     } = sig;
 
     let transducers: Vec<_> = inputs
-		.iter()
-		.map(|input| {
-			if let syn::FnArg::Typed(pat) = input {
-				let ty = &pat.ty;
-				let pat = &pat.pat;
-				if let syn::Type::Path(path) = *ty.clone() {
-					let path = &path.path;
-					quote! {
-						let mut #pat: #path = ngyn::prelude::Transducer::reduce::<#path>(cx, response);
-					}
-				} else {
-					panic!("Expected a valid struct");
-				}
-			} else {
-				quote! {}
-			}
-		})
-		.collect();
+        .iter()
+        .map(|input| {
+            if let syn::FnArg::Typed(pat) = input {
+                let ty = &pat.ty;
+                let pat = &pat.pat;
+                if let syn::Type::Path(path) = *ty.clone() {
+                    let path = &path.path;
+                    quote! {
+                        let mut #pat: #path = ngyn::prelude::Transducer::reduce::<#path>(cx, res);
+                    }
+                } else {
+                    panic!("Expected a valid struct");
+                }
+            } else {
+                quote! {}
+            }
+        })
+        .collect();
 
     // initial self varn obtained from the first input
     let self_var = match inputs.iter().next() {
@@ -78,7 +78,7 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #(#attrs)*
-        #vis async #fn_token #ident(#self_var, cx: &mut ngyn::prelude::NgynContext, response: &mut ngyn::prelude::NgynResponse) #output {
+        #vis async #fn_token #ident(#self_var, cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) #output {
             #(#transducers)*
             #block
             #return_val

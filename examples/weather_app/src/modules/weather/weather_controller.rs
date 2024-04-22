@@ -1,3 +1,4 @@
+use ngyn::http::StatusCode;
 use ngyn::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -18,12 +19,12 @@ pub struct WeatherController {
 
 #[routes]
 impl WeatherController {
-    #[get("/weather/<location>/<city>")]
+    #[get("/weather")]
     #[check(WeatherGate)]
-    async fn get_location(&self, params: Param) -> String {
-        let location = params.get("location").unwrap_or_default();
+    async fn get_location(&self, query: Query) -> String {
+        let location = query.get("location").unwrap_or_default();
         if location.is_empty() {
-            eject!("Location is required");
+            eject!(res, StatusCode::BAD_REQUEST, "Location is required");
         }
         self.weather_service.get_location_weather(&location).await
     }
