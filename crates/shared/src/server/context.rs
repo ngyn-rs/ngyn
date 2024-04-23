@@ -1,7 +1,7 @@
 // a context extends hashmap to provide some extra functionality
 //
 
-use hyper::{body::Incoming, Request};
+use hyper::Request;
 use std::{collections::HashMap, sync::Arc};
 
 use crate::{Method, NgynController, NgynResponse, ToParts};
@@ -108,7 +108,7 @@ impl From<NgynContextValue> for String {
 }
 
 pub struct NgynContext {
-    pub request: Request<Incoming>,
+    pub request: Request<Vec<u8>>,
     pub params: Vec<(String, String)>,
     route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, NgynContextValue>,
@@ -152,7 +152,7 @@ impl NgynContext {
         !stored_value.is_empty() || stored_value.clone().into()
     }
 
-    pub fn from_request(request: Request<Incoming>) -> Self {
+    pub fn from_request(request: Request<Vec<u8>>) -> Self {
         NgynContext {
             request,
             store: HashMap::new(),

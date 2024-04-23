@@ -11,33 +11,33 @@ pub fn platform_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
         impl #ident {
             /// Adds a new route to the `NgynApplication` with the `Method::Get`.
-            pub fn get<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, Method::Get, Box::new(handler))
+            pub fn get(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) -> &mut Self {
+                self.route(path, Method::GET, handler.into())
             }
 
             /// Adds a new route to the `NgynApplication` with the `Method::Post`.
-            pub fn post<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, Method::Get, Box::new(handler))
+            pub fn post(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) -> &mut Self {
+                self.route(path, Method::POST, handler.into())
             }
 
             /// Adds a new route to the `NgynApplication` with the `Method::Put`.
-            pub fn put<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, Method::Get, Box::new(handler))
+            pub fn put(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) -> &mut Self {
+                self.route(path, Method::PUT, handler.into())
             }
 
             /// Adds a new route to the `NgynApplication` with the `Method::Delete`.
-            pub fn delete<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, Method::Get, Box::new(handler))
+            pub fn delete(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) -> &mut Self {
+                self.route(path, Method::DELETE, handler.into())
             }
 
             /// Adds a new route to the `NgynApplication` with the `Method::Patch`.
-            pub fn patch<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, Method::Get, Box::new(handler))
+            pub fn patch(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) -> &mut Self {
+                self.route(path, Method::PATCH, handler.into())
             }
 
             /// Adds a new route to the `NgynApplication` with the `Method::Head`.
-            pub fn head<F>(&mut self, path: &str, handler: F) -> &mut Self {
-                self.route(path, Method::Get, Box::new(handler))
+            pub fn head(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) -> &mut Self {
+                self.route(path, Method::HEAD, handler.into())
             }
         }
     };

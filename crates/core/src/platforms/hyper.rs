@@ -1,4 +1,4 @@
-use http_body_util::Full;
+use http_body_util::{BodyExt, Full};
 use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request, Response};
@@ -11,11 +11,13 @@ pub struct HyperApplication {
     routes: Vec<(String, Method, Option<Box<Handler>>)>,
 }
 
-impl NgynEngine for HyperApplication {
-    fn new() -> Self {
-        HyperApplication { routes: vec![] }
+impl Default for HyperApplication {
+    fn default() -> Self {
+        Self { routes: vec![] }
     }
+}
 
+impl NgynEngine for HyperApplication {
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) -> &mut Self {
         self.routes.push((path.to_string(), method, Some(handler)));
         self
@@ -33,7 +35,16 @@ impl HyperApplication {
         let service = service_fn(move |req: Request<Incoming>| {
             let routes = Arc::clone(&routes_copy);
             async move {
-                let mut cx = NgynContext::from_request(req);
+                let mut cx = NgynContext::from_request(req.map(|b| {
+                    let mut new_body = vec![];
+                    b.map_frame(|mut f| {
+                        if let Some(d) = f.data_mut() {
+                            new_body.append(&mut d.to_vec());
+                        }
+                        f
+                    });
+                    new_body
+                }));
                 let mut res = Response::new(Full::new(Bytes::default()));
 
                 let handler = routes
