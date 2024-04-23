@@ -2,19 +2,13 @@ use std::str::FromStr;
 
 use http_body_util::{BodyExt, Full};
 use hyper::{header::HeaderName, Response, Uri};
-use ngyn_macros::platform;
+use ngyn_macros::Platform;
 use ngyn_shared::{Bytes, FullResponse, Handler, Method, NgynContext, NgynEngine};
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 
-#[platform]
+#[derive(Default, Platform)]
 pub struct VercelApplication {
     routes: Vec<(String, Method, Box<Handler>)>,
-}
-
-impl Default for VercelApplication {
-    fn default() -> Self {
-        Self { routes: vec![] }
-    }
 }
 
 impl NgynEngine for VercelApplication {
@@ -78,7 +72,7 @@ impl VercelApplication {
             let mut body = Vec::new();
 
             res.body_mut().map_frame(|f| {
-                body.extend_from_slice(&f.data_ref().unwrap().to_vec());
+                body.extend_from_slice(&f.data_ref().unwrap());
                 f
             });
 

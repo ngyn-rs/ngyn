@@ -2,7 +2,6 @@ use super::Handler;
 use crate::Method;
 
 pub trait NgynEngine: Default {
-
     /// Adds a new route to the `App`.
     /// This function is chainable.
     ///

@@ -12,10 +12,10 @@ use crate::core::platform_macro::platform_macro;
 use common::check_macro::check_impl_macro;
 use proc_macro::TokenStream;
 
-#[proc_macro_attribute]
+#[proc_macro_derive(Platform)]
 /// `platform` is used to mark a struct as a platform engine.
-pub fn platform(args: TokenStream, input: TokenStream) -> TokenStream {
-    platform_macro(args, input)
+pub fn platform(input: TokenStream) -> TokenStream {
+    platform_macro(input)
 }
 
 #[proc_macro_attribute]

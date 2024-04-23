@@ -3,18 +3,14 @@ use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request, Response};
 use hyper_util::rt::TokioIo;
+use ngyn_macros::Platform;
 use ngyn_shared::{FullResponse, Handler, Method, NgynContext, NgynEngine};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
+#[derive(Default, Platform)]
 pub struct HyperApplication {
     routes: Vec<(String, Method, Option<Box<Handler>>)>,
-}
-
-impl Default for HyperApplication {
-    fn default() -> Self {
-        Self { routes: vec![] }
-    }
 }
 
 impl NgynEngine for HyperApplication {
