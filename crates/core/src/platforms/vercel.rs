@@ -22,6 +22,8 @@ impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
         let request = request.map(|b| b.to_vec());
         let (parts, body) = request.into_parts();
+
+        // TODO: Once vercel_runtime supports http v1, we can remove this
         let request = {
             let mut hyper_request = hyper::Request::new(body);
 
@@ -68,19 +70,24 @@ impl VercelApplication {
             res.peek("Not Found".to_string());
         }
 
-        let body = {
-            let mut body = Vec::new();
-
-            res.body_mut().map_frame(|f| {
-                body.extend_from_slice(&f.data_ref().unwrap());
-                f
-            });
-
-            body
+        // TODO: Once vercel_runtime supports http v1, we can remove this
+        let (parts, body) = {
+            let (parts, mut r_body) = res.into_parts();
+            (
+                parts,
+                r_body
+                    .frame()
+                    .await
+                    .unwrap()
+                    .unwrap()
+                    .into_data()
+                    .unwrap()
+                    .to_vec(),
+            )
         };
 
         Ok(VercelResponse::builder()
-            .status(res.status().as_u16())
+            .status(parts.status.as_u16())
             .body(body.into())
             .unwrap())
     }
