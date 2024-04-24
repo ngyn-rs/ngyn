@@ -1,10 +1,7 @@
 use super::Handler;
 use crate::Method;
 
-pub trait NgynEngine {
-    /// Creates a new instance of the `App` with a new `Server`
-    fn new() -> Self;
-
+pub trait NgynEngine: Default {
     /// Adds a new route to the `App`.
     /// This function is chainable.
     ///

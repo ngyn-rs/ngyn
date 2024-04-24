@@ -1,8 +1,5 @@
 use std::borrow::Cow;
 
-use http_body_util::BodyExt;
-use hyper::body::Bytes;
-
 use crate::{context::NgynContext, NgynResponse};
 
 pub trait Transformer {
@@ -86,17 +83,7 @@ impl Dto {
 
 impl Transformer for Dto {
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Dto {
-        let mut data = String::new();
-        cx.request.body_mut().map_frame(|frame| {
-            let frame = if let Ok(data) = frame.into_data() {
-                data
-            } else {
-                Bytes::new()
-            };
-            data.push_str(&String::from_utf8(frame.clone().into()).unwrap());
-            hyper::body::Frame::data(frame)
-        });
-
+        let data = String::from_utf8_lossy(cx.request.body()).to_string();
         Dto { data }
     }
 }
