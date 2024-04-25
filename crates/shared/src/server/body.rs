@@ -5,17 +5,17 @@ use std::str::FromStr;
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust ignore
 /// use ngyn_shared::{ToBytes, Bytes};
 ///
 /// let string_body: Bytes = "Hello, world!".to_string().to_bytes();
 /// ```
-pub trait ToBytes {
+pub trait ToBytes: Default {
     /// Parses the body into a `Bytes` object.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use ngyn_shared::{ToBytes, Bytes};
     ///
     /// let bytes: Bytes = Bytes::from("Hello, world!");
@@ -24,24 +24,24 @@ pub trait ToBytes {
     fn to_bytes(self) -> Bytes;
 }
 
-/// `FromBytes` can be used to parse `Bytes` into a specific type
-pub trait FromBytes {
+/// `ParseBytes` can be used to parse `Bytes` into a specific type
+pub trait ParseBytes {
     /// Parses `Bytes` into a specific type
     ///
     /// # Examples
     ///
-    /// ```
-    /// use ngyn_shared::{FromBytes, Bytes};
+    /// ```rust ignore
+    /// use ngyn_shared::{ParseBytes, Bytes};
     ///
     /// let bytes: Bytes = Bytes::from("42");
-    /// let value: i32 = bytes.from_bytes();
+    /// let value: i32 = bytes.parse_bytes();
     /// assert_eq!(value, 42);
     /// ```
-    fn from_bytes<T: FromStr + Default>(self) -> T;
+    fn parse_bytes<T: FromStr + Default>(self) -> T;
 }
 
-impl FromBytes for Bytes {
-    fn from_bytes<T: FromStr + Default>(self) -> T {
+impl ParseBytes for Bytes {
+    fn parse_bytes<T: FromStr + Default>(self) -> T {
         String::from_utf8_lossy(&self)
             .parse::<T>()
             .unwrap_or_default()

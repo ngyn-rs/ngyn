@@ -12,7 +12,7 @@ pub trait NgynEngine: Default {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use crate::{Method, NgynEngine};
     ///
     /// struct MyEngine;

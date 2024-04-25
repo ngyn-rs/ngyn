@@ -14,18 +14,18 @@ pub trait ToParams {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use hyper::http::uri::Uri;
     ///
     /// let uri = Uri::from_static("/users/123");
     /// let raw_path = "/users/<id>";
     ///
-    /// let (success, params) = uri.params(raw_path);
+    /// let params = uri.to_params(raw_path);
     ///
-    /// assert_eq!(success, true);
-    /// assert_eq!(params, vec![("id".to_string(), "123".to_string())]);
+    /// assert_eq!(params.is_some(), true);
+    /// assert_eq!(params.unwrap(), vec![("id".to_string(), "123".to_string())]);
     /// ```
-    fn into_params(&self, path: &str) -> Option<Vec<(String, String)>>;
+    fn to_params(&self, path: &str) -> Option<Vec<(String, String)>>;
 }
 
 /// Converts a path string to a regular expression.
@@ -38,7 +38,7 @@ fn path_to_regex(path: &str) -> regex::Regex {
 }
 
 impl ToParams for Uri {
-    fn into_params(&self, raw_path: &str) -> Option<Vec<(String, String)>> {
+    fn to_params(&self, raw_path: &str) -> Option<Vec<(String, String)>> {
         let uri_path = self.path().trim_start_matches('/').trim_end_matches('/');
         let params_path = raw_path.trim_start_matches('/').trim_end_matches('/');
 

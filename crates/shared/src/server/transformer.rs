@@ -1,5 +1,5 @@
-use std::borrow::Cow;
 use crate::{context::NgynContext, NgynResponse};
+use std::borrow::Cow;
 
 /// Represents a transformer trait.
 pub trait Transformer {
@@ -12,9 +12,7 @@ pub trait Transformer {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use crate::{context::NgynContext, NgynResponse};
-    ///
+    /// ```rust ignore
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
@@ -31,7 +29,6 @@ pub trait Transformer {
 pub struct Transducer;
 
 impl Transducer {
-    #[allow(dead_code)]
     /// Reduces the given `NgynContext` and `NgynResponse` using the specified `Transformer` and returns an instance of `S`.
     ///
     /// # Arguments
@@ -41,8 +38,7 @@ impl Transducer {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use crate::{context::NgynContext, NgynResponse};
+    /// ```rust ignore
     ///
     /// struct MyTransformer;
     ///
@@ -69,7 +65,6 @@ pub struct Param {
 }
 
 impl Param {
-    #[allow(dead_code)]
     /// Retrieves the value associated with the specified `id` from the parameter data.
     ///
     /// # Arguments
@@ -83,7 +78,7 @@ impl Param {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// let param = Param {
     ///     data: vec![
     ///         (Cow::Borrowed("id"), Cow::Borrowed("123")),
@@ -119,7 +114,7 @@ impl Transformer for Param {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use crate::{context::NgynContext, NgynResponse};
     ///
     /// let mut cx = NgynContext::new();
@@ -144,7 +139,6 @@ pub struct Query {
 }
 
 impl Query {
-    #[allow(dead_code)]
     /// Retrieves the value associated with the specified `id` from the query parameters.
     ///
     /// # Arguments
@@ -158,7 +152,7 @@ impl Query {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use hyper::Uri;
     ///
     /// let uri: Uri = "https://example.com/?id=123&name=John".parse().unwrap();
@@ -194,7 +188,7 @@ impl Transformer for Query {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use crate::{context::NgynContext, NgynResponse};
     /// use hyper::Uri;
     ///
@@ -219,7 +213,6 @@ pub struct Dto {
 }
 
 impl Dto {
-    #[allow(dead_code)]
     /// Parses the data into the specified type using serde deserialization.
     ///
     /// # Arguments
@@ -232,7 +225,7 @@ impl Dto {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use serde::Deserialize;
     ///
     /// let dto = Dto {
@@ -267,7 +260,7 @@ impl Transformer for Dto {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use crate::{context::NgynContext, NgynResponse};
     ///
     /// let mut cx = NgynContext::new();

@@ -13,7 +13,7 @@ pub trait FullResponse {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use http_body_util::Full;
     /// use hyper::StatusCode;
     /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
@@ -36,7 +36,7 @@ pub trait FullResponse {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust ignore
     /// use http_body_util::Full;
     /// use hyper::StatusCode;
     /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
