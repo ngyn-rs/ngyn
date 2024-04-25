@@ -87,7 +87,7 @@ pub fn check_fn_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 let gate: #gate = ngyn::prelude::NgynProvider.provide();
                 if !gate.can_activate(#req) {
                     #res.set_status(403);
-                    return ngyn::prelude::Bytes::from("Forbidden".to_string()).parse_bytes::<String>().parse().unwrap_or_default();
+                    return ngyn::prelude::Bytes::from("Forbidden".to_string()).from_bytes::<String>().parse().unwrap_or_default();
                 }
             }
         }

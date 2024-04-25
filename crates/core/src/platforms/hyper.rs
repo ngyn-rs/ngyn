@@ -68,7 +68,7 @@ impl HyperApplication {
                     cx.execute(&mut res).await;
                 } else {
                     res.set_status(404);
-                    res.peek("Not Found".to_string());
+                    res.send("Not Found".to_string());
                 }
 
                 Ok::<_, hyper::Error>(res)

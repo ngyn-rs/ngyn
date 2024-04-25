@@ -1,116 +1,115 @@
 use hyper::body::Bytes;
 use std::str::FromStr;
 
-/// `ParseBody` can be used to convert a type into a `Bytes`
+/// `ToBytes` can be used to convert a type into a `Bytes`
 ///
 /// # Examples
 ///
 /// ```
-/// use ngyn_shared::{ParseBody, Bytes};
+/// use ngyn_shared::{ToBytes, Bytes};
 ///
-/// let string_body: Bytes = "Hello, world!".to_string().parse_body();
+/// let string_body: Bytes = "Hello, world!".to_string().to_bytes();
 /// ```
-pub trait ParseBody {
+pub trait ToBytes {
     /// Parses the body into a `Bytes` object.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ngyn_shared::{ParseBody, Bytes};
+    /// use ngyn_shared::{ToBytes, Bytes};
     ///
     /// let bytes: Bytes = Bytes::from("Hello, world!");
-    /// let parsed_bytes: Bytes = bytes.parse_body();
+    /// let parsed_bytes: Bytes = bytes.to_bytes();
     /// ```
-    fn parse_body(self) -> Bytes;
+    fn to_bytes(self) -> Bytes;
 }
 
-/// `ParseBytes` can be used to parse `Bytes` into a specific type
-pub trait ParseBytes {
+/// `FromBytes` can be used to parse `Bytes` into a specific type
+pub trait FromBytes {
     /// Parses `Bytes` into a specific type
     ///
     /// # Examples
     ///
     /// ```
-    /// use ngyn_shared::{ParseBytes, Bytes};
+    /// use ngyn_shared::{FromBytes, Bytes};
     ///
     /// let bytes: Bytes = Bytes::from("42");
-    /// let value: i32 = bytes.parse_bytes();
+    /// let value: i32 = bytes.from_bytes();
     /// assert_eq!(value, 42);
     /// ```
-    fn parse_bytes<T: FromStr + Default>(self) -> T;
+    fn from_bytes<T: FromStr + Default>(self) -> T;
 }
 
-impl ParseBytes for Bytes {
-    fn parse_bytes<T: FromStr + Default>(self) -> T {
+impl FromBytes for Bytes {
+    fn from_bytes<T: FromStr + Default>(self) -> T {
         String::from_utf8_lossy(&self)
             .parse::<T>()
             .unwrap_or_default()
     }
 }
 
-impl ParseBody for Bytes {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for Bytes {
+    fn to_bytes(self) -> Bytes {
         self
     }
 }
 
-impl ParseBody for String {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for String {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self)
     }
 }
 
-impl ParseBody for bool {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for bool {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for usize {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for usize {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for i32 {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for i32 {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for f32 {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for f32 {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for Vec<u8> {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for Vec<u8> {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self)
     }
 }
 
-impl ParseBody for i64 {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for i64 {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for f64 {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for f64 {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for char {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for char {
+    fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ParseBody for () {
-    fn parse_body(self) -> Bytes {
+impl ToBytes for () {
+    fn to_bytes(self) -> Bytes {
         Bytes::default()
     }
 }
-

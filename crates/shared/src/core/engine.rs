@@ -10,10 +10,6 @@ pub trait NgynEngine: Default {
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
     ///
-    /// # Returns
-    ///
-    /// A mutable reference to `Self`.
-    ///
     /// # Examples
     ///
     /// ```

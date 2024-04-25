@@ -66,7 +66,7 @@ impl VercelApplication {
             cx.execute(&mut res).await;
         } else {
             res.set_status(404);
-            res.peek("Not Found".to_string());
+            res.send("Not Found".to_string());
         }
 
         // TODO: Once vercel_runtime supports http v1, we can remove this
