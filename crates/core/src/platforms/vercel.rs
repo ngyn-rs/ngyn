@@ -12,9 +12,8 @@ pub struct VercelApplication {
 }
 
 impl NgynEngine for VercelApplication {
-    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) -> &mut Self {
+    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.routes.push((path.to_string(), method, handler));
-        self
     }
 }
 
