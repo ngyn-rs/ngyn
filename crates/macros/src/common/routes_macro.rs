@@ -71,7 +71,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
 
     match trait_ {
         Some((..)) => panic!("Trait impls are not supported"),
-        None => quote! {},
+        None => {}
     };
 
     let mut route_defs: Vec<_> = Vec::new();
