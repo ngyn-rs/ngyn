@@ -25,8 +25,11 @@ impl syn::parse::Parse for CheckArgs {
     }
 }
 
+/// This macro is used to add a check attribute to all methods in an impl block.
 pub fn check_impl_macro(impl_item: ItemImpl, args: TokenStream) -> TokenStream {
     let mut new_items = Vec::new();
+
+    // Create the check attribute
     let attrs = syn::Attribute {
         pound_token: Default::default(),
         style: syn::AttrStyle::Outer,
@@ -66,6 +69,7 @@ pub fn check_impl_macro(impl_item: ItemImpl, args: TokenStream) -> TokenStream {
     quote::quote!(#new_impl).into()
 }
 
+/// This macro is used to add a check attribute handler to a method.
 pub fn check_fn_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input = syn::parse_macro_input!(input as ItemFn);
     let CheckArgs { gates } = syn::parse_macro_input!(args as CheckArgs);
@@ -87,7 +91,7 @@ pub fn check_fn_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 let gate: #gate = ngyn::prelude::NgynProvider.provide();
                 if !gate.can_activate(#req) {
                     #res.set_status(403);
-                    return ngyn::prelude::Bytes::from("Forbidden".to_string()).parse_bytes::<String>().parse().unwrap_or_default();
+                    return ngyn::prelude::Bytes::from("Forbidden".to_string()).parse_bytes();
                 }
             }
         }

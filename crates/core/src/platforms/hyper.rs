@@ -8,19 +8,28 @@ use ngyn_shared::{FullResponse, Handler, Method, NgynContext, NgynEngine};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
+/// Represents a Hyper-based application.
 #[derive(Default, Platform)]
 pub struct HyperApplication {
     routes: Vec<(String, Method, Option<Box<Handler>>)>,
 }
 
 impl NgynEngine for HyperApplication {
-    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) -> &mut Self {
+    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.routes.push((path.to_string(), method, Some(handler)));
-        self
     }
 }
 
 impl HyperApplication {
+    /// Listens for incoming connections and serves the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `address` - The address to listen on.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating success or failure.
     pub async fn listen(
         self,
         address: &str,
@@ -59,7 +68,7 @@ impl HyperApplication {
                     cx.execute(&mut res).await;
                 } else {
                     res.set_status(404);
-                    res.peek("Not Found".to_string());
+                    res.send("Not Found".to_string());
                 }
 
                 Ok::<_, hyper::Error>(res)

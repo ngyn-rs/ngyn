@@ -12,9 +12,8 @@ pub struct VercelApplication {
 }
 
 impl NgynEngine for VercelApplication {
-    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) -> &mut Self {
+    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.routes.push((path.to_string(), method, handler));
-        self
     }
 }
 
@@ -67,7 +66,7 @@ impl VercelApplication {
             cx.execute(&mut res).await;
         } else {
             res.set_status(404);
-            res.peek("Not Found".to_string());
+            res.send("Not Found".to_string());
         }
 
         // TODO: Once vercel_runtime supports http v1, we can remove this
