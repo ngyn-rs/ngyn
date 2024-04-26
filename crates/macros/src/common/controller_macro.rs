@@ -51,7 +51,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         ident,
         data,
         vis,
-        ..
+        generics,
     } = syn::parse_macro_input!(input as syn::DeriveInput);
     let args = syn::parse_macro_input!(args as ControllerArgs);
     let (types, keys) = parse_macro_data(data);
@@ -80,13 +80,13 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #(#attrs)*
         #[ngyn::macros::dependency]
-        #vis struct #ident {
+        #vis struct #ident #generics {
             middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>,
             #(#fields),*
         }
 
         #[ngyn::prelude::async_trait]
-        impl ngyn::prelude::NgynControllerRoutePlaceholder for #ident {
+        impl #generics ngyn::prelude::NgynControllerRoutePlaceholder for #ident #generics {
             #[allow(non_upper_case_globals)]
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
 
@@ -101,7 +101,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[ngyn::prelude::async_trait]
-        impl ngyn::prelude::NgynController for #ident {
+        impl #generics ngyn::prelude::NgynController for #ident #generics {
             fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
                 let mut controller = #ident {
