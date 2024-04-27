@@ -108,7 +108,7 @@ impl From<NgynContextValue> for String {
 }
 pub struct NgynContext {
     pub request: Request<Vec<u8>>,
-    pub params: Vec<(String, String)>,
+    pub params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, NgynContextValue>,
 }
@@ -323,7 +323,7 @@ impl NgynContext {
         NgynContext {
             request,
             store: HashMap::new(),
-            params: Vec::new(),
+            params: None,
             route_info: None,
         }
     }
@@ -359,11 +359,22 @@ impl NgynContext {
             return None;
         }
         if let Some(params) = self.request.uri().to_params(path) {
-            self.params = params;
+            self.params = Some(params);
             Some(self)
         } else {
             None
         }
+    }
+
+    /// Checks if the context has a valid route.
+    /// A valid route is when the route information and the params are set.
+    /// This is great for differentiating known routes from unknown routes.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the context has a valid route, `false` otherwise.
+    pub fn is_valid_route(&self) -> bool {
+        self.route_info.is_some() && self.params.is_some()
     }
 
     /// Prepares the context for execution by setting the route information.
