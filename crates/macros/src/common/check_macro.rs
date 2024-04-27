@@ -49,5 +49,5 @@ pub fn check_impl_macro(impl_item: ItemImpl, args: TokenStream) -> TokenStream {
 
 /// This macro is used to add a check attribute handler to a method.
 pub fn check_fn_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
-    input.into()
+    input
 }

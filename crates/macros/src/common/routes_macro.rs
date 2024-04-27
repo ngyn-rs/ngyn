@@ -172,9 +172,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                         {
                                             use ngyn::prelude::NgynGate;
                                             let gate: #path = ngyn::prelude::NgynProvider.provide();
-                                            if !gate.can_activate(cx) {
-                                                res.set_status(403);
-                                                res.send("Forbidden".to_string());
+                                            if !gate.can_activate(cx, res) {
                                                 return;
                                             }
                                         }

@@ -4,7 +4,7 @@
 use hyper::Request;
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{uri::ToParams, Method, NgynController, NgynResponse};
+use crate::{uri::ToParams, Method, NgynController, NgynRequest, NgynResponse, Transformer};
 
 /// Represents the value of a context in Ngyn
 ///
@@ -409,5 +409,11 @@ impl NgynContext {
         if let Some((handler, controller)) = self.route_info.clone() {
             controller.handle(handler.as_str(), self, res).await;
         }
+    }
+}
+
+impl Transformer for NgynRequest {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+        cx.request.clone()
     }
 }

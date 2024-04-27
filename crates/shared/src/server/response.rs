@@ -110,9 +110,6 @@ impl ResponseBuilder for NgynResponse {
         if let Some(handler) = handler {
             handler(&mut cx, &mut res);
             cx.execute(&mut res).await;
-        } else {
-            res.set_status(404);
-            res.send("Not Found".to_string());
         }
 
         res

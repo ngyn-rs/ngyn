@@ -43,8 +43,8 @@ impl HyperApplication {
             async move {
                 let req = req.map(|b| {
                     let mut new_body = vec![];
-                    b.map_frame(|mut f| {
-                        if let Some(d) = f.data_mut() {
+                    b.map_frame(|f| {
+                        if let Some(d) = f.data_ref() {
                             new_body.append(&mut d.to_vec());
                         }
                         f
