@@ -1,22 +1,23 @@
-use http_body_util::{BodyExt, Full};
-use hyper::body::{Bytes, Incoming};
+use http_body_util::BodyExt;
+use hyper::body::Incoming;
 use hyper::server::conn::http1;
-use hyper::{service::service_fn, Request, Response};
+use hyper::{service::service_fn, Request};
 use hyper_util::rt::TokioIo;
 use ngyn_macros::Platform;
-use ngyn_shared::{FullResponse, Handler, Method, NgynContext, NgynEngine};
+use ngyn_shared::response::ResponseBuilder;
+use ngyn_shared::{Handler, Method, NgynEngine, NgynResponse};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 /// Represents a Hyper-based application.
 #[derive(Default, Platform)]
 pub struct HyperApplication {
-    routes: Vec<(String, Method, Option<Box<Handler>>)>,
+    routes: Vec<(String, Method, Box<Handler>)>,
 }
 
 impl NgynEngine for HyperApplication {
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
-        self.routes.push((path.to_string(), method, Some(handler)));
+        self.routes.push((path.to_string(), method, handler));
     }
 }
 
@@ -40,7 +41,7 @@ impl HyperApplication {
         let service = service_fn(move |req: Request<Incoming>| {
             let routes = Arc::clone(&routes_copy);
             async move {
-                let mut cx = NgynContext::from_request(req.map(|b| {
+                let req = req.map(|b| {
                     let mut new_body = vec![];
                     b.map_frame(|mut f| {
                         if let Some(d) = f.data_mut() {
@@ -49,27 +50,8 @@ impl HyperApplication {
                         f
                     });
                     new_body
-                }));
-                let mut res = Response::new(Full::new(Bytes::default()));
-
-                let handler = routes
-                    .iter()
-                    .filter_map(|(path, method, handler)| {
-                        if cx.with(path, method).is_some() {
-                            Some(handler)
-                        } else {
-                            None
-                        }
-                    })
-                    .next();
-
-                if let Some(Some(handler)) = handler {
-                    handler(&mut cx, &mut res);
-                    cx.execute(&mut res).await;
-                } else {
-                    res.set_status(404);
-                    res.send("Not Found".to_string());
-                }
+                });
+                let res = NgynResponse::init(req, routes).await;
 
                 Ok::<_, hyper::Error>(res)
             }

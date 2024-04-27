@@ -1,7 +1,9 @@
-use http_body_util::Full;
-use hyper::StatusCode;
+use std::sync::Arc;
 
-use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
+use http_body_util::Full;
+use hyper::{body::Bytes, Method, Request, Response, StatusCode};
+
+use crate::{context::NgynContext, transformer::Transformer, Handler, NgynResponse, ToBytes};
 
 /// Trait representing a full response.
 pub trait FullResponse {
@@ -59,6 +61,61 @@ impl FullResponse for NgynResponse {
 
     fn send(&mut self, item: impl ToBytes) {
         *self.body_mut() = Full::new(item.to_bytes());
+    }
+}
+
+#[async_trait::async_trait]
+pub trait ResponseBuilder: FullResponse {
+    /// Creates a new response.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The request to create the response from.
+    ///
+    /// # Returns
+    ///
+    /// A new response.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use http_body_util::Full;
+    /// use hyper::StatusCode;
+    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
+    ///
+    /// let response = NgynResponse::init(req, routes);
+    /// assert_eq!(response.status, StatusCode::OK);
+    /// assert_eq!(response.body.as_slice(), &[1, 2, 3]);
+    /// ```
+    async fn init(req: Request<Vec<u8>>, routes: Arc<Vec<(String, Method, Box<Handler>)>>) -> Self;
+}
+
+#[async_trait::async_trait]
+impl ResponseBuilder for NgynResponse {
+    async fn init(req: Request<Vec<u8>>, routes: Arc<Vec<(String, Method, Box<Handler>)>>) -> Self {
+        let mut cx = NgynContext::from_request(req);
+        let mut res = Response::new(Full::new(Bytes::default()));
+
+        let handler = routes
+            .iter()
+            .filter_map(|(path, method, handler)| {
+                if cx.with(path, method).is_some() {
+                    Some(handler)
+                } else {
+                    None
+                }
+            })
+            .next();
+
+        if let Some(handler) = handler {
+            handler(&mut cx, &mut res);
+            cx.execute(&mut res).await;
+        } else {
+            res.set_status(404);
+            res.send("Not Found".to_string());
+        }
+
+        res
     }
 }
 

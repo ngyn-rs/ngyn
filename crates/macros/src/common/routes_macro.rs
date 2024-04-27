@@ -69,10 +69,9 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
         Err(_err) => panic!("Only impl blocks are supported"),
     };
 
-    match trait_ {
-        Some((..)) => panic!("Trait impls are not supported"),
-        None => {}
-    };
+    if let Some((..)) = trait_ {
+        panic!("Trait impls are not supported");
+    }
 
     let mut route_defs: Vec<_> = Vec::new();
     let mut handle_routes: Vec<_> = Vec::new();
