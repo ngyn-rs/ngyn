@@ -53,6 +53,27 @@ impl syn::parse::Parse for Args {
     }
 }
 
+struct CheckArgs {
+    gates: Vec<syn::Path>,
+}
+
+impl syn::parse::Parse for CheckArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut gates = vec![];
+        while !input.is_empty() {
+            let path: syn::Path = input.parse()?;
+            gates.push(path);
+            if !input.is_empty() {
+                input.parse::<syn::Token![,]>()?;
+            }
+        }
+        if gates.is_empty() {
+            return Err(syn::Error::new(input.span(), "expected at least one gate"));
+        }
+        Ok(Self { gates })
+    }
+}
+
 pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
     let ItemImpl {
         items,
@@ -133,9 +154,41 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 args
                             }
                         });
+                        let gates = method.attrs.iter().filter_map(|attr| {
+                            if attr.path().is_ident("check") {
+                                Some(attr.meta.clone())
+                            } else {
+                                None
+                            }
+                        });
+                        let gate_handlers: Vec<_> = gates
+                            .map(|gate| {
+                                if let syn::Meta::List(path) = gate {
+                                    let CheckArgs { gates } =
+                                        path.parse_args::<CheckArgs>().unwrap();
+                                    gates.iter().fold(quote! {}, |gates, path| {
+                                    quote! {
+                                        #gates
+                                        {
+                                            use ngyn::prelude::NgynGate;
+                                            let gate: #path = ngyn::prelude::NgynProvider.provide();
+                                            if !gate.can_activate(cx) {
+                                                res.set_status(403);
+                                                res.send("Forbidden".to_string());
+                                                return;
+                                            }
+                                        }
+                                    }
+                                })
+                                } else {
+                                    panic!("Expected a list of gates")
+                                }
+                            })
+                            .collect();
                         if asyncness.is_some() {
                             handle_routes.push(quote! {
                                 #ident_str => {
+                                    #(#gate_handlers)*
                                     let body = self.#ident(#args).await;
                                     res.send(body);
                                 }
@@ -143,6 +196,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         } else {
                             handle_routes.push(quote! {
                                 #ident_str => {
+                                    #(#gate_handlers)*
                                     let body = self.#ident(#args);
                                     res.send(body);
                                 }
