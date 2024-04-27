@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{ItemFn, Receiver, Signature};
+use syn::{ItemFn, Signature};
 
 pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let ItemFn {
@@ -21,50 +21,10 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
         inputs,
         output,
         fn_token,
+        asyncness,
+        generics,
         ..
     } = sig;
-
-    let transducers: Vec<_> = inputs
-		.iter()
-		.map(|input| {
-			if let syn::FnArg::Typed(pat) = input {
-				let ty = &pat.ty;
-				let pat = &pat.pat;
-				if let syn::Type::Path(path) = *ty.clone() {
-					let path = &path.path;
-					quote! {
-						let mut #pat: #path = ngyn::prelude::Transducer::reduce::<#path>(cx, response);
-					}
-				} else {
-					panic!("Expected a valid struct");
-				}
-			} else {
-				quote! {}
-			}
-		})
-		.collect();
-
-    // initial self varn obtained from the first input
-    let self_var = match inputs.iter().next() {
-        Some(syn::FnArg::Receiver(receiver)) => {
-            let Receiver {
-                reference,
-                mutability,
-                self_token,
-                ..
-            } = receiver;
-            if reference.is_some() {
-                if mutability.is_some() {
-                    quote! { &mut #self_token }
-                } else {
-                    quote! { &#self_token }
-                }
-            } else {
-                quote! { #self_token }
-            }
-        }
-        _ => quote! {},
-    };
 
     let return_val = match output {
         syn::ReturnType::Type(_, _) => quote! {},
@@ -78,8 +38,7 @@ pub fn route_macro(_args: TokenStream, raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #(#attrs)*
-        #vis async #fn_token #ident(#self_var, cx: &mut ngyn::prelude::NgynContext, response: &mut ngyn::prelude::NgynResponse) #output {
-            #(#transducers)*
+        #vis #asyncness #fn_token #ident #generics (#inputs) #output {
             #block
             #return_val
         }

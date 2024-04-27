@@ -1,7 +1,7 @@
 use ngyn_shared::{Method, Path};
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::ItemImpl;
+use quote::{quote, ToTokens};
+use syn::{ItemImpl, Signature};
 
 pub struct PathArg {
     pub path: Option<Path>,
@@ -53,6 +53,27 @@ impl syn::parse::Parse for Args {
     }
 }
 
+struct CheckArgs {
+    gates: Vec<syn::Path>,
+}
+
+impl syn::parse::Parse for CheckArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut gates = vec![];
+        while !input.is_empty() {
+            let path: syn::Path = input.parse()?;
+            gates.push(path);
+            if !input.is_empty() {
+                input.parse::<syn::Token![,]>()?;
+            }
+        }
+        if gates.is_empty() {
+            return Err(syn::Error::new(input.span(), "expected at least one gate"));
+        }
+        Ok(Self { gates })
+    }
+}
+
 pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
     let ItemImpl {
         items,
@@ -69,10 +90,9 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
         Err(_err) => panic!("Only impl blocks are supported"),
     };
 
-    match trait_ {
-        Some((..)) => panic!("Trait impls are not supported"),
-        None => {}
-    };
+    if let Some((..)) = trait_ {
+        panic!("Trait impls are not supported");
+    }
 
     let mut route_defs: Vec<_> = Vec::new();
     let mut handle_routes: Vec<_> = Vec::new();
@@ -100,19 +120,86 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         }
                     };
                     path.unwrap().each(|path| {
-                        let ident = method.sig.ident.clone();
+                        let Signature {
+                            ident,
+                            inputs,
+                            asyncness,
+                            ..
+                        } = method.sig.clone();
                         let ident_str = ident.to_string();
                         route_defs.push(quote! {(
                             #path,
                             #http_method,
                             #ident_str,
                         )});
-                        handle_routes.push(quote! {
-                            #ident_str => {
-                                let body = self.#ident(cx, res).await;
-                                res.send(body);
+                        let args = inputs.iter().fold(None, |args, input| {
+                            if let syn::FnArg::Typed(pat) = input {
+                                let ty = &pat.ty;
+                                let pat = &pat.pat;
+                                if let syn::Type::Path(path) = *ty.clone() {
+                                    let path = &path.path;
+                                    Some(quote! {
+                                        #args ngyn::prelude::Transducer::reduce::<#path>(cx, res)
+                                    })
+                                } else {
+                                    panic!(
+                                        "{}",
+                                        format!(
+                                            "Expected {:?} to be a valid struct",
+                                            pat.to_token_stream()
+                                        )
+                                    );
+                                }
+                            } else {
+                                args
                             }
                         });
+                        let gates = method.attrs.iter().filter_map(|attr| {
+                            if attr.path().is_ident("check") {
+                                Some(attr.meta.clone())
+                            } else {
+                                None
+                            }
+                        });
+                        let gate_handlers: Vec<_> = gates
+                            .map(|gate| {
+                                if let syn::Meta::List(path) = gate {
+                                    let CheckArgs { gates } =
+                                        path.parse_args::<CheckArgs>().unwrap();
+                                    gates.iter().fold(quote! {}, |gates, path| {
+                                    quote! {
+                                        #gates
+                                        {
+                                            use ngyn::prelude::NgynGate;
+                                            let gate: #path = ngyn::prelude::NgynProvider.provide();
+                                            if !gate.can_activate(cx, res) {
+                                                return;
+                                            }
+                                        }
+                                    }
+                                })
+                                } else {
+                                    panic!("Expected a list of gates")
+                                }
+                            })
+                            .collect();
+                        if asyncness.is_some() {
+                            handle_routes.push(quote! {
+                                #ident_str => {
+                                    #(#gate_handlers)*
+                                    let body = self.#ident(#args).await;
+                                    res.send(body);
+                                }
+                            });
+                        } else {
+                            handle_routes.push(quote! {
+                                #ident_str => {
+                                    #(#gate_handlers)*
+                                    let body = self.#ident(#args);
+                                    res.send(body);
+                                }
+                            });
+                        }
                     })
                 }
             }
@@ -136,9 +223,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
             ) {
                 match handler {
                     #(#handle_routes),*
-                    _ => {
-                        res.set_status(404);
-                    }
+                    _ => {}
                 }
             }
         }

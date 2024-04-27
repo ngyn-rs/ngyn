@@ -1,8 +1,8 @@
 use hyper::http::uri::Uri;
 
-/// Trait for converting a type to its params.
+/// Trait for converting a path to its params.
 pub trait ToParams {
-    /// Extracts the params of the type based on the provided path.
+    /// Extracts the available params of a provided path.
     ///
     /// # Arguments
     ///
@@ -10,7 +10,7 @@ pub trait ToParams {
     ///
     /// # Returns
     ///
-    /// A tuple containing a boolean indicating whether the extraction was successful and a vector of key-value pairs representing the extracted params.
+    /// * `Option<Vec<(String, String)>>` - The extracted params, if the path matches.
     ///
     /// # Examples
     ///

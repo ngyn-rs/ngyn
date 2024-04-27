@@ -1,19 +1,23 @@
-use std::str::FromStr;
-
-use http_body_util::{BodyExt, Full};
-use hyper::{header::HeaderName, Response, Uri};
+use http_body_util::BodyExt;
+use hyper::{header::HeaderName, Uri};
 use ngyn_macros::Platform;
-use ngyn_shared::{Bytes, FullResponse, Handler, Method, NgynContext, NgynEngine};
+use ngyn_shared::{response::ResponseBuilder, Handler, Method, NgynEngine, NgynResponse};
+use std::{str::FromStr, sync::Arc};
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 
 #[derive(Default, Platform)]
 pub struct VercelApplication {
     routes: Vec<(String, Method, Box<Handler>)>,
+    middlewares: Vec<Box<dyn ngyn_shared::NgynMiddleware>>,
 }
 
 impl NgynEngine for VercelApplication {
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.routes.push((path.to_string(), method, handler));
+    }
+
+    fn use_middleware(&mut self, middleware: impl ngyn_shared::NgynMiddleware + 'static) {
+        self.middlewares.push(Box::new(middleware));
     }
 }
 
@@ -45,29 +49,8 @@ impl VercelApplication {
 
             hyper_request
         };
-        let mut cx = NgynContext::from_request(request);
-
-        let handler = self
-            .routes
-            .iter()
-            .filter_map(|(path, method, handler)| {
-                if cx.with(path, method).is_some() {
-                    Some(handler)
-                } else {
-                    None
-                }
-            })
-            .next();
-
-        let mut res = Response::new(Full::new(Bytes::default()));
-
-        if let Some(handler) = handler {
-            handler(&mut cx, &mut res);
-            cx.execute(&mut res).await;
-        } else {
-            res.set_status(404);
-            res.send("Not Found".to_string());
-        }
+        let res =
+            NgynResponse::init(request, Arc::new(self.routes), Arc::new(self.middlewares)).await;
 
         // TODO: Once vercel_runtime supports http v1, we can remove this
         let (parts, body) = {

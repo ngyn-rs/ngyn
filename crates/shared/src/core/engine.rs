@@ -1,5 +1,5 @@
 use super::Handler;
-use crate::Method;
+use crate::{Method, NgynMiddleware};
 
 pub trait NgynEngine: Default {
     /// Adds a route to the application.
@@ -21,4 +21,11 @@ pub trait NgynEngine: Default {
     /// engine.route("/", Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>);
+
+    /// Adds a middleware to the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `middleware` - The middleware to add.
+    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static);
 }

@@ -12,5 +12,5 @@ pub use hyper::body::Bytes;
 pub use transformer::{Dto, Param, Query, Transducer, Transformer};
 pub use uri::ToParams;
 
-pub type NgynRequest = hyper::Request<hyper::body::Incoming>;
+pub type NgynRequest = hyper::Request<Vec<u8>>;
 pub type NgynResponse = hyper::Response<Full<Bytes>>;
