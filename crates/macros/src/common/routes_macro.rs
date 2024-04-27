@@ -1,7 +1,7 @@
 use ngyn_shared::{Method, Path};
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::ItemImpl;
+use quote::{quote, ToTokens};
+use syn::{ItemImpl, Signature};
 
 pub struct PathArg {
     pub path: Option<Path>,
@@ -99,19 +99,55 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         }
                     };
                     path.unwrap().each(|path| {
-                        let ident = method.sig.ident.clone();
+                        let Signature {
+                            ident,
+                            inputs,
+                            asyncness,
+                            ..
+                        } = method.sig.clone();
                         let ident_str = ident.to_string();
                         route_defs.push(quote! {(
                             #path,
                             #http_method,
                             #ident_str,
                         )});
-                        handle_routes.push(quote! {
-                            #ident_str => {
-                                let body = self.#ident(cx, res).await;
-                                res.send(body);
+                        let args = inputs.iter().fold(None, |args, input| {
+                            if let syn::FnArg::Typed(pat) = input {
+                                let ty = &pat.ty;
+                                let pat = &pat.pat;
+                                if let syn::Type::Path(path) = *ty.clone() {
+                                    let path = &path.path;
+                                    Some(quote! {
+                                        #args ngyn::prelude::Transducer::reduce::<#path>(cx, res)
+                                    })
+                                } else {
+                                    panic!(
+                                        "{}",
+                                        format!(
+                                            "Expected {:?} to be a valid struct",
+                                            pat.to_token_stream()
+                                        )
+                                    );
+                                }
+                            } else {
+                                args
                             }
                         });
+                        if asyncness.is_some() {
+                            handle_routes.push(quote! {
+                                #ident_str => {
+                                    let body = self.#ident(#args).await;
+                                    res.send(body);
+                                }
+                            });
+                        } else {
+                            handle_routes.push(quote! {
+                                #ident_str => {
+                                    let body = self.#ident(#args);
+                                    res.send(body);
+                                }
+                            });
+                        }
                     })
                 }
             }
@@ -135,9 +171,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
             ) {
                 match handler {
                     #(#handle_routes),*
-                    _ => {
-                        res.set_status(404);
-                    }
+                    _ => {}
                 }
             }
         }
