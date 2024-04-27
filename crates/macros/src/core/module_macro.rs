@@ -96,7 +96,6 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             }
         })
         .collect();
-
     let controller_ident = str_to_ident(random_str_from(ident.clone().to_string()));
 
     let expanded = quote! {
@@ -110,15 +109,12 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl ngyn::prelude::NgynModule for #ident {
-
             fn new(middlewares:  Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
                 Self { middlewares }
             }
-
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
-
             fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> {
                 let mut modules: Vec<std::sync::Arc<dyn ngyn::prelude::NgynModule>> = vec![];
                 let mut controllers: Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> = vec![];

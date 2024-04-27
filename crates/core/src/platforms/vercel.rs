@@ -8,11 +8,16 @@ use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 #[derive(Default, Platform)]
 pub struct VercelApplication {
     routes: Vec<(String, Method, Box<Handler>)>,
+    middlewares: Vec<Box<dyn ngyn_shared::NgynMiddleware>>,
 }
 
 impl NgynEngine for VercelApplication {
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.routes.push((path.to_string(), method, handler));
+    }
+
+    fn use_middleware(&mut self, middleware: impl ngyn_shared::NgynMiddleware + 'static) {
+        self.middlewares.push(Box::new(middleware));
     }
 }
 
@@ -44,7 +49,8 @@ impl VercelApplication {
 
             hyper_request
         };
-        let res = NgynResponse::init(request, Arc::new(self.routes)).await;
+        let res =
+            NgynResponse::init(request, Arc::new(self.routes), Arc::new(self.middlewares)).await;
 
         // TODO: Once vercel_runtime supports http v1, we can remove this
         let (parts, body) = {

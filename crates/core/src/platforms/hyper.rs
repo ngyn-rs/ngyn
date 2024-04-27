@@ -13,11 +13,16 @@ use tokio::net::TcpListener;
 #[derive(Default, Platform)]
 pub struct HyperApplication {
     routes: Vec<(String, Method, Box<Handler>)>,
+    middlewares: Vec<Box<dyn ngyn_shared::NgynMiddleware>>,
 }
 
 impl NgynEngine for HyperApplication {
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.routes.push((path.to_string(), method, handler));
+    }
+
+    fn use_middleware(&mut self, middleware: impl ngyn_shared::NgynMiddleware + 'static) {
+        self.middlewares.push(Box::new(middleware));
     }
 }
 
@@ -37,9 +42,11 @@ impl HyperApplication {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let server = TcpListener::bind(&address).await?;
         let routes_copy = Arc::new(self.routes);
+        let middlewares = Arc::new(self.middlewares);
 
         let service = service_fn(move |req: Request<Incoming>| {
             let routes = Arc::clone(&routes_copy);
+            let middlewares = Arc::clone(&middlewares);
             async move {
                 let req = req.map(|b| {
                     let mut new_body = vec![];
@@ -51,7 +58,7 @@ impl HyperApplication {
                     });
                     new_body
                 });
-                let res = NgynResponse::init(req, routes).await;
+                let res = NgynResponse::init(req, routes, middlewares).await;
 
                 Ok::<_, hyper::Error>(res)
             }

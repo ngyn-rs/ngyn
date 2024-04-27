@@ -87,14 +87,26 @@ pub trait ResponseBuilder: FullResponse {
     /// assert_eq!(response.status, StatusCode::OK);
     /// assert_eq!(response.body.as_slice(), &[1, 2, 3]);
     /// ```
-    async fn init(req: Request<Vec<u8>>, routes: Arc<Vec<(String, Method, Box<Handler>)>>) -> Self;
+    async fn init(
+        req: Request<Vec<u8>>,
+        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
+        middlewares: Arc<Vec<Box<dyn crate::NgynMiddleware>>>,
+    ) -> Self;
 }
 
 #[async_trait::async_trait]
 impl ResponseBuilder for NgynResponse {
-    async fn init(req: Request<Vec<u8>>, routes: Arc<Vec<(String, Method, Box<Handler>)>>) -> Self {
+    async fn init(
+        req: Request<Vec<u8>>,
+        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
+        middlewares: Arc<Vec<Box<dyn crate::NgynMiddleware>>>,
+    ) -> Self {
         let mut cx = NgynContext::from_request(req);
         let mut res = Response::new(Full::new(Bytes::default()));
+
+        middlewares
+            .iter()
+            .for_each(|middleware| middleware.handle(&mut cx, &mut res));
 
         let handler = routes
             .iter()
