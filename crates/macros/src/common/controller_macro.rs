@@ -148,7 +148,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn routes(&self) -> Vec<(String, String, String)> {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
                 Self::routes.iter().map(|(path, method, handler)| {
-                    (#path_prefix + path, method.to_string(), handler.to_string())
+                    ((#path_prefix + path).replace("//", "/"), method.to_string(), handler.to_string())
                 }).collect()
             }
 
