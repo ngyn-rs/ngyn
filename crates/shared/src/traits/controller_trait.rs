@@ -32,3 +32,18 @@ pub trait NgynControllerRoutePlaceholder {
         res: &mut crate::NgynResponse,
     );
 }
+
+pub struct NgynControllerData {
+    middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>,
+}
+
+impl NgynControllerData {
+    /// Creates a new instance of `NgynControllerData`.
+    pub fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self {
+        Self { middlewares }
+    }
+
+    pub fn middlewares(&self) -> &Vec<std::sync::Arc<dyn super::NgynMiddleware>> {
+        &self.middlewares
+    }
+}

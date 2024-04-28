@@ -104,10 +104,6 @@ impl ResponseBuilder for NgynResponse {
         let mut cx = NgynContext::from_request(req);
         let mut res = Response::new(Full::new(Bytes::default()));
 
-        middlewares
-            .iter()
-            .for_each(|middleware| middleware.handle(&mut cx, &mut res));
-
         let handler = routes
             .iter()
             .filter_map(|(path, method, handler)| {
@@ -118,6 +114,10 @@ impl ResponseBuilder for NgynResponse {
                 }
             })
             .next();
+
+        middlewares
+            .iter()
+            .for_each(|middleware| middleware.handle(&mut cx, &mut res));
 
         if let Some(handler) = handler {
             handler(&mut cx, &mut res);

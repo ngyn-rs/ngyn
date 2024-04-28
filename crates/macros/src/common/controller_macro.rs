@@ -4,20 +4,37 @@ use quote::quote;
 use crate::utils::parse_macro_data;
 
 struct ControllerArgs {
+    prefix: Option<syn::LitStr>,
     middlewares: Vec<syn::Path>,
 }
 
 impl syn::parse::Parse for ControllerArgs {
-    /// Parses a string like `routes = "get_location, get_location_weather", middlewares = [WeatherGate]`
+    /// Parses a string like `prefix="/weather", middlewares = [WeatherGate]`
     /// into a `ControllerArgs` struct.
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut middlewares = vec![];
+        let mut prefix = None;
+
+        // match the input with format "/prefix"
+        if !input.is_empty() && input.peek(syn::LitStr) {
+            let path: syn::LitStr = input.parse()?;
+            prefix = Some(path);
+
+            return Ok(ControllerArgs {
+                middlewares,
+                prefix,
+            });
+        }
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
             input.parse::<syn::Token![=]>()?;
 
             match ident.to_string().as_str() {
+                "prefix" => {
+                    let path: syn::LitStr = input.parse()?;
+                    prefix = Some(path);
+                }
                 "middlewares" => {
                     let content;
                     syn::bracketed!(content in input);
@@ -41,7 +58,10 @@ impl syn::parse::Parse for ControllerArgs {
             }
         }
 
-        Ok(ControllerArgs { middlewares })
+        Ok(ControllerArgs {
+            middlewares,
+            prefix,
+        })
     }
 }
 
@@ -53,7 +73,10 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         vis,
         generics,
     } = syn::parse_macro_input!(input as syn::DeriveInput);
-    let args = syn::parse_macro_input!(args as ControllerArgs);
+    let ControllerArgs {
+        middlewares,
+        prefix,
+    } = syn::parse_macro_input!(args as ControllerArgs);
     let (types, keys) = parse_macro_data(data);
 
     let fields: Vec<_> = types
@@ -66,8 +89,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let add_middlewares: Vec<_> = args
-        .middlewares
+    let add_middlewares: Vec<_> = middlewares
         .iter()
         .map(|m| {
             quote! {
@@ -77,11 +99,23 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
+    let path_prefix = {
+        if let Some(prefix) = prefix {
+            quote! {
+                #prefix.to_string() + "/"
+            }
+        } else {
+            quote! {
+                "".to_string()
+            }
+        }
+    };
+
     let expanded = quote! {
         #(#attrs)*
         #[ngyn::macros::dependency]
         #vis struct #ident #generics {
-            middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>,
+            data: ngyn::prelude::NgynControllerData,
             #(#fields),*
         }
 
@@ -105,7 +139,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
                 #(#add_middlewares)*
                 let mut controller = #ident {
-                    middlewares,
+                    data: ngyn::prelude::NgynControllerData::new(middlewares),
                     #(#keys: ngyn::prelude::NgynProvider.provide()),*
                 };
                 controller
@@ -114,13 +148,13 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn routes(&self) -> Vec<(String, String, String)> {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
                 Self::routes.iter().map(|(path, method, handler)| {
-                    (path.to_string(), method.to_string(), handler.to_string())
+                    ((#path_prefix + path).replace("//", "/"), method.to_string(), handler.to_string())
                 }).collect()
             }
 
             async fn handle(&self, handler: &str, cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
-                self.middlewares.iter().for_each(|middleware| {
+                self.data.middlewares().iter().for_each(|middleware| {
                     middleware.handle(cx, res);
                 });
                 self.__handle_route(handler, cx, res).await;
