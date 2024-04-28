@@ -7,9 +7,23 @@ pub fn dto_macro(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl ngyn::prelude::Transformer for #ident {
-            fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Self {
-                let dto = ngyn::prelude::Dto::transform(cx, res);
-                dto.parse::<#ident>().unwrap()
+            fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Option<Self> {
+                let dto = ngyn::prelude::Dto::transform(cx, res).unwrap();
+                match dto.parse::<#ident>() {
+                    Ok(data) => {
+                        if let Err(err) = data.run_validation() {
+                            res.set_status(400);
+                            res.send(err.to_string());
+                            return None;
+                        }
+                        return Some(data);
+                    }
+                    Err(err) => {
+                        res.set_status(400);
+                        res.send(err.to_string());
+                        return None;
+                    }
+                }
             }
         }
     };

@@ -1,10 +1,11 @@
 use ngyn::prelude::*;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
 use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
 
-#[derive(Dto, Serialize, Deserialize)]
+#[derive(Dto, Serialize, Deserialize, Validate)]
 pub struct WeatherDto {
     pub location: String,
     pub temperature: f32,
@@ -27,7 +28,6 @@ impl WeatherController {
     }
 
     #[post("/weather")]
-    #[check(WeatherGate)]
     async fn post_location(&self, weather: WeatherDto) -> String {
         let location = weather.location;
         self.weather_service.get_location_weather(&location).await
