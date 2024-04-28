@@ -129,7 +129,7 @@ impl ResponseBuilder for NgynResponse {
 }
 
 impl Transformer for NgynResponse {
-    fn transform(_cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
-        res.clone()
+    fn transform(_cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
+        Some(res.clone())
     }
 }

@@ -9,7 +9,7 @@ pub use body::{ParseBytes, ToBytes};
 pub use context::NgynContext;
 use http_body_util::Full;
 pub use hyper::body::Bytes;
-pub use transformer::{Dto, Param, Query, Transducer, Transformer};
+pub use transformer::{Dto, Param, Query, Transducer, Transformer, Validator};
 pub use uri::ToParams;
 
 pub type NgynRequest = hyper::Request<Vec<u8>>;

@@ -1,3 +1,6 @@
+use serde::Deserialize;
+use validator::{Validate, ValidationErrors};
+
 use crate::{context::NgynContext, NgynResponse};
 use std::borrow::Cow;
 
@@ -16,13 +19,15 @@ pub trait Transformer {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
+    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
     /// }
     /// ```
-    fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self;
+    fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self>
+    where
+        Self: Sized;
 }
 
 /// Represents a transducer struct.
@@ -43,7 +48,7 @@ impl Transducer {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
+    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
@@ -54,7 +59,7 @@ impl Transducer {
     ///
     /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
     /// ```
-    pub fn reduce<S: Transformer>(cx: &mut NgynContext, res: &mut NgynResponse) -> S {
+    pub fn reduce<S: Transformer>(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<S> {
         S::transform(cx, res)
     }
 }
@@ -122,7 +127,7 @@ impl Transformer for Param {
     ///
     /// let param: Param = Param::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Param {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params
             .clone()
@@ -130,7 +135,7 @@ impl Transformer for Param {
             .into_iter()
             .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
             .collect();
-        Param { data }
+        Some(Param { data })
     }
 }
 
@@ -201,11 +206,15 @@ impl Transformer for Query {
     ///
     /// let query: Query = Query::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Query {
-        Query {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
+        Some(Query {
             url: cx.request.uri().clone(),
-        }
+        })
     }
+}
+
+pub trait Validator {
+    fn run_validation(&self) -> Result<(), ValidationErrors>;
 }
 
 /// Represents a data transfer object struct.
@@ -241,9 +250,21 @@ impl Dto {
     ///
     /// let result: Result<Person, serde_json::Error> = dto.parse();
     /// ```
-    pub fn parse<S: for<'a> serde::Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
+    pub fn parse<S: for<'a> Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
         let data = self.data.as_str();
         serde_json::from_str(data)
+    }
+}
+
+impl Validator for Dto {
+    fn run_validation(&self) -> Result<(), ValidationErrors> {
+        Ok(())
+    }
+}
+
+impl<D: for<'a> Deserialize<'a> + Validate> Validator for D {
+    fn run_validation(&self) -> Result<(), ValidationErrors> {
+        self.validate()
     }
 }
 
@@ -269,8 +290,8 @@ impl Transformer for Dto {
     ///
     /// let dto: Dto = Dto::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Dto {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
         let data = String::from_utf8_lossy(cx.request.body()).to_string();
-        Dto { data }
+        Some(Dto { data })
     }
 }

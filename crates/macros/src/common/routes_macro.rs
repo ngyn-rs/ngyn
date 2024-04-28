@@ -132,14 +132,22 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             #http_method,
                             #ident_str,
                         )});
+                        let mut arg_def = Vec::new();
                         let args = inputs.iter().fold(None, |args, input| {
                             if let syn::FnArg::Typed(pat) = input {
                                 let ty = &pat.ty;
                                 let pat = &pat.pat;
                                 if let syn::Type::Path(path) = *ty.clone() {
                                     let path = &path.path;
+                                    arg_def.push(quote! {
+                                        let #pat = ngyn::prelude::Transducer::reduce::<#path>(cx, res);
+                                        if #pat.is_none() {
+                                            return;
+                                        }
+                                        let #pat = #pat.unwrap();
+                                    });
                                     Some(quote! {
-                                        #args ngyn::prelude::Transducer::reduce::<#path>(cx, res)
+                                        #args #pat
                                     })
                                 } else {
                                     panic!(
@@ -187,6 +195,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             handle_routes.push(quote! {
                                 #ident_str => {
                                     #(#gate_handlers)*
+                                    #(#arg_def)*
                                     let body = self.#ident(#args).await;
                                     res.send(body);
                                 }
@@ -195,6 +204,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             handle_routes.push(quote! {
                                 #ident_str => {
                                     #(#gate_handlers)*
+                                    #(#arg_def)*
                                     let body = self.#ident(#args);
                                     res.send(body);
                                 }
