@@ -54,6 +54,12 @@ impl ToBytes for Bytes {
     }
 }
 
+impl ToBytes for &str {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_owned())
+    }
+}
+
 impl ToBytes for String {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self)
