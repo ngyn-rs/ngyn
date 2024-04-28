@@ -48,16 +48,17 @@ impl HyperApplication {
             let routes = Arc::clone(&routes_copy);
             let middlewares = Arc::clone(&middlewares);
             async move {
-                let req = req.map(|b| {
-                    let mut new_body = vec![];
-                    b.map_frame(|f| {
-                        if let Some(d) = f.data_ref() {
-                            new_body.append(&mut d.to_vec());
-                        }
-                        f
-                    });
-                    new_body
-                });
+                let (parts, mut body) = req.into_parts();
+                let req = Request::from_parts(
+                    parts,
+                    body.frame()
+                        .await
+                        .unwrap()
+                        .unwrap()
+                        .into_data()
+                        .unwrap()
+                        .to_vec(),
+                );
                 let res = NgynResponse::init(req, routes, middlewares).await;
 
                 Ok::<_, hyper::Error>(res)
