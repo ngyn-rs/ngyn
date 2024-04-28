@@ -15,6 +15,17 @@ impl syn::parse::Parse for ControllerArgs {
         let mut middlewares = vec![];
         let mut prefix = None;
 
+        // match the input with format "/prefix"
+        if !input.is_empty() && input.peek(syn::LitStr) {
+            let path: syn::LitStr = input.parse()?;
+            prefix = Some(path);
+
+            return Ok(ControllerArgs {
+                middlewares,
+                prefix,
+            });
+        }
+
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
             input.parse::<syn::Token![=]>()?;

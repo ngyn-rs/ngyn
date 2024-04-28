@@ -12,14 +12,14 @@ pub struct WeatherDto {
     pub humidity: f32,
 }
 
-#[controller(middlewares = [])]
+#[controller("/weather")]
 pub struct WeatherController {
     weather_service: WeatherService,
 }
 
 #[routes]
 impl WeatherController {
-    #[get("/weather/<location>/<city>")]
+    #[get("/<location>/<city>")]
     #[check(WeatherGate)]
     async fn get_location(&self, params: Param) -> String {
         self.weather_service
@@ -27,7 +27,7 @@ impl WeatherController {
             .await
     }
 
-    #[post("/weather")]
+    #[post("/")]
     async fn post_location(&self, weather: WeatherDto) -> String {
         let location = weather.location;
         self.weather_service.get_location_weather(&location).await
