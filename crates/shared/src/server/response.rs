@@ -3,7 +3,7 @@ use std::sync::Arc;
 use http_body_util::Full;
 use hyper::{body::Bytes, Method, Request, Response, StatusCode};
 
-use crate::{context::NgynContext, transformer::Transformer, Handler, NgynResponse, ToBytes};
+use crate::{context::NgynContext, Handler, NgynResponse, ToBytes};
 
 /// Trait representing a full response.
 pub trait FullResponse {
@@ -125,11 +125,5 @@ impl ResponseBuilder for NgynResponse {
         }
 
         res
-    }
-}
-
-impl Transformer for NgynResponse {
-    fn transform(_cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
-        Some(res.clone())
     }
 }

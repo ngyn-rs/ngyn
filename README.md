@@ -45,8 +45,8 @@ impl MyController {
     }
 
     #[get("/hello/<name>")]
-    fn hello(&self) {
-        let name = request.param("name").unwrap();
+    fn hello(&self, param: Param) {
+        let name = param.get("name").unwrap();
         format!("Hello, {}!", name)
     }
 }

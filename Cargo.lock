@@ -1632,7 +1632,6 @@ dependencies = [
  "serde",
  "serde_json",
  "url",
- "validator",
 ]
 
 [[package]]

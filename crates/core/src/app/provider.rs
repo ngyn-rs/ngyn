@@ -1,5 +1,3 @@
-use std::vec;
-
 use nject::provider;
 
 /// `NgynProvider` is a struct that acts as a provider in Ngyn.

@@ -146,9 +146,15 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                         }
                                         let #pat = #pat.unwrap();
                                     });
-                                    Some(quote! {
-                                        #args #pat
-                                    })
+                                    if args.is_none() {
+                                        Some(quote! {
+                                            #pat
+                                        })
+                                    } else {
+                                        Some(quote! {
+                                            #args, #pat
+                                        })
+                                    }
                                 } else {
                                     panic!(
                                         "{}",
@@ -175,17 +181,17 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                     let CheckArgs { gates } =
                                         path.parse_args::<CheckArgs>().unwrap();
                                     gates.iter().fold(quote! {}, |gates, path| {
-                                    quote! {
-                                        #gates
-                                        {
-                                            use ngyn::prelude::NgynGate;
-                                            let gate: #path = ngyn::prelude::NgynProvider.provide();
-                                            if !gate.can_activate(cx, res) {
-                                                return;
+                                        quote! {
+                                            #gates
+                                            {
+                                                use ngyn::prelude::NgynGate;
+                                                let gate: #path = ngyn::prelude::NgynProvider.provide();
+                                                if !gate.can_activate(cx, res) {
+                                                    return;
+                                                }
                                             }
                                         }
-                                    }
-                                })
+                                    })
                                 } else {
                                     panic!("Expected a list of gates")
                                 }

@@ -11,7 +11,7 @@ pub fn parse_macro_data(data: Data) -> (Vec<Type>, Vec<Ident>) {
         .collect::<Vec<Type>>();
     let keys = raw_fields
         .iter()
-        .map(|f| f.ident.clone().unwrap())
+        .filter_map(|f| f.ident.clone())
         .collect::<Vec<Ident>>();
     (types, keys)
 }

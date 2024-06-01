@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use validator::{Validate, ValidationErrors};
 
 use crate::{context::NgynContext, NgynResponse};
 use std::borrow::Cow;
@@ -213,10 +212,6 @@ impl Transformer for Query {
     }
 }
 
-pub trait Validator {
-    fn run_validation(&self) -> Result<(), ValidationErrors>;
-}
-
 /// Represents a data transfer object struct.
 pub struct Dto {
     data: String,
@@ -253,18 +248,6 @@ impl Dto {
     pub fn parse<S: for<'a> Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
         let data = self.data.as_str();
         serde_json::from_str(data)
-    }
-}
-
-impl Validator for Dto {
-    fn run_validation(&self) -> Result<(), ValidationErrors> {
-        Ok(())
-    }
-}
-
-impl<D: for<'a> Deserialize<'a> + Validate> Validator for D {
-    fn run_validation(&self) -> Result<(), ValidationErrors> {
-        self.validate()
     }
 }
 
