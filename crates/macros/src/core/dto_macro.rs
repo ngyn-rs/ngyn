@@ -32,10 +32,10 @@ impl syn::parse::Parse for DtoMacroArgs {
                 }
             }
         }
-        return Ok(Self {
+        Ok(Self {
             validator,
             reporter,
-        });
+        })
     }
 }
 
