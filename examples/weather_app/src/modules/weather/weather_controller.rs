@@ -5,7 +5,8 @@ use validator::Validate;
 use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
 
-#[derive(Dto, Serialize, Deserialize, Validate)]
+#[dto(validator = "validate")]
+#[derive(Validate, Serialize, Deserialize)]
 pub struct WeatherDto {
     pub location: String,
     pub temperature: f32,

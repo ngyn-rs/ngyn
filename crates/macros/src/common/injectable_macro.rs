@@ -22,7 +22,6 @@ pub fn injectable_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #(#attrs)*
         #[ngyn::macros::dependency]
-        #[derive(Clone)]
         #vis struct #ident {
             #(#fields),*
         }

@@ -1,7 +1,7 @@
 use crate::NgynController;
 
 /// `NgynModule` is a trait that defines the basic structure of a module in Ngyn.
-pub trait NgynModule: Send + Sync {
+pub trait NgynModule: Send {
     /// Creates a new instance of the module.
     fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self
     where
