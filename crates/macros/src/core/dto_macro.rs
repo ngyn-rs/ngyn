@@ -4,12 +4,12 @@ use syn::DeriveInput;
 
 use crate::utils::parse_macro_data;
 
-struct DtoMacroArgs {
+struct DtoArgs {
     validator: Option<syn::LitStr>,
     reporter: Option<syn::LitStr>,
 }
 
-impl syn::parse::Parse for DtoMacroArgs {
+impl syn::parse::Parse for DtoArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut validator = None;
         let mut reporter = None;
@@ -47,21 +47,29 @@ pub fn dto_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         vis,
         generics,
     } = syn::parse_macro_input!(input as DeriveInput);
-    let DtoMacroArgs {
+    let DtoArgs {
         validator,
         reporter,
-    } = syn::parse_macro_input!(args as DtoMacroArgs);
+    } = syn::parse_macro_input!(args as DtoArgs);
 
-    let (types, keys) = parse_macro_data(data);
+    let dto_fields = parse_macro_data(data);
 
-    let fields: Vec<_> = types
+    let fields: Vec<_> = dto_fields
         .iter()
-        .zip(keys.iter())
-        .map(|(ty, key)| {
-            quote! {
-                #key: #ty
-            }
-        })
+        .map(
+            |syn::Field {
+                 ident,
+                 ty,
+                 vis,
+                 attrs,
+                 colon_token,
+                 ..
+             }| {
+                quote! {
+                    #(#attrs),* #vis #ident #colon_token #ty
+                }
+            },
+        )
         .collect();
 
     let validation = if validator.is_some() {

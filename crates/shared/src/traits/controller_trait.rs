@@ -4,7 +4,7 @@
 pub trait NgynController: Send + Sync {
     /// Creates a new instance of the controller.
     /// This is for internal use only.
-    fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self
+    fn new() -> Self
     where
         Self: Sized;
 
@@ -25,25 +25,11 @@ pub trait NgynController: Send + Sync {
 pub trait NgynControllerRoutePlaceholder {
     #[allow(non_upper_case_globals)]
     const routes: &'static [(&'static str, &'static str, &'static str)];
+
     async fn __handle_route(
         &self,
         handler: &str,
         cx: &mut crate::NgynContext,
         res: &mut crate::NgynResponse,
     );
-}
-
-pub struct NgynControllerData {
-    middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>,
-}
-
-impl NgynControllerData {
-    /// Creates a new instance of `NgynControllerData`.
-    pub fn new(middlewares: Vec<std::sync::Arc<dyn super::NgynMiddleware>>) -> Self {
-        Self { middlewares }
-    }
-
-    pub fn middlewares(&self) -> &Vec<std::sync::Arc<dyn super::NgynMiddleware>> {
-        &self.middlewares
-    }
 }

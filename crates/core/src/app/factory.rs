@@ -23,7 +23,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     /// let server = NgynFactory::<HyperApplication>::create::<YourAppModule>();
     /// ```
     pub fn create<AppModule: NgynModule>() -> Application {
-        let mut module = AppModule::new(vec![]);
+        let mut module = AppModule::new();
         let mut server = Application::default();
         for controller in module.get_controllers() {
             for (path, http_method, handler) in controller.routes() {

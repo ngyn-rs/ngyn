@@ -2,21 +2,21 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-use crate::utils::{random_str_from, str_to_ident};
+use crate::utils::parse_macro_data;
 
 struct ModuleArgs {
     imports: Vec<syn::Path>,
     controllers: Vec<syn::Path>,
-    middlewares: Vec<syn::Path>,
+    init: Option<syn::LitStr>,
 }
 
 impl syn::parse::Parse for ModuleArgs {
     /// Parses the attribute arguments of a `#[module]` macro.
-    /// We make sure that the arguments are in the format `controllers = [], imports = []`.
+    /// We make sure that the arguments are in the format `controllers = [], imports = [], init = "new"`.
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut imports = vec![];
         let mut controllers = vec![];
-        let mut middlewares = vec![];
+        let mut init = None;
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
@@ -26,11 +26,10 @@ impl syn::parse::Parse for ModuleArgs {
             syn::bracketed!(content in input);
 
             while !content.is_empty() {
-                let path: syn::Path = content.parse()?;
                 match ident.to_string().as_str() {
-                    "imports" => imports.push(path),
-                    "controllers" => controllers.push(path),
-                    "middlewares" => middlewares.push(path),
+                    "imports" => imports.push(content.parse()?),
+                    "controllers" => controllers.push(content.parse()?),
+                    "init" => init = Some(content.parse()?),
                     _ => {
                         return Err(syn::Error::new(
                             ident.span(),
@@ -51,26 +50,54 @@ impl syn::parse::Parse for ModuleArgs {
         Ok(ModuleArgs {
             imports,
             controllers,
-            middlewares,
+            init,
         })
     }
 }
 
 pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let DeriveInput {
-        ident, attrs, vis, ..
+        ident,
+        attrs,
+        vis,
+        generics,
+        data,
     } = parse_macro_input!(input as DeriveInput);
     let args = parse_macro_input!(args as ModuleArgs);
+    let module_fields = parse_macro_data(data);
 
-    let add_middlewares: Vec<_> = args
-        .middlewares
+    let fields: Vec<_> = module_fields
         .iter()
-        .map(|middleware| {
-            quote! {
-                let middleware: #middleware = ngyn::prelude::NgynProvider.provide();
-                self.middlewares.push(std::sync::Arc::new(middleware));
-            }
-        })
+        .map(
+            |syn::Field {
+                 ident,
+                 ty,
+                 vis,
+                 attrs,
+                 colon_token,
+                 ..
+             }| {
+                quote! {
+                    #(#attrs),* #vis #ident #colon_token #ty
+                }
+            },
+        )
+        .collect();
+
+    let add_fields: Vec<_> = module_fields
+        .iter()
+        .map(
+            |syn::Field {
+                 ident,
+                 ty,
+                 colon_token,
+                 ..
+             }| {
+                quote! {
+                    #ident #colon_token #ty::default()
+                }
+            },
+        )
         .collect();
 
     let add_controllers: Vec<_> = args
@@ -78,7 +105,7 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|controller| {
             quote! {
-                let controller: #controller = #controller::new(self.middlewares.clone());
+                let controller: #controller = #controller::new();
                 controllers.push(std::sync::Arc::new(controller));
             }
         })
@@ -89,36 +116,45 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         .iter()
         .map(|import| {
             quote! {
-                let mut module: #import = #import::new(self.middlewares.clone());
+                let mut module: #import = #import::new();
                 module.get_controllers().iter().for_each(|controller| {
                     controllers.push(controller.clone());
                 });
             }
         })
         .collect();
-    let controller_ident = str_to_ident(random_str_from(ident.clone().to_string()));
+
+    let init_module = match args.init {
+        Some(init) => {
+            let init_ident = init.parse::<syn::Ident>().unwrap();
+            quote! {
+                #ident::#init_ident()
+            }
+        }
+        None => quote! {
+            #ident {
+                #(#add_fields),*
+            }
+        },
+    };
 
     let expanded = quote! {
-        // This is to make sure that the controller is imported
-        use ngyn::prelude::NgynController as #controller_ident;
-
         #(#attrs)*
-        #[ngyn::macros::dependency]
-        #vis struct #ident {
-            middlewares:  Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>,
+        #vis struct #ident #generics {
+            #(#fields),*
         }
 
         impl ngyn::prelude::NgynModule for #ident {
-            fn new(middlewares:  Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
-                Self { middlewares }
+            fn new() -> Self {
+                #init_module
             }
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
             fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> {
+                use ngyn::prelude::NgynController;
                 let mut modules: Vec<std::sync::Arc<dyn ngyn::prelude::NgynModule>> = vec![];
                 let mut controllers: Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> = vec![];
-                #(#add_middlewares)*
                 #(#add_controllers)*
                 #(#add_imported_modules_controllers)*
                 controllers

@@ -1,17 +1,9 @@
-use syn::{Data, Ident, Type};
+use syn::{Data, Field};
 
-pub fn parse_macro_data(data: Data) -> (Vec<Type>, Vec<Ident>) {
+pub fn parse_macro_data(data: Data) -> Vec<Field> {
     let raw_fields = match data {
         syn::Data::Struct(d) => d.fields,
         _ => panic!("Only structs are supported"),
     };
-    let types = raw_fields
-        .iter()
-        .map(|f| f.ty.clone())
-        .collect::<Vec<Type>>();
-    let keys = raw_fields
-        .iter()
-        .filter_map(|f| f.ident.clone())
-        .collect::<Vec<Ident>>();
-    (types, keys)
+    raw_fields.iter().map(|f| f.clone()).collect::<Vec<Field>>()
 }
