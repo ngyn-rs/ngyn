@@ -185,7 +185,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                             #gates
                                             {
                                                 use ngyn::prelude::NgynGate;
-                                                let gate: #path = ngyn::prelude::NgynProvider.provide();
+                                                let gate = #path::default();
                                                 if !gate.can_activate(cx, res) {
                                                     return;
                                                 }

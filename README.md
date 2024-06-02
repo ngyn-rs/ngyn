@@ -12,7 +12,6 @@ More information about Ngyn can be found in the [documentation](https://ngyn.rs)
 ## Features
 
 - Macro API for organizing your application into reusable components
-- Built-in dependency injection for managing dependencies
 - Asynchronous middleware for handling requests and responses
 - Asynchronous routing support for defining routes
 - [Platform-agnostic](#platform-agnosticism) for supporting multiple libraries and frameworks
@@ -26,7 +25,6 @@ This example demonstrates how to create a simple web server using Ngyn and [Hype
 ```toml
 [dependencies]
 ngyn = { version = "0.4" }
-nject = "0.3"
 ```
 
 And here's the code:

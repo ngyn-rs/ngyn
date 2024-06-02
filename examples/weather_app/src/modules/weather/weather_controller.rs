@@ -4,6 +4,7 @@ use validator::Validate;
 
 use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
+use crate::middlewares::test_middleware::TestMiddleware;
 
 #[dto(validator = "validate")]
 #[derive(Validate, Serialize, Deserialize)]
@@ -13,7 +14,7 @@ pub struct WeatherDto {
     pub humidity: f32,
 }
 
-#[controller("/weather")]
+#[controller(prefix="/weather", middlewares=[TestMiddleware])]
 pub struct WeatherController {
     weather_service: WeatherService,
 }
