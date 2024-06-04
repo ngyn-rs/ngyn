@@ -124,6 +124,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             ident,
                             inputs,
                             asyncness,
+                            output,
                             ..
                         } = method.sig.clone();
                         let ident_str = ident.to_string();
@@ -198,21 +199,37 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             })
                             .collect();
                         if asyncness.is_some() {
+                            let handle_body = match output {
+                                syn::ReturnType::Type(_, _) => quote! {
+                                    let body = self.#ident(#args).await;
+                                    res.send(body);
+                                },
+                                _ => quote!{
+                                    self.#ident(#args).await;
+                                }
+                            };
                             handle_routes.push(quote! {
                                 #ident_str => {
                                     #(#gate_handlers)*
                                     #(#arg_def)*
-                                    let body = self.#ident(#args).await;
-                                    res.send(body);
+                                    #handle_body
                                 }
                             });
                         } else {
+                            let handle_body = match output {
+                                syn::ReturnType::Type(_, _) => quote! {
+                                    let body = self.#ident(#args);
+                                    res.send(body);
+                                },
+                                _ => quote!{
+                                    self.#ident(#args);
+                                }
+                            };
                             handle_routes.push(quote! {
                                 #ident_str => {
                                     #(#gate_handlers)*
                                     #(#arg_def)*
-                                    let body = self.#ident(#args);
-                                    res.send(body);
+                                    #handle_body
                                 }
                             });
                         }
