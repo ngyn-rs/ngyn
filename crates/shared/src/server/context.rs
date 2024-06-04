@@ -2,115 +2,28 @@
 //
 
 use hyper::Request;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
 use crate::{uri::ToParams, Method, NgynController, NgynRequest, NgynResponse, Transformer};
 
 /// Represents the value of a context in Ngyn
-///
-/// # Examples
-///
-/// ```rust ignore
-/// use ngyn_shared::context::NgynContextValue;
-///
-/// let string_value: NgynContextValue = "Hello, world!".into();
-/// let number_value: NgynContextValue = 42.into();
-/// let bool_value: NgynContextValue = true.into();
-/// ```
-#[derive(Clone, Debug, PartialEq)]
-pub enum NgynContextValue<V = String> {
-    String(String),
-    Number(i64),
-    Boolean(bool),
-    Vector(Vec<V>),
-    Tuple(V),
-    Empty,
+#[derive(Serialize, Deserialize)]
+pub struct NgynContextValue<V> {
+    value: V,
 }
 
-impl NgynContextValue {
-    /// Checks if the value is empty
-    pub fn is_empty(&self) -> bool {
-        match self {
-            NgynContextValue::String(value) => value.is_empty(),
-            NgynContextValue::Number(_) => false,
-            NgynContextValue::Boolean(_) => false,
-            NgynContextValue::Vector(value) => value.is_empty(),
-            NgynContextValue::Tuple(_) => false,
-            NgynContextValue::Empty => true,
-        }
+impl<V> NgynContextValue<V> {
+    pub fn create(value: V) -> Self {
+        Self { value }
     }
 }
 
-impl From<String> for NgynContextValue {
-    fn from(value: String) -> Self {
-        NgynContextValue::String(value)
-    }
-}
-
-impl From<&str> for NgynContextValue {
-    fn from(value: &str) -> Self {
-        NgynContextValue::String(value.to_string())
-    }
-}
-
-impl From<bool> for NgynContextValue {
-    fn from(value: bool) -> Self {
-        NgynContextValue::Boolean(value)
-    }
-}
-
-impl From<isize> for NgynContextValue {
-    fn from(value: isize) -> Self {
-        NgynContextValue::Number(value as i64)
-    }
-}
-
-impl From<i64> for NgynContextValue {
-    fn from(value: i64) -> Self {
-        NgynContextValue::Number(value)
-    }
-}
-
-impl From<i32> for NgynContextValue {
-    fn from(value: i32) -> Self {
-        NgynContextValue::Number(value as i64)
-    }
-}
-
-impl From<usize> for NgynContextValue {
-    fn from(value: usize) -> Self {
-        NgynContextValue::Number(value as i64)
-    }
-}
-
-impl<T> From<Vec<T>> for NgynContextValue<T> {
-    fn from(value: Vec<T>) -> Self {
-        NgynContextValue::Vector(value)
-    }
-}
-
-impl From<NgynContextValue> for bool {
-    fn from(value: NgynContextValue) -> Self {
-        match value {
-            NgynContextValue::Boolean(b) => b,
-            _ => false, // or handle the conversion based on your specific logic
-        }
-    }
-}
-
-impl From<NgynContextValue> for String {
-    fn from(value: NgynContextValue) -> Self {
-        match value {
-            NgynContextValue::String(val) => val,
-            _ => panic!("conversion failed"),
-        }
-    }
-}
 pub struct NgynContext {
     pub request: Request<Vec<u8>>,
     pub params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<dyn NgynController>)>,
-    store: HashMap<String, NgynContextValue>,
+    store: HashMap<String, String>,
 }
 
 impl NgynContext {
@@ -127,19 +40,22 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
     ///
-    /// let value = context.get("name");
-    /// assert_eq!(value, &NgynContextValue::String("John".to_string()));
+    /// let value: String = context.get("name").unwrap();
+    /// assert_eq!(value, "John".to_string());
     /// ```
-    pub fn get(&self, key: &str) -> &NgynContextValue {
+    pub fn get<V: for<'a> Deserialize<'a>>(&self, key: &str) -> Option<V> {
         let value = self.store.get(key.to_lowercase().trim());
         match value {
-            Some(value) => value,
-            None => &NgynContextValue::Empty,
+            Some(v) => {
+                let stored_cx: NgynContextValue<V> = serde_json::from_str(v).unwrap();
+                Some(stored_cx.value)
+            }
+            None => None,
         }
     }
 
@@ -153,16 +69,19 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
     ///
-    /// let value = context.get("name");
-    /// assert_eq!(value, &NgynContextValue::String("John".to_string()));
+    /// let value: String = context.get("name").unwrap();
+    /// assert_eq!(value, "John".to_string());
     /// ```
-    pub fn set(&mut self, key: &str, value: NgynContextValue) {
-        self.store.insert(key.trim().to_lowercase(), value);
+    pub fn set<V: Serialize>(&mut self, key: &str, value: V) {
+        self.store.insert(
+            key.trim().to_lowercase(),
+            serde_json::to_string(&NgynContextValue::create(value)).unwrap(),
+        );
     }
 
     /// Removes the value associated with the given key from the context.
@@ -174,14 +93,14 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
     ///
     /// context.remove("name");
-    /// let value = context.get("name");
-    /// assert_eq!(value, &NgynContextValue::Empty);
+    /// let value = context.get::<String>("name");
+    /// assert_eq!(value, None);
     /// ```
     pub fn remove(&mut self, key: &str) {
         self.store.remove(key.to_lowercase().trim());
@@ -192,7 +111,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -214,7 +133,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -235,7 +154,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     ///
@@ -261,7 +180,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -271,32 +190,6 @@ impl NgynContext {
     /// ```
     pub fn has(&self, key: &str) -> bool {
         self.store.contains_key(key.to_lowercase().trim())
-    }
-
-    /// Checks if the value associated with the given key is not empty.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - The key to check the value for.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the value associated with the key is not empty, `false` otherwise.
-    ///
-    /// # Examples
-    ///
-    /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
-    ///
-    /// let mut context = NgynContext::from_request(request);
-    /// context.set("name", "John".into());
-    ///
-    /// assert!(context.is("name"));
-    /// assert!(!context.is("age"));
-    /// ```
-    pub fn is(&self, key: &str) -> bool {
-        let stored_value = self.get(key);
-        !stored_value.is_empty() || stored_value.clone().into()
     }
 
     /// Creates a new `NgynContext` from the given request.
@@ -312,7 +205,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     /// use hyper::Request;
     ///
     /// let request = Request::new(Vec::new());
@@ -342,7 +235,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     /// use ngyn_shared::Method;
     ///
     /// let mut context = NgynContext::from_request(request);
@@ -387,7 +280,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     /// use ngyn_shared::NgynController;
     ///
     /// let mut context = NgynContext::from_request(request);
@@ -408,7 +301,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::{NgynContext, NgynContextValue};
+    /// use ngyn_shared::context::NgynContext;
     /// use ngyn_shared::NgynResponse;
     ///
     /// let mut context = NgynContext::from_request(request);
