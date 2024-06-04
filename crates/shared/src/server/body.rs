@@ -48,74 +48,8 @@ impl ParseBytes for Bytes {
     }
 }
 
-impl ToBytes for Bytes {
-    fn to_bytes(self) -> Bytes {
-        self
-    }
-}
-
-impl ToBytes for &str {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_owned())
-    }
-}
-
-impl ToBytes for String {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self)
-    }
-}
-
-impl ToBytes for bool {
+impl<T: ToString + Default> ToBytes for T {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for usize {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for i32 {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for f32 {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for Vec<u8> {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self)
-    }
-}
-
-impl ToBytes for i64 {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for f64 {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for char {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
-}
-
-impl ToBytes for () {
-    fn to_bytes(self) -> Bytes {
-        Bytes::default()
     }
 }
