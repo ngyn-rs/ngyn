@@ -36,11 +36,11 @@ impl HyperApplication {
     /// # Returns
     ///
     /// A `Result` indicating success or failure.
-    pub async fn listen(
+    pub async fn listen<A: tokio::net::ToSocketAddrs>(
         self,
-        address: &str,
+        address: A,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let server = TcpListener::bind(&address).await?;
+        let server = TcpListener::bind(address).await?;
         let routes_copy = Arc::new(self.routes);
         let middlewares = Arc::new(self.middlewares);
 
