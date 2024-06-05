@@ -30,7 +30,8 @@ ngyn = { version = "0.4" }
 And here's the code:
 
 ```rust ignore
-use ngyn::{platforms::HyperApplication, prelude::*};
+use ngyn::prelude::*;
+use ngyn_hyper::HyperApplication;
 
 #[controller]
 struct MyController;

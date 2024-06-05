@@ -1,10 +1,6 @@
 #![doc = include_str!("../README.md")]
-#[doc(hidden)]
 pub mod app;
-#[doc(hidden)]
-pub mod platforms;
 
-#[doc(hidden)]
 pub mod macros {
     pub use async_std::main;
     pub use ngyn_macros::*;

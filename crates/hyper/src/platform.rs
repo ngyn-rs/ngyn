@@ -36,11 +36,11 @@ impl HyperApplication {
     /// # Returns
     ///
     /// A `Result` indicating success or failure.
-    pub async fn listen(
+    pub async fn listen<A: tokio::net::ToSocketAddrs>(
         self,
-        address: &str,
+        address: A,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let server = TcpListener::bind(&address).await?;
+        let server = TcpListener::bind(address).await?;
         let routes_copy = Arc::new(self.routes);
         let middlewares = Arc::new(self.middlewares);
 
@@ -65,19 +65,21 @@ impl HyperApplication {
                 Ok::<_, hyper::Error>(res)
             }
         });
+        let http = http1::Builder::new();
 
         loop {
-            let (stream, _) = server.accept().await?;
-            let io = TokioIo::new(stream);
+            tokio::select! {
+                Ok((stream, _)) = server.accept() => {
+                    let io = TokioIo::new(stream);
+                    let conn = http.serve_connection(io, service.clone());
 
-            let http = http1::Builder::new();
-            let conn = http.serve_connection(io, service.clone());
-
-            tokio::task::spawn(async move {
-                if let Err(e) = conn.await {
-                    eprintln!("server error: {}", e);
+                    tokio::task::spawn(async move {
+                        if let Err(e) = conn.await {
+                            eprintln!("server error: {}", e);
+                        }
+                    });
                 }
-            });
+            }
         }
     }
 }
