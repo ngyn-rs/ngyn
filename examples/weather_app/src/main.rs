@@ -3,7 +3,8 @@ mod modules;
 
 use dotenv::dotenv;
 use modules::AppModule;
-use ngyn::{platforms::HyperApplication, prelude::*};
+use ngyn::prelude::*;
+use ngyn_hyper::HyperApplication;
 
 use crate::middlewares::notfound_middleware::NotFoundMiddleware;
 
