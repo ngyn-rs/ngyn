@@ -97,13 +97,13 @@ pub fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
-        impl ngyn::prelude::NgynInjectable for #ident {
+        impl #generics ngyn::prelude::NgynInjectable for #ident #generics {
             fn new() -> Self {
                 #init_injectable
             }
         }
 
-        impl Default for #ident {
+        impl #generics Default for #ident #generics {
             fn default() -> Self {
                 Self::new()
             }

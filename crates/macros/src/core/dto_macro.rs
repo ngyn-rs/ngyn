@@ -101,7 +101,7 @@ pub fn dto_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
-        impl ngyn::prelude::Transformer for #ident {
+        impl #generics ngyn::prelude::Transformer for #ident #generics {
             fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Option<Self> {
                 let dto = ngyn::prelude::Dto::transform(cx, res).unwrap();
                 match dto.parse::<#ident>() {
