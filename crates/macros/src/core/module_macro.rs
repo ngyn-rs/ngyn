@@ -144,7 +144,7 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
-        impl ngyn::prelude::NgynModule for #ident {
+        impl #generics ngyn::prelude::NgynModule for #ident #generics {
             fn new() -> Self {
                 #init_module
             }
