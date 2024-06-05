@@ -165,7 +165,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[ngyn::prelude::async_trait]
-        impl #generics ngyn::prelude::NgynControllerRoutePlaceholder for #ident #generics {
+        impl #generics ngyn::prelude::NgynControllerHandler for #ident #generics {
             #[allow(non_upper_case_globals)]
             const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
 
@@ -186,7 +186,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             }
 
             fn routes(&self) -> Vec<(String, String, String)> {
-                use ngyn::prelude::NgynControllerRoutePlaceholder;
+                use ngyn::prelude::NgynControllerHandler;
                 Self::routes.iter().map(|(path, method, handler)| {
                     ((#path_prefix + path).replace("//", "/"), method.to_string(), handler.to_string())
                 }).collect()
@@ -197,7 +197,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse,
             ) {
-                use ngyn::prelude::NgynControllerRoutePlaceholder;
+                use ngyn::prelude::NgynControllerHandler;
                 let mut middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>> = vec![];
                 #(#add_middlewares)*
                 middlewares.iter().for_each(|middleware| {
