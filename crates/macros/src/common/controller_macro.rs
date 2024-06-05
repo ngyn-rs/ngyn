@@ -192,7 +192,11 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
                 }).collect()
             }
 
-            async fn handle(&self, handler: &str, cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) {
+            async fn handle(
+                &self, handler: &str,
+                cx: &mut ngyn::prelude::NgynContext,
+                res: &mut ngyn::prelude::NgynResponse,
+            ) {
                 use ngyn::prelude::NgynControllerRoutePlaceholder;
                 let mut middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>> = vec![];
                 #(#add_middlewares)*
