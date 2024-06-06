@@ -166,8 +166,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
         #[ngyn::prelude::async_trait]
         impl #generics ngyn::prelude::NgynControllerHandler for #ident #generics {
-            #[allow(non_upper_case_globals)]
-            const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
+            const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[];
 
             async fn __handle_route(
                 &self,
@@ -187,7 +186,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
 
             fn routes(&self) -> Vec<(String, String, String)> {
                 use ngyn::prelude::NgynControllerHandler;
-                Self::routes.iter().map(|(path, method, handler)| {
+                Self::ROUTES.iter().map(|(path, method, handler)| {
                     ((#path_prefix + path).replace("//", "/"), method.to_string(), handler.to_string())
                 }).collect()
             }

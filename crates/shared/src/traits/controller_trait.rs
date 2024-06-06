@@ -23,8 +23,7 @@ pub trait NgynController: Send + Sync {
 #[async_trait::async_trait]
 /// `NgynControllerHandler` defines placeholders for routing logic of a controller.
 pub trait NgynControllerHandler {
-    #[allow(non_upper_case_globals)]
-    const routes: &'static [(&'static str, &'static str, &'static str)];
+    const ROUTES: &'static [(&'static str, &'static str, &'static str)];
 
     async fn __handle_route(
         &self,
