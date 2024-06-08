@@ -39,12 +39,12 @@ struct MyController;
 #[routes]
 impl MyController {
     #[get("/")]
-    fn index(&self) {
+    fn index(&self) -> String {
         "Hello World!".to_string()
     }
 
     #[get("/hello/<name>")]
-    fn hello(&self, param: Param) {
+    fn hello(&self, param: Param) -> String {
         let name = param.get("name").unwrap();
         format!("Hello, {}!", name)
     }

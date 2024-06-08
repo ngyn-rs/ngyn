@@ -290,16 +290,16 @@ pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
     }
 }
 
-#[proc_macro_attribute]
+#[proc_macro_derive(Dto)]
 /// The `Dto` derive macro is used to generate a DTO struct.
 ///
 /// ##### Example
 /// ```rust ignore
-/// #[dto]
+/// #[derive(Dto)]
 /// struct MyDto {
 ///     // fields
 /// }
 /// ```
-pub fn dto(args: TokenStream, input: TokenStream) -> TokenStream {
-    dto_macro(args, input)
+pub fn dto(input: TokenStream) -> TokenStream {
+    dto_macro(input)
 }

@@ -1,6 +1,6 @@
 use ngyn_shared::{Method, Path};
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{ItemImpl, Signature};
 
 pub struct PathArg {
@@ -133,37 +133,37 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             #http_method,
                             #ident_str,
                         )});
-                        let mut arg_def = Vec::new();
                         let args = inputs.iter().fold(None, |args, input| {
                             if let syn::FnArg::Typed(pat) = input {
                                 let ty = &pat.ty;
                                 let pat = &pat.pat;
-                                if let syn::Type::Path(path) = *ty.clone() {
-                                    let path = &path.path;
-                                    arg_def.push(quote! {
-                                        let #pat = ngyn::prelude::Transducer::reduce::<#path>(cx, res);
-                                        if #pat.is_none() {
-                                            return;
+                                let (path, borrow) = {
+                                    if let syn::Type::Reference(path_ref) = *ty.clone() {
+                                        if let syn::Type::Path(path) = *path_ref.elem.clone() {
+                                            (path.path, quote! {&})
+                                        } else {
+                                            panic!("Expected a reference or a path");
                                         }
-                                        let #pat = #pat.unwrap();
-                                    });
-                                    if args.is_none() {
-                                        Some(quote! {
-                                            #pat
-                                        })
+                                    } else if let syn::Type::Path(path) = *ty.clone() {
+                                        (path.path, quote! {})
                                     } else {
-                                        Some(quote! {
-                                            #args, #pat
-                                        })
+                                        panic!("Expected a reference or a path");
                                     }
+                                };
+                                let arg_def = quote! {
+                                    {
+                                        let #pat = ngyn::prelude::Transducer::reduce::<#borrow #path>(cx, res);
+                                        #pat
+                                    }
+                                };
+                                if args.is_none() {
+                                    Some(quote! {
+                                        #arg_def
+                                    })
                                 } else {
-                                    panic!(
-                                        "{}",
-                                        format!(
-                                            "Expected {:?} to be a valid struct",
-                                            pat.to_token_stream()
-                                        )
-                                    );
+                                    Some(quote! {
+                                        #args, #arg_def
+                                    })
                                 }
                             } else {
                                 args
@@ -204,14 +204,13 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                     let body = self.#ident(#args).await;
                                     res.send(body);
                                 },
-                                _ => quote!{
+                                _ => quote! {
                                     self.#ident(#args).await;
-                                }
+                                },
                             };
                             handle_routes.push(quote! {
                                 #ident_str => {
                                     #(#gate_handlers)*
-                                    #(#arg_def)*
                                     #handle_body
                                 }
                             });
@@ -221,14 +220,13 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                     let body = self.#ident(#args);
                                     res.send(body);
                                 },
-                                _ => quote!{
+                                _ => quote! {
                                     self.#ident(#args);
-                                }
+                                },
                             };
                             handle_routes.push(quote! {
                                 #ident_str => {
                                     #(#gate_handlers)*
-                                    #(#arg_def)*
                                     #handle_body
                                 }
                             });
