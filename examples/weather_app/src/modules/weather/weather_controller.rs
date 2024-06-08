@@ -6,8 +6,7 @@ use super::weather_gate::WeatherGate;
 use super::weather_service::WeatherService;
 use crate::middlewares::test_middleware::TestMiddleware;
 
-#[dto(validator = "validate")]
-#[derive(Validate, Serialize, Deserialize)]
+#[derive(Dto, Validate, Serialize, Deserialize)]
 pub struct WeatherDto {
     pub location: String,
     pub temperature: f32,
