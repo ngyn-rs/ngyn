@@ -4,7 +4,7 @@ use crate::{context::NgynContext, NgynResponse};
 use std::borrow::Cow;
 
 /// Represents a transformer trait.
-pub trait Transformer {
+pub trait Transformer<'a> {
     /// Transforms the given `NgynContext` and `NgynResponse` and returns an instance of `Self`.
     ///
     /// # Arguments
@@ -18,13 +18,13 @@ pub trait Transformer {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
+    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
     /// }
     /// ```
-    fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self>
+    fn transform(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self
     where
         Self: Sized;
 }
@@ -32,7 +32,7 @@ pub trait Transformer {
 /// Represents a transducer struct.
 pub struct Transducer;
 
-impl Transducer {
+impl<'a> Transducer {
     /// Reduces the given `NgynContext` and `NgynResponse` using the specified `Transformer` and returns an instance of `S`.
     ///
     /// # Arguments
@@ -58,7 +58,7 @@ impl Transducer {
     ///
     /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
     /// ```
-    pub fn reduce<S: Transformer>(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<S> {
+    pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> S {
         S::transform(cx, res)
     }
 }
@@ -104,7 +104,7 @@ impl Param {
     }
 }
 
-impl Transformer for Param {
+impl Transformer<'_> for Param {
     /// Transforms the given `NgynContext` and `_res` into a `Param` instance.
     ///
     /// # Arguments
@@ -126,7 +126,7 @@ impl Transformer for Param {
     ///
     /// let param: Param = Param::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params
             .clone()
@@ -134,7 +134,7 @@ impl Transformer for Param {
             .into_iter()
             .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
             .collect();
-        Some(Param { data })
+        Param { data }
     }
 }
 
@@ -179,7 +179,7 @@ impl Query {
     }
 }
 
-impl Transformer for Query {
+impl Transformer<'_> for Query {
     /// Transforms the given `NgynContext` and `_res` into a `Query` instance.
     ///
     /// # Arguments
@@ -205,10 +205,10 @@ impl Transformer for Query {
     ///
     /// let query: Query = Query::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
-        Some(Query {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+        Query {
             url: cx.request.uri().clone(),
-        })
+        }
     }
 }
 
@@ -251,7 +251,7 @@ impl Dto {
     }
 }
 
-impl Transformer for Dto {
+impl Transformer<'_> for Dto {
     /// Transforms the given `NgynContext` and `_res` into a `Dto` instance.
     ///
     /// # Arguments
@@ -273,8 +273,8 @@ impl Transformer for Dto {
     ///
     /// let dto: Dto = Dto::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         let data = String::from_utf8_lossy(cx.request.body()).to_string();
-        Some(Dto { data })
+        Dto { data }
     }
 }

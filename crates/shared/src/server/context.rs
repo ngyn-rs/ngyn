@@ -316,8 +316,14 @@ impl NgynContext {
     }
 }
 
-impl Transformer for NgynRequest {
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Option<Self> {
-        Some(cx.request.clone())
+impl<'a> Transformer<'a> for &'a NgynContext {
+    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+        cx
+    }
+}
+
+impl<'a> Transformer<'a> for &'a NgynRequest {
+    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+        &(cx.request)
     }
 }

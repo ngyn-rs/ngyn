@@ -3,7 +3,7 @@ use std::sync::Arc;
 use http_body_util::Full;
 use hyper::{body::Bytes, Method, Request, Response, StatusCode};
 
-use crate::{context::NgynContext, Handler, NgynResponse, ToBytes};
+use crate::{context::NgynContext, Handler, NgynResponse, ToBytes, Transformer};
 
 /// Trait representing a full response.
 pub trait FullResponse {
@@ -61,6 +61,12 @@ impl FullResponse for NgynResponse {
 
     fn send(&mut self, item: impl ToBytes) {
         *self.body_mut() = Full::new(item.to_bytes());
+    }
+}
+
+impl<'a> Transformer<'a> for &'a NgynResponse {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res
     }
 }
 
