@@ -14,4 +14,4 @@ path = "src/lib.rs"
 ngyn = { version = "0.3.1", path = "../../crates/core" }
 ngyn_vercel = { version = "0.3.1", path = "../../crates/vercel" }
 tokio = { version = "1.32.0", features = ["full"] }
-vercel_runtime = { version = "1.1" }
+vercel_runtime = { version = "1.1.0" }

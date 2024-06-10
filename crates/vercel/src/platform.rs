@@ -22,7 +22,15 @@ impl NgynEngine for VercelApplication {
 
 impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
-        let request = request.map(|b| b.to_vec());
+        let request = request.map(|b| {
+            let mut buf = Vec::new();
+            b.map_frame(|f| {
+                let d = f.data_ref().unwrap().to_vec();
+                buf.extend_from_slice(d.as_slice());
+                f
+            });
+            buf
+        });
 
         let response =
             NgynResponse::init(request, Arc::new(self.routes), Arc::new(self.middlewares)).await;
