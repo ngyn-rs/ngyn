@@ -129,9 +129,8 @@ impl Transformer<'_> for Param {
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params()
-            .clone()
             .unwrap()
-            .into_iter()
+            .iter()
             .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
             .collect();
         Param { data }
