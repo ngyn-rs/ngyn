@@ -22,28 +22,22 @@ impl NgynEngine for VercelApplication {
 
 impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
-        let request = request.map(|b| {
-            let mut buf = Vec::new();
-            b.map_frame(|f| {
-                let d = f.data_ref().unwrap().to_vec();
-                buf.extend_from_slice(d.as_slice());
-                f
-            });
-            buf
-        });
+        let request = request.map(|b| b.to_vec());
 
         let response =
             NgynResponse::init(request, Arc::new(self.routes), Arc::new(self.middlewares)).await;
 
-        Ok(response.map(|b| {
-            let mut res = Vec::new();
-            b.map_frame(|f| {
-                f.map_data(|d| {
-                    res.extend_from_slice(d.to_vec().as_slice());
-                    d
-                })
-            });
-            Body::from(res)
-        }))
+        let (parts, mut body) = response.into_parts();
+        let body = {
+            let mut buf = Vec::new();
+            let f = body.frame().await.unwrap().unwrap();
+            let d = f.data_ref().unwrap();
+            buf.extend_from_slice(d.to_vec().as_slice());
+            Body::from(buf)
+        };
+
+        let response = VercelResponse::from_parts(parts, body);
+
+        Ok(response)
     }
 }
