@@ -128,7 +128,7 @@ impl Transformer<'_> for Param {
     /// ```
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
-            .params
+            .params()
             .clone()
             .unwrap()
             .into_iter()
@@ -207,7 +207,7 @@ impl Transformer<'_> for Query {
     /// ```
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         Query {
-            url: cx.request.uri().clone(),
+            url: cx.request().uri().clone(),
         }
     }
 }
@@ -274,7 +274,7 @@ impl Transformer<'_> for Dto {
     /// let dto: Dto = Dto::transform(&mut cx, &mut res);
     /// ```
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
-        let data = String::from_utf8_lossy(cx.request.body()).to_string();
+        let data = String::from_utf8_lossy(cx.request().body()).to_string();
         Dto { data }
     }
 }

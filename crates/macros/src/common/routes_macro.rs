@@ -136,25 +136,25 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         let args = inputs.iter().fold(None, |args, input| {
                             if let syn::FnArg::Typed(pat) = input {
                                 let ty = &pat.ty;
-                                let pat = &pat.pat;
-                                let (path, borrow) = {
+                                let (path, and_token, mutability) = {
                                     if let syn::Type::Reference(path_ref) = *ty.clone() {
                                         if let syn::Type::Path(path) = *path_ref.elem.clone() {
-                                            (path.path, quote! {&})
+                                            (
+                                                path.path,
+                                                Some(path_ref.and_token),
+                                                path_ref.mutability,
+                                            )
                                         } else {
                                             panic!("Expected a reference or a path");
                                         }
                                     } else if let syn::Type::Path(path) = *ty.clone() {
-                                        (path.path, quote! {})
+                                        (path.path, None, None)
                                     } else {
                                         panic!("Expected a reference or a path");
                                     }
                                 };
                                 let arg_def = quote! {
-                                    {
-                                        let #pat = ngyn::prelude::Transducer::reduce::<#borrow #path>(cx, res);
-                                        #pat
-                                    }
+                                    #and_token #mutability ngyn::prelude::Transducer::reduce::<#and_token #mutability #path>(cx, res)
                                 };
                                 if args.is_none() {
                                     Some(quote! {

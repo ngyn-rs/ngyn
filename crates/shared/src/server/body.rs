@@ -10,7 +10,7 @@ use std::str::FromStr;
 ///
 /// let string_body: Bytes = "Hello, world!".to_string().to_bytes();
 /// ```
-pub trait ToBytes: Default {
+pub trait ToBytes {
     /// Parses the body into a `Bytes` object.
     ///
     /// # Examples
@@ -48,7 +48,7 @@ impl ParseBytes for Bytes {
     }
 }
 
-impl<T: ToString + Default> ToBytes for T {
+impl<T: ToString> ToBytes for T {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
