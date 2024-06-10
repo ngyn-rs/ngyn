@@ -30,9 +30,12 @@ impl VercelApplication {
         let (parts, mut body) = response.into_parts();
         let body = {
             let mut buf = Vec::new();
-            let f = body.frame().await.unwrap().unwrap();
-            let d = f.data_ref().unwrap();
-            buf.extend_from_slice(d.to_vec().as_slice());
+            let frame = body.frame().await;
+            if frame.is_some() {
+                let chunk = frame.unwrap().unwrap();
+                let d = chunk.data_ref().unwrap();
+                buf.extend_from_slice(d.to_vec().as_slice());
+            }
             Body::from(buf)
         };
 
