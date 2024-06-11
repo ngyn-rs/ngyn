@@ -70,6 +70,12 @@ impl<'a> Transformer<'a> for &'a NgynResponse {
     }
 }
 
+impl<'a> Transformer<'a> for &'a mut NgynResponse {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res
+    }
+}
+
 #[async_trait::async_trait]
 pub trait ResponseBuilder: FullResponse {
     /// Creates a new response.

@@ -134,7 +134,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let path_prefix = {
         if let Some(prefix) = prefix {
             quote! {
-                #prefix.to_string() + "/"
+                format!("{}{}", #prefix, "/")
             }
         } else {
             quote! {
@@ -187,7 +187,7 @@ pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             fn routes(&self) -> Vec<(String, String, String)> {
                 use ngyn::prelude::NgynControllerHandler;
                 Self::ROUTES.iter().map(|(path, method, handler)| {
-                    ((#path_prefix + path).replace("//", "/"), method.to_string(), handler.to_string())
+                    ((format!("{}{}", #path_prefix, path)).replace("//", "/"), method.to_string(), handler.to_string())
                 }).collect()
             }
 

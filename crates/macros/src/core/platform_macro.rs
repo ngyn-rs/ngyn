@@ -3,11 +3,15 @@ use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
 pub fn platform_macro(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let ident = &input.ident;
+    let DeriveInput {
+        ident, generics, ..
+    } = parse_macro_input!(input as DeriveInput);
 
     let expanded = quote! {
-        impl #ident {
+        impl #generics #ident #generics
+        where
+            Self: Default,
+        {
             /// Adds a new route to the `NgynApplication` with the `Method::Get`.
             pub fn get(&mut self, path: &str, handler: impl ngyn_shared::RouteHandle) {
                 self.route(path, Method::GET, handler.into())

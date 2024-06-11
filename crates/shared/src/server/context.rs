@@ -19,11 +19,22 @@ impl<V> NgynContextValue<V> {
     }
 }
 
+/// Represents the context of a request in Ngyn
 pub struct NgynContext {
-    pub request: Request<Vec<u8>>,
-    pub params: Option<Vec<(String, String)>>,
+    request: Request<Vec<u8>>,
+    params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, String>,
+}
+
+impl NgynContext {
+    pub fn request(&self) -> &Request<Vec<u8>> {
+        &self.request
+    }
+
+    pub fn params(&self) -> Option<&Vec<(String, String)>> {
+        self.params.as_ref()
+    }
 }
 
 impl NgynContext {
@@ -191,7 +202,9 @@ impl NgynContext {
     pub fn has(&self, key: &str) -> bool {
         self.store.contains_key(key.to_lowercase().trim())
     }
+}
 
+impl NgynContext {
     /// Creates a new `NgynContext` from the given request.
     ///
     /// # Arguments
@@ -322,8 +335,20 @@ impl<'a> Transformer<'a> for &'a NgynContext {
     }
 }
 
+impl<'a> Transformer<'a> for &'a mut NgynContext {
+    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+        cx
+    }
+}
+
 impl<'a> Transformer<'a> for &'a NgynRequest {
     fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
-        &(cx.request)
+        cx.request()
+    }
+}
+
+impl Transformer<'_> for NgynRequest {
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+        cx.request().clone()
     }
 }

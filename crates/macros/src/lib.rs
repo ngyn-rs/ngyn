@@ -300,6 +300,6 @@ pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
 ///     // fields
 /// }
 /// ```
-pub fn dto(input: TokenStream) -> TokenStream {
+pub fn derive_dto(input: TokenStream) -> TokenStream {
     dto_macro(input)
 }

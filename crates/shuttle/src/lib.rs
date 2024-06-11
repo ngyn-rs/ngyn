@@ -2,6 +2,7 @@ use ngyn_hyper::HyperApplication;
 use shuttle_runtime::Error;
 use std::net::SocketAddr;
 
+pub type ShuttleApplication = HyperApplication;
 pub struct NgynService(HyperApplication);
 
 #[shuttle_runtime::async_trait]

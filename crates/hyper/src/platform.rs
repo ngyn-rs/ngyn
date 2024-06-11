@@ -45,8 +45,8 @@ impl HyperApplication {
         let middlewares = Arc::new(self.middlewares);
 
         let service = service_fn(move |req: Request<Incoming>| {
-            let routes = Arc::clone(&routes_copy);
-            let middlewares = Arc::clone(&middlewares);
+            let routes = routes_copy.clone();
+            let middlewares = middlewares.clone();
             async move {
                 let (parts, mut body) = req.into_parts();
                 let body = {

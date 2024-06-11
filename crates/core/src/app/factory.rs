@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use ngyn_shared::{Method, NgynContext, NgynEngine, NgynModule, NgynResponse};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
@@ -34,7 +32,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
                     Box::new({
                         let controller = controller.clone();
                         move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                            cx.prepare(Arc::clone(&controller), handler.clone());
+                            cx.prepare(controller.clone(), handler.clone());
                         }
                     }),
                 );

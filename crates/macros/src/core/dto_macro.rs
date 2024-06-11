@@ -14,6 +14,12 @@ pub fn dto_macro(input: TokenStream) -> TokenStream {
                 dto.parse::<#ident>().unwrap()
             }
         }
+
+        impl #generics ngyn::prelude::ToBytes for #ident #generics {
+            fn to_bytes(self) -> ngyn::prelude::Bytes {
+                ngyn::prelude::Bytes::from(serde_json::to_string(&self).unwrap())
+            }
+        }
     };
     expanded.into()
 }
