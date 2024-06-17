@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::{context::NgynContext, NgynResponse};
+use crate::server::{NgynContext, NgynResponse};
 use std::borrow::Cow;
 
 /// Represents a transformer trait.

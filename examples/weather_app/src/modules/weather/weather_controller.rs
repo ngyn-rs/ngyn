@@ -22,7 +22,7 @@ pub struct WeatherController {
 impl WeatherController {
     #[get("/<location>/<city>")]
     #[check(WeatherGate)]
-    async fn get_location(&self, params: Param) -> String {
+    async fn get_location(&self, params: Query) -> String {
         self.weather_service
             .get_location_weather(params.get("location").unwrap().as_str())
             .await

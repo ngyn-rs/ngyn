@@ -144,17 +144,17 @@ pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
             #(#fields),*
         }
 
-        impl #generics ngyn::prelude::NgynModule for #ident #generics {
+        impl #generics ngyn::shared::traits::NgynModule for #ident #generics {
             fn new() -> Self {
                 #init_module
             }
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
-            fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> {
-                use ngyn::prelude::NgynController;
-                let mut modules: Vec<std::sync::Arc<dyn ngyn::prelude::NgynModule>> = vec![];
-                let mut controllers: Vec<std::sync::Arc<dyn ngyn::prelude::NgynController>> = vec![];
+            fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynController>> {
+                use ngyn::shared::traits::NgynController;
+                let mut modules: Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynModule>> = vec![];
+                let mut controllers: Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynController>> = vec![];
                 #(#add_controllers)*
                 #(#add_imported_modules_controllers)*
                 controllers

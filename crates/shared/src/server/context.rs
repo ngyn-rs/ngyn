@@ -5,7 +5,10 @@ use hyper::Request;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{uri::ToParams, Method, NgynController, NgynRequest, NgynResponse, Transformer};
+use crate::{
+    server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
+    traits::NgynController,
+};
 
 /// Represents the value of a context in Ngyn
 #[derive(Serialize, Deserialize)]
@@ -225,7 +228,7 @@ impl NgynContext {
     /// let context = NgynContext::from_request(request);
     /// assert!(context.is_empty());
     /// ```
-    pub fn from_request(request: Request<Vec<u8>>) -> Self {
+    pub(crate) fn from_request(request: Request<Vec<u8>>) -> Self {
         NgynContext {
             request,
             store: HashMap::new(),
@@ -260,7 +263,7 @@ impl NgynContext {
     /// let result = context.with("/users", &Method::POST);
     /// assert!(result.is_some());
     /// ```
-    pub fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
+    pub(crate) fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
         if method.ne(self.request.method()) {
             return None;
         }
@@ -322,7 +325,7 @@ impl NgynContext {
     ///
     /// context.execute(&mut response).await;
     /// ```
-    pub async fn execute(&mut self, res: &mut NgynResponse) {
+    pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
         if let Some((handler, controller)) = self.route_info.clone() {
             controller.handle(handler.as_str(), self, res).await;
         }

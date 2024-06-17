@@ -1,4 +1,4 @@
-use crate::{NgynContext, NgynResponse};
+use crate::server::{NgynContext, NgynResponse};
 
 /// Represents a handler function that takes in a mutable reference to `NgynContext` and `NgynResponse`.
 pub type Handler = dyn Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static;

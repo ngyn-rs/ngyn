@@ -1,5 +1,5 @@
 use super::Handler;
-use crate::{Method, NgynMiddleware};
+use crate::{server::Method, traits::NgynMiddleware};
 
 pub trait NgynEngine: Default {
     /// Adds a route to the application.

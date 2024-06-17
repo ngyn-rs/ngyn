@@ -1,4 +1,4 @@
-use ngyn_shared::{Method, Path};
+use ngyn_shared::{enums::Path, server::Method};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemImpl, Signature};

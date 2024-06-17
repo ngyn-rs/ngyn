@@ -15,20 +15,21 @@ pub trait NgynController: Send + Sync {
     async fn handle(
         &self,
         handler: &str,
-        cx: &mut crate::NgynContext,
-        res: &mut crate::NgynResponse,
+        cx: &mut crate::server::NgynContext,
+        res: &mut crate::server::NgynResponse,
     );
 }
 
 #[async_trait::async_trait]
 /// `NgynControllerHandler` defines placeholders for routing logic of a controller.
 pub trait NgynControllerHandler {
-    const ROUTES: &'static [(&'static str, &'static str, &'static str)];
+    const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[];
 
     async fn __handle_route(
         &self,
-        handler: &str,
-        cx: &mut crate::NgynContext,
-        res: &mut crate::NgynResponse,
-    );
+        _handler: &str,
+        _cx: &mut crate::server::NgynContext,
+        _res: &mut crate::server::NgynResponse,
+    ) {
+    }
 }

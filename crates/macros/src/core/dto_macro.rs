@@ -15,9 +15,9 @@ pub fn dto_macro(input: TokenStream) -> TokenStream {
             }
         }
 
-        impl #generics ngyn::prelude::ToBytes for #ident #generics {
-            fn to_bytes(self) -> ngyn::prelude::Bytes {
-                ngyn::prelude::Bytes::from(serde_json::to_string(&self).unwrap())
+        impl #generics ngyn::shared::server::ToBytes for #ident #generics {
+            fn to_bytes(self) -> ngyn::shared::server::Bytes {
+                ngyn::shared::server::Bytes::from(serde_json::to_string(&self).unwrap())
             }
         }
     };

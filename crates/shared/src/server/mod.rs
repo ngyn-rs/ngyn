@@ -14,3 +14,5 @@ pub use uri::ToParams;
 
 pub type NgynRequest = hyper::Request<Vec<u8>>;
 pub type NgynResponse = hyper::Response<Full<Bytes>>;
+
+pub use hyper::http::Method;
