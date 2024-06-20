@@ -8,6 +8,8 @@ use crate::{
     server::{NgynContext, NgynResponse, ToBytes, Transformer},
 };
 
+use super::context::AppState;
+
 /// Trait representing a full response.
 pub trait FullResponse {
     /// Sets the status code of the response.
@@ -127,6 +129,13 @@ pub trait ResponseBuilder: FullResponse {
         routes: Arc<Vec<(String, Method, Box<Handler>)>>,
         middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
     ) -> Self;
+
+    async fn build_with_state<T: AppState>(
+        req: Request<Vec<u8>>,
+        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
+        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        state: T,
+    ) -> Self;
 }
 
 #[async_trait::async_trait]
@@ -136,8 +145,19 @@ impl ResponseBuilder for NgynResponse {
         routes: Arc<Vec<(String, Method, Box<Handler>)>>,
         middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
     ) -> Self {
+        Self::build_with_state(req, routes, middlewares, ()).await
+    }
+
+    async fn build_with_state<T: AppState>(
+        req: Request<Vec<u8>>,
+        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
+        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        state: T,
+    ) -> Self {
         let mut cx = NgynContext::from_request(req);
         let mut res = Response::new(Full::new(Bytes::default()));
+
+        cx.set_state(Box::new(state));
 
         let handler = routes
             .iter()

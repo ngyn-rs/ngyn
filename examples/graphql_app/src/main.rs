@@ -39,7 +39,7 @@ impl GraphQLController {
             EmptyMutation::<Database>::new(),
             EmptySubscription::<Database>::new(),
         ));
-        let req = req.map(|f| panic!(""));
+        let req = req.map(|_b| panic!(""));
         let graphql = graphql(root_node, self.db.clone(), req).await;
         *res = graphql.map(|body| Full::new(Bytes::from(body)));
     }

@@ -3,7 +3,7 @@
 
 use hyper::Request;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc};
+use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
@@ -22,12 +22,29 @@ impl<V> NgynContextValue<V> {
     }
 }
 
+pub trait AppState: Any + Send {
+    fn as_any(&self) -> &dyn Any
+    where
+        Self: Sized,
+    {
+        self
+    }
+    fn get_state(&self) -> &dyn Any;
+}
+
+impl AppState for () {
+    fn get_state(&self) -> &dyn Any {
+        self
+    }
+}
+
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, String>,
+    state: Option<Box<dyn AppState>>,
 }
 
 impl NgynContext {
@@ -37,6 +54,17 @@ impl NgynContext {
 
     pub fn params(&self) -> Option<&Vec<(String, String)>> {
         self.params.as_ref()
+    }
+}
+
+impl NgynContext {
+    pub fn state<T: 'static>(&self) -> Option<&T> {
+        let state = self.state.as_ref();
+
+        match state {
+            Some(value) => value.get_state().downcast_ref::<T>(),
+            None => None,
+        }
     }
 }
 
@@ -234,7 +262,12 @@ impl NgynContext {
             store: HashMap::new(),
             params: None,
             route_info: None,
+            state: None,
         }
+    }
+
+    pub(crate) fn set_state(&mut self, state: Box<dyn AppState>) {
+        self.state = Some(state);
     }
 
     /// Sets the route information for the context.
