@@ -46,18 +46,70 @@ pub struct NgynContext {
     store: HashMap<String, String>,
     state: Option<Box<dyn AppState>>,
 }
-
 impl NgynContext {
+    /// Retrieves the request associated with the context.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the request associated with the context.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ngyn_shared::context::NgynContext;
+    /// use hyper::Request;
+    ///
+    /// let request = Request::new(Vec::new());
+    /// let context = NgynContext::from_request(request);
+    ///
+    /// let request_ref = context.request();
+    /// ```
     pub fn request(&self) -> &Request<Vec<u8>> {
         &self.request
     }
 
+    /// Retrieves the params associated with the context.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to the params associated with the context.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ngyn_shared::context::NgynContext;
+    ///
+    /// let mut context = NgynContext::from_request(request);
+    /// context.set("name", "John".into());
+    ///
+    /// let params_ref = context.params();
+    /// ```
     pub fn params(&self) -> Option<&Vec<(String, String)>> {
         self.params.as_ref()
     }
 }
 
 impl NgynContext {
+    /// Retrieves the state of the context as a reference to the specified type.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T` - The type of the state to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to the state of the specified type. Returns `None` if the state is not found or if it cannot be downcasted to the specified type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ngyn_shared::context::NgynContext;
+    ///
+    /// let mut context = NgynContext::from_request(request);
+    /// context.set_state(Box::new(MyAppState::new()));
+    ///
+    /// let state_ref = context.state::<MyAppState>();
+    /// ```
     pub fn state<T: 'static>(&self) -> Option<&T> {
         let state = self.state.as_ref();
 

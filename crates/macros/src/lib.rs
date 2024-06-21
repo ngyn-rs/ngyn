@@ -19,16 +19,34 @@ pub fn platform(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// `module` is a procedural macro that generates a struct and its implementation.
+/// `module` marks a struct that contains controllers and imports other modules.
 ///
 /// ##### Arguments
 /// * `controllers` - A list of controllers that the module will contain.
+/// * `imports` - A list of modules that the module will import.
+/// * `init` - The name of the init method that will be called when the module is initialized.
 ///
 /// ##### Example
 /// ```rust ignore
 /// #[module(controllers = [MyController1, MyController2])]
-/// mod MyModule {
-///     // module implementation
+/// struct MyModule;
+/// ```
+///
+/// ##### Example with imports
+/// ```rust ignore
+/// #[module(controllers = [MyController1, MyController2], imports = [MyModule1, MyModule2])]
+/// struct MyModule;
+/// ```
+///
+/// ##### Example with init method
+/// ```rust ignore
+/// #[module(controllers = [MyController], imports = [MyModule], init = "start")]
+/// struct MyModule;
+///
+/// impl MyModule {
+///    fn start() {
+///       // init method implementation
+///   }
 /// }
 /// ```
 pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -37,7 +55,9 @@ pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 /// The `injectable` attribute is used to mark a struct as injectable.
-/// This means that the struct can be automatically provided as a dependency where needed.
+/// 
+/// ##### Arguments
+/// * `init` - The name of the init method that will be called when the struct is initialized.
 ///
 /// ##### Example
 /// ```rust ignore
