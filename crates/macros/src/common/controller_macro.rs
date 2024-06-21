@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::parse_macro_data;
+use crate::utils::parse_macro_data::parse_macro_data;
 
 struct ControllerArgs {
     prefix: Option<syn::LitStr>,
@@ -72,7 +72,7 @@ impl syn::parse::Parse for ControllerArgs {
     }
 }
 
-pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
+pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let syn::DeriveInput {
         attrs,
         ident,

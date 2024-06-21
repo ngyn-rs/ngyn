@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
 
-pub fn dto_macro(input: TokenStream) -> TokenStream {
+pub(crate) fn dto_macro(input: TokenStream) -> TokenStream {
     let DeriveInput {
         ident, generics, ..
     } = syn::parse_macro_input!(input as DeriveInput);

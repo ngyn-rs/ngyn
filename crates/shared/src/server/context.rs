@@ -32,7 +32,7 @@ pub trait AppState: Any + Send {
     fn get_state(&self) -> &dyn Any;
 }
 
-impl AppState for () {
+impl<T: Send + Sized + 'static> AppState for T {
     fn get_state(&self) -> &dyn Any {
         self
     }

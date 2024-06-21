@@ -32,7 +32,7 @@ impl syn::parse::Parse for InjectableArgs {
     }
 }
 
-pub fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenStream {
+pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let syn::DeriveInput {
         ident,
         data,

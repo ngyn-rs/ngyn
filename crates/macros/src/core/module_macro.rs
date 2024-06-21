@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-use crate::utils::parse_macro_data;
+use crate::utils::parse_macro_data::parse_macro_data;
 
 struct ModuleArgs {
     imports: Vec<syn::Path>,
@@ -55,7 +55,7 @@ impl syn::parse::Parse for ModuleArgs {
     }
 }
 
-pub fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
+pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let DeriveInput {
         ident,
         attrs,
