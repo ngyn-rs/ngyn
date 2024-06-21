@@ -55,7 +55,7 @@ pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 /// The `injectable` attribute is used to mark a struct as injectable.
-/// 
+///
 /// ##### Arguments
 /// * `init` - The name of the init method that will be called when the struct is initialized.
 ///
