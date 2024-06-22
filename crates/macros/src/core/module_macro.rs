@@ -152,7 +152,7 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
                 stringify!(#ident)
             }
             fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynController>> {
-                use ngyn::shared::traits::NgynController;
+                use ngyn::shared::traits::NgynInjectable;
                 let mut modules: Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynModule>> = vec![];
                 let mut controllers: Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynController>> = vec![];
                 #(#add_controllers)*

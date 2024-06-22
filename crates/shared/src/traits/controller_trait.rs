@@ -1,13 +1,9 @@
+use super::NgynInjectable;
+
 #[async_trait::async_trait]
 /// `NgynController` defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
-pub trait NgynController: Send + Sync {
-    /// Creates a new instance of the controller.
-    /// This is for internal use only.
-    fn new() -> Self
-    where
-        Self: Sized;
-
+pub trait NgynController: NgynInjectable + Sync {
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)>;
 

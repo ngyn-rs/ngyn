@@ -7,6 +7,7 @@ struct ControllerArgs {
     prefix: Option<syn::LitStr>,
     middlewares: Vec<syn::Path>,
     init: Option<syn::LitStr>,
+    inject: Option<syn::LitStr>,
 }
 
 impl syn::parse::Parse for ControllerArgs {
@@ -16,6 +17,7 @@ impl syn::parse::Parse for ControllerArgs {
         let mut middlewares = vec![];
         let mut prefix = None;
         let mut init = None;
+        let mut inject = None;
 
         // match the input with format "/prefix"
         if !input.is_empty() && input.peek(syn::LitStr) {
@@ -26,6 +28,7 @@ impl syn::parse::Parse for ControllerArgs {
                 middlewares,
                 prefix,
                 init,
+                inject,
             });
         }
 
@@ -52,6 +55,9 @@ impl syn::parse::Parse for ControllerArgs {
                 "init" => {
                     init = input.parse()?;
                 }
+                "inject" => {
+                    inject = input.parse()?;
+                }
                 _ => {
                     return Err(syn::Error::new(
                         ident.span(),
@@ -68,6 +74,7 @@ impl syn::parse::Parse for ControllerArgs {
             middlewares,
             prefix,
             init,
+            inject,
         })
     }
 }
@@ -84,6 +91,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         middlewares,
         prefix,
         init,
+        inject,
     } = syn::parse_macro_input!(args as ControllerArgs);
     let controller_fields = parse_macro_data(data);
 
@@ -126,7 +134,8 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         .map(|m| {
             quote! {
                 let middleware = #m::default();
-                middlewares.push(std::sync::Arc::new(middleware));
+                middleware.inject(cx);
+                middleware.handle(cx, res);
             }
         })
         .collect();
@@ -158,6 +167,17 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         }
     };
 
+    let inject_controller = {
+        if let Some(inject) = inject {
+            let inject_ident = inject.parse::<syn::Ident>().unwrap();
+            quote! {
+                #ident::#inject_ident()
+            }
+        } else {
+            quote! {}
+        }
+    };
+
     let expanded = quote! {
         #(#attrs)*
         #vis struct #ident #generics {
@@ -166,12 +186,18 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
 
         impl #generics ngyn::shared::traits::NgynControllerHandler for #ident #generics {}
 
-        #[ngyn::prelude::async_trait]
-        impl #generics ngyn::shared::traits::NgynController for #ident #generics {
+        impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics {
             fn new() -> Self {
                 #init_controller
             }
 
+            fn inject(&self, cx: &ngyn::prelude::NgynContext) {
+                #inject_controller
+            }
+        }
+
+        #[ngyn::prelude::async_trait]
+        impl #generics ngyn::shared::traits::NgynController for #ident #generics {
             fn routes(&self) -> Vec<(String, String, String)> {
                 Self::ROUTES.iter().map(|(path, method, handler)| {
                     ((format!("{}{}", #path_prefix, path)).replace("//", "/"), method.to_string(), handler.to_string())
@@ -183,11 +209,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse,
             ) {
-                let mut middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>> = vec![];
                 #(#add_middlewares)*
-                middlewares.iter().for_each(|middleware| {
-                    middleware.handle(cx, res);
-                });
                 self.__handle_route(handler, cx, res).await;
             }
         }

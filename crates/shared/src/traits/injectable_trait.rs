@@ -1,3 +1,5 @@
+use crate::server::NgynContext;
+
 /// `NgynInjectable` is a trait that defines the basic structure of an injectable in Ngyn.
 /// It is designed to be thread-safe.
 pub trait NgynInjectable: Send {
@@ -6,4 +8,6 @@ pub trait NgynInjectable: Send {
     fn new() -> Self
     where
         Self: Sized;
+
+    fn inject(&self, _cx: &NgynContext) {}
 }

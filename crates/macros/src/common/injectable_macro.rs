@@ -5,11 +5,13 @@ use crate::utils::parse_macro_data::parse_macro_data;
 
 struct InjectableArgs {
     init: Option<syn::LitStr>,
+    inject: Option<syn::LitStr>,
 }
 
 impl syn::parse::Parse for InjectableArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut init = None;
+        let mut inject = None;
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
@@ -18,6 +20,9 @@ impl syn::parse::Parse for InjectableArgs {
             match ident.to_string().as_str() {
                 "init" => {
                     init = input.parse()?;
+                }
+                "inject" => {
+                    inject = input.parse()?;
                 }
                 _ => {
                     return Err(syn::Error::new(
@@ -28,7 +33,7 @@ impl syn::parse::Parse for InjectableArgs {
             }
         }
 
-        Ok(InjectableArgs { init })
+        Ok(InjectableArgs { init, inject })
     }
 }
 
@@ -40,7 +45,7 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
         vis,
         generics,
     } = syn::parse_macro_input!(input as syn::DeriveInput);
-    let InjectableArgs { init } = syn::parse_macro_input!(args as InjectableArgs);
+    let InjectableArgs { init, inject } = syn::parse_macro_input!(args as InjectableArgs);
     let injectable_fields = parse_macro_data(data);
 
     let fields: Vec<_> = injectable_fields
@@ -91,6 +96,16 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
         },
     };
 
+    let inject_injectable = match inject {
+        Some(inject) => {
+            let inject_ident = inject.parse::<syn::Ident>().unwrap();
+            quote! {
+                #ident::#inject_ident(cx)
+            }
+        }
+        None => quote! {},
+    };
+
     let expanded = quote! {
         #(#attrs)*
         #vis struct #ident #generics {
@@ -100,6 +115,10 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
         impl #generics ngyn::prelude::NgynInjectable for #ident #generics {
             fn new() -> Self {
                 #init_injectable
+            }
+
+            fn inject(&self, cx: &ngyn::prelude::NgynContext) {
+                #inject_injectable
             }
         }
 

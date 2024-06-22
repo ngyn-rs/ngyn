@@ -187,6 +187,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                             {
                                                 use ngyn::prelude::NgynGate;
                                                 let gate = #path::default();
+                                                gate.inject(cx);
                                                 if !gate.can_activate(cx, res) {
                                                     return;
                                                 }

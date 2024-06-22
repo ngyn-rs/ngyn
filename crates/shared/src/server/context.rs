@@ -414,6 +414,7 @@ impl NgynContext {
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
         if let Some((handler, controller)) = self.route_info.clone() {
+            controller.inject(self);
             controller.handle(handler.as_str(), self, res).await;
         }
     }
