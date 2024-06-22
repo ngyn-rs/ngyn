@@ -1292,7 +1292,7 @@ dependencies = [
  "juniper",
  "juniper_hyper",
  "ngyn 0.3.1",
- "ngyn_hyper",
+ "ngyn-hyper",
  "serde",
  "serde_json",
  "tokio",
@@ -2091,6 +2091,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ngyn-hyper"
+version = "0.3.1"
+dependencies = [
+ "http-body-util",
+ "hyper 1.3.1",
+ "hyper-util",
+ "ngyn_macros 0.3.1",
+ "ngyn_shared 0.3.1",
+ "tokio",
+]
+
+[[package]]
+name = "ngyn-vercel"
+version = "0.3.1"
+dependencies = [
+ "http-body-util",
+ "hyper 1.3.1",
+ "ngyn_macros 0.3.1",
+ "ngyn_shared 0.3.1",
+ "tokio",
+ "vercel_runtime",
+]
+
+[[package]]
 name = "ngyn_cli"
 version = "0.0.1"
 dependencies = [
@@ -2105,18 +2129,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tracing-tree",
-]
-
-[[package]]
-name = "ngyn_hyper"
-version = "0.3.1"
-dependencies = [
- "http-body-util",
- "hyper 1.3.1",
- "hyper-util",
- "ngyn_macros 0.3.1",
- "ngyn_shared 0.3.1",
- "tokio",
 ]
 
 [[package]]
@@ -2165,18 +2177,6 @@ dependencies = [
  "serde",
  "serde_json",
  "url",
-]
-
-[[package]]
-name = "ngyn_vercel"
-version = "0.3.1"
-dependencies = [
- "http-body-util",
- "hyper 1.3.1",
- "ngyn_macros 0.3.1",
- "ngyn_shared 0.3.1",
- "tokio",
- "vercel_runtime",
 ]
 
 [[package]]
@@ -3017,7 +3017,7 @@ dependencies = [
 name = "shuttle_ngyn"
 version = "0.3.1"
 dependencies = [
- "ngyn_hyper",
+ "ngyn-hyper",
  "shuttle-runtime",
 ]
 
@@ -3942,7 +3942,7 @@ name = "vercel_app"
 version = "0.2.8"
 dependencies = [
  "ngyn 0.3.1",
- "ngyn_vercel",
+ "ngyn-vercel",
  "tokio",
  "vercel_runtime",
 ]
