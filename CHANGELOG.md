@@ -1,7 +1,61 @@
 # Changelog
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+
+## Unreleased (44348c2..230d43e)
+#### Bug Fixes
+- **(macros)** default controller methods output to response type - (b736094) - elcharitas
+- **(routes)** grouped routes resolving with blank screen issue - (c0c890c) - elcharitas
+- **(routes)** sync provider impl to support `http_method` - (7bebcfe) - elcharitas
+- **(routes)** temp drop support for http_method - (8eee401) - elcharitas
+- **(routes)** route registry and handler discover - (478ac5b) - elcharitas
+- **(routes)** stabilize server routing - (1fa1f23) - elcharitas
+- **(routes)** allow for grouped routes via controllers - (2cea892) - elcharitas
+- **(routes)** remove register from route_get macro - (f64af6c) - elcharitas
+- **(routes)** allow one route registration per controller - (829b7b4) - elcharitas
+- **(routing)** remove clutters and enforce impls - (69218c7) - elcharitas
+- **(routing)** middleware works - (51d6385) - elcharitas
+- **(sample)** force consistent return type - (2088f5a) - elcharitas
+- restructure dto and validation (#109) - (4dde061) - elcharitas
+- improve macro outputs to improve perf (#108) - (456f98e) - elcharitas
+- generics in macros (#107) - (04adad1) - elcharitas
+- response to bytes parse improvement (#104) - (d4c47ab) - elcharitas
+- use `serde_json` in context value parsing (#103) - (a9d20f9) - elcharitas
+- resolve empty request body in hyper platforms (#93) - (d9f664e) - elcharitas
+- improve controller/injectable stability (#92) - (01d0511) - elcharitas
+- improve platforms stability (#90) - (79efeb7) - elcharitas
+- named route paths discovery (#82) - (b36c947) - elcharitas
+- use context over request - (30a1189) - elcharitas
+#### Documentation
+- add more info for traits - (d43af47) - elcharitas
+- add license + improve contrib docs - (a0eecae) - elcharitas
+- update readme with more information - (d0812bc) - elcharitas
+#### Features
+- **(structure)** use crates to contain all crates - (647e4b7) - elcharitas
+- setup docs website (#110) - (230d43e) - elcharitas
+- add support for mutable transformation (#111) - (1fc95b2) - elcharitas
+- platforms crates + shuttle support (#105) - (0cc8e1b) - elcharitas
+- injectable init attribute (#102) - (7391645) - elcharitas
+- add support for Dto attribute macro (#100) - (640c0bf) - elcharitas
+- add support for route path prefixes in controllers (#95) - (a622518) - elcharitas
+- add support for validation (#94) - (1d3a2f8) - elcharitas
+- implement match strategy for hyper platform - (23a2cdc) - elcharitas
+- create hyper platform - (2e83902) - elcharitas
+
 - - -
+
+## 0.3.1 - 2024-05-13
+### Packages
+- ngyn_macros locked to ngyn_macros-0.3.1
+- ngyn locked to ngyn-0.3.1
+- ngyn_shared locked to ngyn_shared-0.3.1
+- ngyn_cli locked to ngyn_cli-0.3.1
+#### Features
+- add support for transducer transformers (#78) - (7a77a3b) - elcharitas
+- support grouped routes gates (#73) - (80bc126) - elcharitas
+
+- - -
+
 ## 0.3.0 - 2023-12-27
 ### Packages
 - ngyn_macros locked to ngyn_macros-0.3.0

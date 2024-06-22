@@ -1,9 +1,9 @@
-use ngyn_shared::{Method, Path};
+use ngyn_shared::{enums::Path, server::Method};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemImpl, Signature};
 
-pub struct PathArg {
+pub(crate) struct PathArg {
     pub path: Option<Path>,
 }
 
@@ -32,7 +32,7 @@ impl syn::parse::Parse for PathArg {
     }
 }
 
-pub struct Args {
+pub(crate) struct Args {
     pub path: Option<Path>,
     pub http_method: String,
 }
@@ -74,7 +74,7 @@ impl syn::parse::Parse for CheckArgs {
     }
 }
 
-pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
+pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
     let ItemImpl {
         items,
         attrs,
@@ -187,6 +187,7 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                             {
                                                 use ngyn::prelude::NgynGate;
                                                 let gate = #path::default();
+                                                gate.inject(cx);
                                                 if !gate.can_activate(cx, res) {
                                                     return;
                                                 }

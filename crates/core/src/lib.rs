@@ -3,14 +3,26 @@ pub mod app;
 
 pub mod macros {
     pub use async_std::main;
+    pub use async_trait::async_trait;
     pub use ngyn_macros::*;
+}
+
+pub mod shared {
+    pub use ngyn_shared::*;
 }
 
 #[doc(hidden)]
 pub mod prelude {
     pub use crate::app::*;
     pub use crate::macros::*;
-    pub use ngyn_shared::*;
+    pub use ngyn_shared::{
+        core::NgynEngine,
+        server::{
+            Dto, FullResponse, NgynContext, NgynRequest, NgynResponse, Param, Query, Transducer,
+            Transformer,
+        },
+        traits::{NgynGate, NgynInjectable, NgynMiddleware},
+    };
 }
 
 pub mod http {

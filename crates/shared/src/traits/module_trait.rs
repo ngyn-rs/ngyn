@@ -1,4 +1,4 @@
-use crate::NgynController;
+use crate::traits::NgynController;
 
 /// `NgynModule` is a trait that defines the basic structure of a module in Ngyn.
 pub trait NgynModule: Send {

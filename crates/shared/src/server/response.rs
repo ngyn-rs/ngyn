@@ -1,9 +1,14 @@
 use std::sync::Arc;
 
 use http_body_util::Full;
-use hyper::{body::Bytes, Method, Request, Response, StatusCode};
+use hyper::{body::Bytes, header::IntoHeaderName, Method, Request, Response, StatusCode};
 
-use crate::{context::NgynContext, Handler, NgynResponse, ToBytes, Transformer};
+use crate::{
+    core::Handler,
+    server::{NgynContext, NgynResponse, ToBytes, Transformer},
+};
+
+use super::context::AppState;
 
 /// Trait representing a full response.
 pub trait FullResponse {
@@ -29,6 +34,22 @@ pub trait FullResponse {
     /// assert_eq!(response.status, StatusCode::OK);
     /// ```
     fn set_status(&mut self, status: u16);
+
+    /// Sets a header - name, value pair - of the response.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the header.
+    /// * `value` - The value of the header.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// let mut response = NgynResponse::default();
+    /// response.set_header("Content-Type", "application/json");
+    /// assert_eq!(response.headers.get("Content-Type"), Some(&"application/json".to_string()));
+    /// ```
+    fn set_header<K: IntoHeaderName>(&mut self, name: K, value: &str);
 
     /// Sends the body of the response.
     ///
@@ -57,6 +78,10 @@ pub trait FullResponse {
 impl FullResponse for NgynResponse {
     fn set_status(&mut self, status: u16) {
         *self.status_mut() = StatusCode::from_u16(status).unwrap();
+    }
+
+    fn set_header<K: IntoHeaderName>(&mut self, name: K, value: &str) {
+        self.headers_mut().insert(name, value.parse().unwrap());
     }
 
     fn send(&mut self, item: impl ToBytes) {
@@ -95,26 +120,44 @@ pub trait ResponseBuilder: FullResponse {
     /// use hyper::StatusCode;
     /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
     ///
-    /// let response = NgynResponse::init(req, routes);
+    /// let response = NgynResponse::build(req, routes);
     /// assert_eq!(response.status, StatusCode::OK);
     /// assert_eq!(response.body.as_slice(), &[1, 2, 3]);
     /// ```
-    async fn init(
+    async fn build(
         req: Request<Vec<u8>>,
         routes: Arc<Vec<(String, Method, Box<Handler>)>>,
-        middlewares: Arc<Vec<Box<dyn crate::NgynMiddleware>>>,
+        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+    ) -> Self;
+
+    async fn build_with_state<T: AppState>(
+        req: Request<Vec<u8>>,
+        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
+        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        state: T,
     ) -> Self;
 }
 
 #[async_trait::async_trait]
 impl ResponseBuilder for NgynResponse {
-    async fn init(
+    async fn build(
         req: Request<Vec<u8>>,
         routes: Arc<Vec<(String, Method, Box<Handler>)>>,
-        middlewares: Arc<Vec<Box<dyn crate::NgynMiddleware>>>,
+        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+    ) -> Self {
+        Self::build_with_state(req, routes, middlewares, ()).await
+    }
+
+    async fn build_with_state<T: AppState>(
+        req: Request<Vec<u8>>,
+        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
+        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        state: T,
     ) -> Self {
         let mut cx = NgynContext::from_request(req);
         let mut res = Response::new(Full::new(Bytes::default()));
+
+        cx.set_state(Box::new(state));
 
         let handler = routes
             .iter()

@@ -3,13 +3,16 @@
 
 use hyper::Request;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc};
+use std::{any::Any, collections::HashMap, sync::Arc};
 
-use crate::{uri::ToParams, Method, NgynController, NgynRequest, NgynResponse, Transformer};
+use crate::{
+    server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
+    traits::NgynController,
+};
 
 /// Represents the value of a context in Ngyn
 #[derive(Serialize, Deserialize)]
-pub struct NgynContextValue<V> {
+struct NgynContextValue<V> {
     value: V,
 }
 
@@ -19,21 +22,103 @@ impl<V> NgynContextValue<V> {
     }
 }
 
+/// Represents the state of an application in Ngyn
+pub trait AppState: Any + Send {
+    fn as_any(&self) -> &dyn Any
+    where
+        Self: Sized,
+    {
+        self
+    }
+    fn get_state(&self) -> &dyn Any;
+}
+
+impl<T: Send + Sized + 'static> AppState for T {
+    fn get_state(&self) -> &dyn Any {
+        self
+    }
+}
+
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, String>,
+    state: Option<Box<dyn AppState>>,
 }
 
 impl NgynContext {
+    /// Retrieves the request associated with the context.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the request associated with the context.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use ngyn_shared::core::context::NgynContext;
+    /// use hyper::Request;
+    ///
+    /// let request = Request::new(Vec::new());
+    /// let context = NgynContext::from_request(request);
+    ///
+    /// let request_ref = context.request();
+    /// ```
     pub fn request(&self) -> &Request<Vec<u8>> {
         &self.request
     }
 
+    /// Retrieves the params associated with the context.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to the params associated with the context.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use ngyn_shared::core::context::NgynContext;
+    ///
+    /// let mut context = NgynContext::from_request(request);
+    /// context.set("name", "John".into());
+    ///
+    /// let params_ref = context.params();
+    /// ```
     pub fn params(&self) -> Option<&Vec<(String, String)>> {
         self.params.as_ref()
+    }
+}
+
+impl NgynContext {
+    /// Retrieves the state of the context as a reference to the specified type.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T` - The type of the state to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to the state of the specified type. Returns `None` if the state is not found or if it cannot be downcasted to the specified type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use ngyn_shared::core::context::NgynContext;
+    ///
+    /// let mut context = NgynContext::from_request(request);
+    /// context.set_state(Box::new(MyAppState::new()));
+    ///
+    /// let state_ref = context.state::<MyAppState>();
+    /// ```
+    pub fn state<T: 'static>(&self) -> Option<&T> {
+        let state = self.state.as_ref();
+
+        match state {
+            Some(value) => value.get_state().downcast_ref::<T>(),
+            None => None,
+        }
     }
 }
 
@@ -51,7 +136,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -80,7 +165,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -104,7 +189,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -122,7 +207,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -144,7 +229,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -165,7 +250,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     ///
@@ -191,7 +276,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
     /// context.set("name", "John".into());
@@ -218,20 +303,25 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     /// use hyper::Request;
     ///
     /// let request = Request::new(Vec::new());
     /// let context = NgynContext::from_request(request);
     /// assert!(context.is_empty());
     /// ```
-    pub fn from_request(request: Request<Vec<u8>>) -> Self {
+    pub(crate) fn from_request(request: Request<Vec<u8>>) -> Self {
         NgynContext {
             request,
             store: HashMap::new(),
             params: None,
             route_info: None,
+            state: None,
         }
+    }
+
+    pub(crate) fn set_state(&mut self, state: Box<dyn AppState>) {
+        self.state = Some(state);
     }
 
     /// Sets the route information for the context.
@@ -248,7 +338,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     /// use ngyn_shared::Method;
     ///
     /// let mut context = NgynContext::from_request(request);
@@ -260,7 +350,7 @@ impl NgynContext {
     /// let result = context.with("/users", &Method::POST);
     /// assert!(result.is_some());
     /// ```
-    pub fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
+    pub(crate) fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
         if method.ne(self.request.method()) {
             return None;
         }
@@ -293,7 +383,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     /// use ngyn_shared::NgynController;
     ///
     /// let mut context = NgynContext::from_request(request);
@@ -314,7 +404,7 @@ impl NgynContext {
     /// # Examples
     ///
     /// ```rust ignore
-    /// use ngyn_shared::context::NgynContext;
+    /// use ngyn_shared::core::context::NgynContext;
     /// use ngyn_shared::NgynResponse;
     ///
     /// let mut context = NgynContext::from_request(request);
@@ -322,8 +412,9 @@ impl NgynContext {
     ///
     /// context.execute(&mut response).await;
     /// ```
-    pub async fn execute(&mut self, res: &mut NgynResponse) {
+    pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
         if let Some((handler, controller)) = self.route_info.clone() {
+            controller.inject(self);
             controller.handle(handler.as_str(), self, res).await;
         }
     }

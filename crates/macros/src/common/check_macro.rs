@@ -1,10 +1,10 @@
 use proc_macro::TokenStream;
 use syn::ItemImpl;
 
-use crate::utils::str_to_ident;
+use crate::utils::str::str_to_ident;
 
 /// This macro is used to add a check attribute to all methods in an impl block.
-pub fn check_impl_macro(impl_item: ItemImpl, args: TokenStream) -> TokenStream {
+pub(crate) fn check_impl_macro(impl_item: ItemImpl, args: TokenStream) -> TokenStream {
     let mut new_items = Vec::new();
 
     // Create the check attribute
@@ -48,6 +48,6 @@ pub fn check_impl_macro(impl_item: ItemImpl, args: TokenStream) -> TokenStream {
 }
 
 /// This macro is used to add a check attribute handler to a method.
-pub fn check_fn_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub(crate) fn check_fn_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
     input
 }

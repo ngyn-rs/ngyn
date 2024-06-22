@@ -1,7 +1,7 @@
 use hyper::http::uri::Uri;
 
 /// Trait for converting a path to its params.
-pub trait ToParams {
+pub(crate) trait ToParams {
     /// Extracts the available params of a provided path.
     ///
     /// # Arguments

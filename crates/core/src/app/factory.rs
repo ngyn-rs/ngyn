@@ -1,4 +1,8 @@
-use ngyn_shared::{Method, NgynContext, NgynEngine, NgynModule, NgynResponse};
+use ngyn_shared::{
+    core::NgynEngine,
+    server::{Method, NgynContext, NgynResponse},
+    traits::NgynModule,
+};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine> {
