@@ -73,6 +73,18 @@ const config: Config = {
       },
       items: [
         {
+          type: 'doc',
+          docId: 'intro',
+          position: 'right',
+          label: 'Docs',
+        },
+        {
+          type: 'doc',
+          docId: 'intro',
+          position: 'right',
+          label: 'Showcase',
+        },
+        {
           href: 'https://github.com/ngyn-rs/ngyn',
           label: 'GitHub',
           position: 'right',
@@ -80,8 +92,8 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} Ngyn, Inc. Built with Docusaurus.`,
+      style: 'light',
+      copyright: `Made with ❤️ by Ngyn`,
     },
     prism: {
       theme: prismThemes.github,
