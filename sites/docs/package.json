@@ -20,6 +20,7 @@
     "@mdx-js/react": "^3.0.0",
     "autoprefixer": "10.4.19",
     "clsx": "^2.0.0",
+    "docusaurus-lunr-search": "3.4.0",
     "postcss": "8.4.38",
     "prism-react-renderer": "^2.3.0",
     "react": "^18.0.0",
@@ -30,7 +31,16 @@
     "@docusaurus/module-type-aliases": "3.4.0",
     "@docusaurus/tsconfig": "3.4.0",
     "@docusaurus/types": "3.4.0",
-    "typescript": "~5.2.2"
+    "@eslint/compat": "^1.1.0",
+    "@eslint/js": "^9.5.0",
+    "@types/node": "20.14.8",
+    "eslint": "9.x",
+    "eslint-config-universe": "13.0.0",
+    "eslint-plugin-react": "^7.34.3",
+    "globals": "^15.6.0",
+    "prettier": "3.3.2",
+    "typescript": "~5.2.2",
+    "typescript-eslint": "^7.13.1"
   },
   "browserslist": {
     "production": [

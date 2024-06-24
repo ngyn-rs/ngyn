@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Ngyn',
   tagline: 'Dinosaurs are cool',
-  favicon: 'img/favicon.ico',
+  favicon: 'https://avatars.githubusercontent.com/u/142031159?s=32&v=4',
 
   // Set the production url of your site here
   url: 'https://ngyn.rs',
@@ -30,7 +30,7 @@ const config: Config = {
   },
 
   plugins: [
-    async function docusaurusTaillwind(context, options) {
+    async function docusaurusTaillwind() {
       return {
         name: "docusaurus-tailwindcss",
         configurePostCss(postcssOptions) {
@@ -40,7 +40,9 @@ const config: Config = {
           return postcssOptions;
         },
       };
-    },],
+    },
+  [require.resolve('docusaurus-lunr-search'), {}]
+  ],
 
   presets: [
     [
@@ -67,15 +69,9 @@ const config: Config = {
       title: 'Ngyn',
       logo: {
         alt: 'Ngyn Logo',
-        src: 'img/logo.svg',
+        src: 'https://avatars.githubusercontent.com/u/142031159?s=200&v=4',
       },
       items: [
-        {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
-          position: 'left',
-          label: 'Tutorial',
-        },
         {
           href: 'https://github.com/ngyn-rs/ngyn',
           label: 'GitHub',
@@ -85,7 +81,7 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Ngyn, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
