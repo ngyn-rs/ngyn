@@ -4,7 +4,7 @@
 :root {
     --ifm-color-primary: theme("colors.orange.500");
     --ifm-footer-background-color: transparent;
-    --ifm-navbar-background-color: transparent;
+    --ifm-navbar-background-color: var(--ifm-background-color);
     --docusaurus-highlighted-code-line-bg: theme("colors.zinc.700");
 
     --ifm-code-font-size: 95%;
@@ -21,6 +21,7 @@
         font-size: theme("fontSize.sm");
         font-weight: theme("fontWeight.semibold");
     }
+
     .btn-primary {
         background-color: theme("colors.orange.500");
         color: theme("colors.gray.100");

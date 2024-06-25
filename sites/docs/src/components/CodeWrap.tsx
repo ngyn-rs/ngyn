@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { Highlight, themes } from "prism-react-renderer";
 import React from "react";
+import { useColorMode } from "@docusaurus/theme-common";
 
 type Props = {
     children: React.ReactNode;
@@ -16,9 +17,14 @@ export function CodeBlock({
     language?: string;
     className?: string;
 }): JSX.Element {
+    const { colorMode } = useColorMode();
     return (
         <CodeWrap className={className}>
-            <Highlight theme={themes.dracula} code={code} language={language}>
+            <Highlight
+                theme={colorMode === "dark" ? themes.oneDark : themes.oneLight}
+                code={code}
+                language={language}
+            >
                 {({
                     className,
                     style,

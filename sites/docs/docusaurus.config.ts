@@ -86,13 +86,10 @@ const config: Config = {
         {
           type: 'doc',
           docId: 'intro',
-          position: 'right',
-          label: 'Docs',
+          label: 'Introduction',
         },
         {
-          type: 'doc',
-          docId: 'intro',
-          position: 'right',
+          href: 'https://showcase.ngyn.rs',
           label: 'Showcase',
         },
         {
@@ -107,8 +104,8 @@ const config: Config = {
       copyright: `Made with ❤️ by Ngyn`,
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+      theme: prismThemes.oneLight,
+      darkTheme: prismThemes.oneDark,
     },
   } satisfies Preset.ThemeConfig,
 };
