@@ -7,6 +7,5 @@ edition = "2021"
 http-body-util = "0.1"
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
-ngyn_macros = { version = "0.3.1", path = "../macros" }
 ngyn_shared = { version = "0.3.1", path = "../shared" }
 tokio = { version = "1", features = ["full"] }

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use http_body_util::Full;
 use hyper::{body::Bytes, header::IntoHeaderName, Method, Request, Response, StatusCode};
@@ -101,8 +101,11 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
     }
 }
 
+pub(crate) type Routes = Vec<(String, Method, Box<Handler>)>;
+pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
+
 #[async_trait::async_trait]
-pub trait ResponseBuilder: FullResponse {
+pub(crate) trait ResponseBuilder: FullResponse {
     /// Creates a new response.
     ///
     /// # Arguments
@@ -126,14 +129,14 @@ pub trait ResponseBuilder: FullResponse {
     /// ```
     async fn build(
         req: Request<Vec<u8>>,
-        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
-        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        routes: Arc<Mutex<Routes>>,
+        middlewares: Arc<Mutex<Middlewares>>,
     ) -> Self;
 
     async fn build_with_state<T: AppState>(
         req: Request<Vec<u8>>,
-        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
-        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        routes: Arc<Mutex<Routes>>,
+        middlewares: Arc<Mutex<Middlewares>>,
         state: T,
     ) -> Self;
 }
@@ -142,16 +145,16 @@ pub trait ResponseBuilder: FullResponse {
 impl ResponseBuilder for NgynResponse {
     async fn build(
         req: Request<Vec<u8>>,
-        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
-        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
+        middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
     ) -> Self {
         Self::build_with_state(req, routes, middlewares, ()).await
     }
 
     async fn build_with_state<T: AppState>(
         req: Request<Vec<u8>>,
-        routes: Arc<Vec<(String, Method, Box<Handler>)>>,
-        middlewares: Arc<Vec<Box<dyn crate::traits::NgynMiddleware>>>,
+        routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
+        middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
         state: T,
     ) -> Self {
         let mut cx = NgynContext::from_request(req);
@@ -159,23 +162,24 @@ impl ResponseBuilder for NgynResponse {
 
         cx.set_state(Box::new(state));
 
-        let handler = routes
+        let mut is_handled = false;
+        let _ = &routes
+            .lock()
+            .unwrap()
             .iter()
-            .filter_map(|(path, method, handler)| {
-                if cx.with(path, method).is_some() {
-                    Some(handler)
-                } else {
-                    None
+            .for_each(|(path, method, route_handler)| {
+                if !is_handled && cx.with(path, method).is_some() {
+                    middlewares
+                        .lock()
+                        .unwrap()
+                        .iter()
+                        .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+                    route_handler(&mut cx, &mut res);
+                    is_handled = true;
                 }
-            })
-            .next();
+            });
 
-        middlewares
-            .iter()
-            .for_each(|middleware| middleware.handle(&mut cx, &mut res));
-
-        if let Some(handler) = handler {
-            handler(&mut cx, &mut res);
+        if is_handled {
             cx.execute(&mut res).await;
         }
 
