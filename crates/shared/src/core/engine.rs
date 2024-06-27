@@ -1,18 +1,62 @@
+use std::sync::{Arc, Mutex};
+
+use hyper::Request;
+
 use super::{Handler, RouteHandle};
 use crate::{
-    server::{Method, NgynContext, NgynResponse},
+    server::{response::ResponseBuilder, Method, NgynContext, NgynResponse},
     traits::{NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
-    pub routes: Vec<(String, Method, Box<Handler>)>,
-    pub middlewares: Vec<Box<dyn NgynMiddleware>>,
+    routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
+    middlewares: Arc<Mutex<Vec<Box<dyn NgynMiddleware>>>>,
 }
 
-pub trait NgynEngine: Default {
-    fn data_mut(&mut self) -> &mut PlatformData;
+/// Represents platform data.
+impl PlatformData {
+    /// Process and responds to a request asynchronously.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The request to respond to.
+    ///
+    /// # Returns
+    ///
+    /// The response to the request.
+    pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
+        NgynResponse::build(req, self.routes.clone(), self.middlewares.clone()).await
+    }
 
+    /// Adds a route to the platform data.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path of the route.
+    /// * `method` - The HTTP method of the route.
+    /// * `handler` - The handler function for the route.
+    pub(crate) fn add_route(&mut self, path: String, method: Method, handler: Box<Handler>) {
+        self.routes.lock().unwrap().push((path, method, handler));
+    }
+
+    /// Adds a middleware to the platform data.
+    ///
+    /// # Arguments
+    ///
+    /// * `middleware` - The middleware to add.
+    pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
+        self.middlewares.lock().unwrap().push(middleware);
+    }
+}
+
+pub trait NgynPlatform: Default {
+    fn data_mut(&mut self) -> &mut PlatformData;
+}
+
+impl<T: NgynPlatform> NgynEngine for T {}
+
+pub trait NgynEngine: NgynPlatform {
     /// Adds a route to the application.
     ///
     /// # Arguments
@@ -32,9 +76,7 @@ pub trait NgynEngine: Default {
     /// engine.route("/", Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
-        self.data_mut()
-            .routes
-            .push((path.to_string(), method, handler));
+        self.data_mut().add_route(path.to_string(), method, handler);
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -73,9 +115,7 @@ pub trait NgynEngine: Default {
     ///
     /// * `middleware` - The middleware to add.
     fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
-        self.data_mut()
-            .middlewares
-            .push(Box::new(middleware) as Box<dyn NgynMiddleware>);
+        self.data_mut().add_middleware(Box::new(middleware));
     }
 
     fn build<AppModule: NgynModule>() -> Self {

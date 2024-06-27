@@ -6,8 +6,8 @@ mod utils;
 
 use crate::common::check_macro::check_fn_macro;
 use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
-use crate::core::dto_macro::dto_macro;
-use crate::core::module_macro::*;
+use crate::core::dto::dto_macro;
+use crate::core::module::*;
 use common::check_macro::check_impl_macro;
 use proc_macro::TokenStream;
 

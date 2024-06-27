@@ -3,19 +3,18 @@ use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request};
 use hyper_util::rt::TokioIo;
-use ngyn_shared::server::response::ResponseBuilder;
-use ngyn_shared::{core::NgynEngine, server::NgynResponse};
+use ngyn_shared::core::{NgynPlatform, PlatformData};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 /// Represents a Hyper-based application.
 #[derive(Default)]
 pub struct HyperApplication {
-    data: ngyn_shared::core::PlatformData,
+    data: PlatformData,
 }
 
-impl NgynEngine for HyperApplication {
-    fn data_mut(&mut self) -> &mut ngyn_shared::core::PlatformData {
+impl NgynPlatform for HyperApplication {
+    fn data_mut(&mut self) -> &mut PlatformData {
         &mut self.data
     }
 }
@@ -35,12 +34,11 @@ impl HyperApplication {
         address: A,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let server = TcpListener::bind(address).await?;
-        let routes_copy = Arc::new(self.data.routes);
-        let middlewares = Arc::new(self.data.middlewares);
+
+        let data = Arc::new(self.data);
 
         let service = service_fn(move |req: Request<Incoming>| {
-            let routes = routes_copy.clone();
-            let middlewares = middlewares.clone();
+            let data = data.clone();
             async move {
                 let (parts, mut body) = req.into_parts();
                 let body = {
@@ -54,7 +52,7 @@ impl HyperApplication {
                     buf
                 };
                 let req = Request::from_parts(parts, body);
-                let res = NgynResponse::build(req, routes, middlewares).await;
+                let res = data.respond(req).await;
 
                 Ok::<_, hyper::Error>(res)
             }
