@@ -1,9 +1,5 @@
 use http_body_util::BodyExt;
-use ngyn_shared::{
-    core::{NgynEngine, PlatformData},
-    server::{response::ResponseBuilder, NgynResponse},
-};
-use std::sync::Arc;
+use ngyn_shared::core::{NgynPlatform, PlatformData};
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 
 #[derive(Default)]
@@ -11,7 +7,7 @@ pub struct VercelApplication {
     data: PlatformData,
 }
 
-impl NgynEngine for VercelApplication {
+impl NgynPlatform for VercelApplication {
     fn data_mut(&mut self) -> &mut PlatformData {
         &mut self.data
     }
@@ -20,13 +16,7 @@ impl NgynEngine for VercelApplication {
 impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
         let request = request.map(|b| b.to_vec());
-
-        let response = NgynResponse::build(
-            request,
-            Arc::new(self.data.routes),
-            Arc::new(self.data.middlewares),
-        )
-        .await;
+        let response = self.data.respond(request).await;
 
         let (parts, mut body) = response.into_parts();
         let body = {
@@ -41,7 +31,6 @@ impl VercelApplication {
         };
 
         let response = VercelResponse::from_parts(parts, body);
-
         Ok(response)
     }
 }
