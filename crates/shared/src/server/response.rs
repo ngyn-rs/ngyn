@@ -101,6 +101,9 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
     }
 }
 
+pub(crate) type Routes = Vec<(String, Method, Box<Handler>)>;
+pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
+
 #[async_trait::async_trait]
 pub(crate) trait ResponseBuilder: FullResponse {
     /// Creates a new response.
@@ -126,14 +129,14 @@ pub(crate) trait ResponseBuilder: FullResponse {
     /// ```
     async fn build(
         req: Request<Vec<u8>>,
-        routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
-        middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
+        routes: Arc<Mutex<Routes>>,
+        middlewares: Arc<Mutex<Middlewares>>,
     ) -> Self;
 
     async fn build_with_state<T: AppState>(
         req: Request<Vec<u8>>,
-        routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
-        middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
+        routes: Arc<Mutex<Routes>>,
+        middlewares: Arc<Mutex<Middlewares>>,
         state: T,
     ) -> Self;
 }

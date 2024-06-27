@@ -4,14 +4,17 @@ use hyper::Request;
 
 use super::{Handler, RouteHandle};
 use crate::{
-    server::{response::ResponseBuilder, Method, NgynContext, NgynResponse},
+    server::{
+        response::{Middlewares, ResponseBuilder, Routes},
+        Method, NgynContext, NgynResponse,
+    },
     traits::{NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
-    routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
-    middlewares: Arc<Mutex<Vec<Box<dyn NgynMiddleware>>>>,
+    routes: Arc<Mutex<Routes>>,
+    middlewares: Arc<Mutex<Middlewares>>,
 }
 
 /// Represents platform data.
