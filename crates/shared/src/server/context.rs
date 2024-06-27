@@ -391,7 +391,7 @@ impl NgynContext {
     ///
     /// context.prepare(Arc::new(controller), "index".to_string());
     /// ```
-    pub fn prepare(&mut self, controller: Arc<dyn NgynController>, handler: String) {
+    pub(crate) fn prepare(&mut self, controller: Arc<dyn NgynController>, handler: String) {
         self.route_info = Some((handler, controller));
     }
 

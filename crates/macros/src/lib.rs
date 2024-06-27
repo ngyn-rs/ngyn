@@ -8,15 +8,8 @@ use crate::common::check_macro::check_fn_macro;
 use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
 use crate::core::dto_macro::dto_macro;
 use crate::core::module_macro::*;
-use crate::core::platform_macro::platform_macro;
 use common::check_macro::check_impl_macro;
 use proc_macro::TokenStream;
-
-#[proc_macro_derive(Platform)]
-/// `platform` is used to mark a struct as a platform engine.
-pub fn platform(input: TokenStream) -> TokenStream {
-    platform_macro(input)
-}
 
 #[proc_macro_attribute]
 /// `module` marks a struct that contains controllers and imports other modules.
