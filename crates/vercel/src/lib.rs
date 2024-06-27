@@ -1,25 +1,19 @@
 use http_body_util::BodyExt;
-use ngyn_macros::Platform;
 use ngyn_shared::{
-    core::{Handler, NgynEngine},
-    server::{response::ResponseBuilder, Method, NgynResponse},
+    core::{NgynEngine, PlatformData},
+    server::{response::ResponseBuilder, NgynResponse},
 };
 use std::sync::Arc;
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 
-#[derive(Default, Platform)]
+#[derive(Default)]
 pub struct VercelApplication {
-    routes: Vec<(String, Method, Box<Handler>)>,
-    middlewares: Vec<Box<dyn ngyn_shared::traits::NgynMiddleware>>,
+    data: PlatformData,
 }
 
 impl NgynEngine for VercelApplication {
-    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
-        self.routes.push((path.to_string(), method, handler));
-    }
-
-    fn use_middleware(&mut self, middleware: impl ngyn_shared::traits::NgynMiddleware + 'static) {
-        self.middlewares.push(Box::new(middleware));
+    fn data_mut(&mut self) -> &mut PlatformData {
+        &mut self.data
     }
 }
 
@@ -27,8 +21,12 @@ impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
         let request = request.map(|b| b.to_vec());
 
-        let response =
-            NgynResponse::build(request, Arc::new(self.routes), Arc::new(self.middlewares)).await;
+        let response = NgynResponse::build(
+            request,
+            Arc::new(self.data.routes),
+            Arc::new(self.data.middlewares),
+        )
+        .await;
 
         let (parts, mut body) = response.into_parts();
         let body = {

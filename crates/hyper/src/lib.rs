@@ -3,29 +3,20 @@ use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request};
 use hyper_util::rt::TokioIo;
-use ngyn_macros::Platform;
 use ngyn_shared::server::response::ResponseBuilder;
-use ngyn_shared::{
-    core::{Handler, NgynEngine},
-    server::{Method, NgynResponse},
-};
+use ngyn_shared::{core::NgynEngine, server::NgynResponse};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
 /// Represents a Hyper-based application.
-#[derive(Default, Platform)]
+#[derive(Default)]
 pub struct HyperApplication {
-    routes: Vec<(String, Method, Box<Handler>)>,
-    middlewares: Vec<Box<dyn ngyn_shared::traits::NgynMiddleware>>,
+    data: ngyn_shared::core::PlatformData,
 }
 
 impl NgynEngine for HyperApplication {
-    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
-        self.routes.push((path.to_string(), method, handler));
-    }
-
-    fn use_middleware(&mut self, middleware: impl ngyn_shared::traits::NgynMiddleware + 'static) {
-        self.middlewares.push(Box::new(middleware));
+    fn data_mut(&mut self) -> &mut ngyn_shared::core::PlatformData {
+        &mut self.data
     }
 }
 
@@ -44,8 +35,8 @@ impl HyperApplication {
         address: A,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let server = TcpListener::bind(address).await?;
-        let routes_copy = Arc::new(self.routes);
-        let middlewares = Arc::new(self.middlewares);
+        let routes_copy = Arc::new(self.data.routes);
+        let middlewares = Arc::new(self.data.middlewares);
 
         let service = service_fn(move |req: Request<Incoming>| {
             let routes = routes_copy.clone();
