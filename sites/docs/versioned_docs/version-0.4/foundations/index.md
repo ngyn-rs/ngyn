@@ -17,7 +17,7 @@ By practice, Ngyn MSRV (Minimum Supported Rust Version) is set to `1.63.0` (alwa
 To create a new Ngyn project, you can use `cargo-generate`. For example, to create a new project called `my_project`, you can run the following command:
 
 ```bash
-cargo generate --git https://
+cargo generate --git https://github.com/ngyn-rs/ngyn-starter.git --name my_project
 ```
 
 This will create a new directory called `my_project` with a basic Ngyn project structure. You can then navigate to the `my_project` directory and run `cargo run` to start the server.

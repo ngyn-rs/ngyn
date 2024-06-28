@@ -2,11 +2,34 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import { CodeBlock } from "../components/CodeWrap";
 
+const homePageCode = `use ngyn::prelude::*;
+
+#[injectable]
+pub struct WeatherGate;
+
+impl NgynGate for WeatherGate {
+    fn can_activate(self, _cx: &mut NgynContext) -> bool {
+        true
+    }
+}
+
+#[controller]
+pub struct WeatherController {}
+
+#[routes]
+#[check(WeatherGate)]
+impl WeatherController {
+    #[get("/weather")]
+    fn get_weather(&self) -> &str {
+        "Hello Weather from Ngyn"
+    }
+}`;
+
 function HomepageHeader() {
     return (
         <header className="">
             <div className="relative max-w-5xl mx-auto px-4 py-24 sm:py-40 lg:py-48 min-h-full">
-                <h1 className="text-slate-900 font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-center dark:text-white">
+                <h1 className="text-zinc-900 font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-center dark:text-white">
                     Craft Scalable Web Applications with Ease in Rust!
                 </h1>
                 <p className="mt-6 text-lg text-slate-600 text-center max-w-3xl mx-auto dark:text-slate-400">
@@ -15,14 +38,14 @@ function HomepageHeader() {
                     <span className="font-bold text-orange-500 dark:text-orange-400">
                         macros
                     </span>
-                    ,
+                    , {}
                     <span className="font-bold text-orange-500 dark:text-orange-400">
                         traits
                     </span>
-                    , and
+                    , and {}
                     <span className="font-medium text-orange-500 dark:text-orange-400">
                         utilities
-                    </span>
+                    </span>{" "}
                     that help create efficient platform-agnostic web apps
                     progressively.
                 </p>
@@ -42,11 +65,7 @@ function HomepageHeader() {
                         </span>
                     </div>
                 </div>
-                <CodeBlock
-                    className="mt-8"
-                    code={`use ngyn::prelude::*;
-use tide::Request;`}
-                />
+                <CodeBlock className="mt-8" code={homePageCode} />
             </div>
         </header>
     );

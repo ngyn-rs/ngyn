@@ -46,6 +46,102 @@ Now, let's break down the code above:
 -   The `#[route]` macro is used to define a route for the `index` method. The first argument is the HTTP method, and the second argument is the URL path.
 -   The `index` method is an async function that returns a reference to a string. This is the handler function for the route.
 
+## Route Parameters
+
+Route parameters are placeholders in the URL path that capture values from the URL. They are defined using arrow braces `<>` in the URL path. In Ngyn, route parameters are automatically extracted from the URL and can be accessed in the handler function using the `Params` transformer.
+
+```rust
+use ngyn::prelude::*;
+
+#[controller]
+struct UserController;
+
+#[routes]
+impl UserController {
+    #[route(GET, "/users/<id>")]
+    async fn get_user(&self, params: Params) -> String {
+        let id = params.get("id").unwrap();
+        format!("User ID: {}", id)
+    }
+}
+```
+
+In the example above, we define a route that captures the `id` parameter from the URL path. The `get_user` method takes a `Params` transformer as an argument, which contains all the route parameters extracted from the URL. We can access the `id` parameter using the `get` method on the `Params` transformer. Learn more about `Params` and other transformers in the [Transformers](/docs/providers/transformers) section.
+
+## Route Wildcards
+
+Route wildcards are placeholders in the URL path that match any value. They are defined using an asterisk `*` in the URL path.
+
+```rust
+use ngyn::prelude::*;
+
+#[controller]
+struct UserController;
+
+#[routes]
+impl UserController {
+    #[route(GET, "/users/*")]
+    async fn get_user(&self) -> &str {
+        "All Users"
+    }
+}
+```
+
+## Resource Routes
+
+Resource routes are a convenient way to define a set of routes for a resource (e.g., users, posts, etc.). Ngyn provides convenient `#[get]`, `#[post]`, `#[put]`, `#[patch]`, `#[delete]`, and `#[options]` attribute macros that can be used to define resource routes for a controller. These macros extend the functionality of the `#[route]` macro and automatically generate the URL path based on the method name.
+
+Here's an example of how to define resource routes for a `UserController`:
+
+```rust
+use ngyn::prelude::*;
+
+#[controller]
+struct UserController;
+
+#[routes]
+impl UserController {
+    #[get("/users")]
+    async fn index(&self) -> &str {
+        "List Users"
+    }
+
+    #[get("/users/<id>")]
+    async fn show(&self, params: Params) -> String {
+        let id = params.get("id").unwrap();
+        format!("Show User: {}", id)
+    }
+
+    #[post("/users")]
+    async fn create(&self) -> &str {
+        "Create User"
+    }
+
+    #[put("/users/<id>")]
+    async fn update(&self, params: Params) -> String {
+        let id = params.get("id").unwrap();
+        format!("Update User: {}", id)
+    }
+
+    #[patch("/users/<id>")]
+    async fn patch(&self, params: Params) -> String {
+        let id = params.get("id").unwrap();
+        format!("Patch User: {}", id)
+    }
+
+    #[delete("/users/<id>")]
+    async fn delete(&self, params: Params) -> String {
+        let id = params.get("id").unwrap();
+        format!("Delete User: {}", id)
+    }
+
+    #[options("/users")]
+    async fn options(&self) -> &str {
+        "Options"
+    }
+}
+```
+
 ## Handler Functions
 
 Handler functions are the functions that are called when a route is matched. They are responsible for processing the incoming request, executing the necessary logic, and returning a response. In Ngyn, handler functions can be async or sync functions that returns any type that implements the `ToBytes` trait.

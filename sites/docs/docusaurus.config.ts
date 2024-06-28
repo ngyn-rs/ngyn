@@ -63,15 +63,19 @@ const config: Config = {
   ],
 
   themeConfig: {
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: true,
+    },
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     announcementBar: {
       id: 'support_us',
       content:
-        'We are looking to revamp our docs, please fill <a target="_blank" rel="noopener noreferrer" href="#">this survey</a>',
+        'We are continuously looking for contributors. If you are interested in contributing, please reach out to us on GitHub.',
       backgroundColor: '#fafbfc',
       textColor: '#091E42',
-      isCloseable: false,
+      isCloseable: true,
     },
     navbar: {
       title: 'Ngyn',

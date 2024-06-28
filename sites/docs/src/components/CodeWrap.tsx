@@ -33,7 +33,7 @@ export function CodeBlock({
                     getTokenProps,
                 }) => (
                     <pre
-                        className={clsx(className, "flex-auto mb-0")}
+                        className={clsx(className, "block  flex-auto mb-0")}
                         style={style}
                     >
                         {tokens.map((line, i) => (
