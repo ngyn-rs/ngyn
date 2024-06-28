@@ -1,0 +1,74 @@
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --ifm-color-primary: theme("colors.orange.500");
+    --ifm-footer-background-color: transparent;
+    --ifm-navbar-background-color: var(--ifm-background-color);
+    --ifm-navbar-link-hover-color: theme("colors.white");
+    --docusaurus-highlighted-code-line-bg: theme("colors.zinc.700");
+
+    --ifm-code-font-size: 95%;
+    --ifm-font-size-base: 95%;
+}
+
+[data-theme="light"] {
+    --docusaurus-highlighted-code-line-bg: theme("colors.orange.100");
+}
+
+.navbar__link:not(.navbar__icon) {
+    border-radius: theme("borderRadius.md");
+    margin: theme("spacing.1");
+}
+
+.navbar__link--active {
+    color: theme("colors.white");
+    background-color: theme("colors.orange.500");
+}
+
+.navbar__link:hover:not(.navbar__icon) {
+    color: theme("colors.white");
+    background-color: theme("colors.orange.500");
+}
+
+.navbar__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navbar__icon:hover {
+    color: theme("colors.gray.500");
+}
+
+@layer components {
+    .btn {
+        border-radius: theme("borderRadius.lg");
+        padding: theme("spacing.2") theme("spacing.4");
+        font-size: theme("fontSize.sm");
+        font-weight: theme("fontWeight.semibold");
+    }
+
+    .btn-primary {
+        background-color: theme("colors.orange.500");
+        color: theme("colors.gray.100");
+
+        &:hover {
+            color: theme("colors.gray.100");
+            background-color: theme("colors.orange.400");
+        }
+
+        &:focus {
+            outline: theme("spacing.0");
+
+            &:visible {
+                outline: theme("spacing.2") theme("outlineOffset.2")
+                    theme("colors.orange.500/50");
+            }
+        }
+
+        &:active {
+            background-color: theme("colors.orange.600");
+        }
+    }
+}
