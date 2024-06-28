@@ -7,11 +7,7 @@ const homePageCode = `use ngyn::prelude::*;
 #[injectable]
 pub struct WeatherGate;
 
-impl NgynGate for WeatherGate {
-    fn can_activate(self, _cx: &mut NgynContext) -> bool {
-        true
-    }
-}
+impl NgynGate for WeatherGate {}
 
 #[controller]
 pub struct WeatherController {}
@@ -52,16 +48,16 @@ function HomepageHeader() {
                 <div className="mt-6 sm:mt-10 flex justify-center space-x-4 text-sm">
                     <a
                         className="btn btn-primary text-center py-3 w-full md:w-fit"
-                        href="https://docs.rs/ngyn"
+                        href="/docs/intro"
                     >
-                        {"Get started"}
+                        Get started
                     </a>
                     <div className="hidden lg:flex items-center text-sm leading-6 text-zinc-400 rounded-md ring-1 ring-zinc-900/10 shadow-sm py-1.5 px-3 hover:ring-zinc-300 dark:bg-zinc-800 dark:highlight-white/5 dark:hover:bg-zinc-700">
                         <span className="text-zinc-500 font-bold">
-                            {"cargo add ngyn --features tide"}
+                            cargo add ngyn
                         </span>
                         <span className="ml-auto pl-3 flex-none text-xs font-semibold">
-                            {"⌘C"}
+                            ⌘C
                         </span>
                     </div>
                 </div>

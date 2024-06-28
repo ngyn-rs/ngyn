@@ -22,7 +22,7 @@ cargo generate --git https://github.com/ngyn-rs/ngyn-starter.git --name my_proje
 
 This will create a new directory called `my_project` with a basic Ngyn project structure. You can then navigate to the `my_project` directory and run `cargo run` to start the server.
 
-## Hello, World!
+### Basic Apps
 
 Here is a simple example of a Ngyn web server powered by hyper that responds with `"Hello, World!"` to all `GET` requests:
 
@@ -40,3 +40,25 @@ async fn main() {
     let _ = app.listen("0.0.0.0:3000").await;
 }
 ```
+
+This example code above uses platform methods to add a route that responds with `"Hello, World!"` to all `GET` requests. The `listen` method starts the server and listens on port `3000`. Other platform methods for adding routes include `post`, `put`, `delete`, and `patch`. You can learn more about the available methods in the [Platforms](/docs/platforms) section.
+
+### Advanced Apps
+
+Ngyn also supports more advanced features like middleware, error handling, and request/response manipulation through controllers. Here is an example of a Ngyn web server that is initialized with a custom module:
+
+```rust
+use ngyn::prelude::*;
+
+#[module]
+struct AppModule;
+
+#[ngyn::main]
+async fn main() {
+    let mut app = NgynFactory::<HyperApplication>::create::<AppModule>();
+
+    let _ = app.listen("0.0.0.0:3000").await;
+}
+```
+
+The next step is to create a controller that will handle incoming requests. You would learn this in the next section.
