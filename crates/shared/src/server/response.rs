@@ -133,11 +133,11 @@ pub(crate) trait ResponseBuilder: FullResponse {
         middlewares: Arc<Mutex<Middlewares>>,
     ) -> Self;
 
-    async fn build_with_state<T: AppState>(
+    async fn build_with_state(
         req: Request<Vec<u8>>,
         routes: Arc<Mutex<Routes>>,
         middlewares: Arc<Mutex<Middlewares>>,
-        state: T,
+        state: impl AppState,
     ) -> Self;
 }
 
@@ -151,11 +151,11 @@ impl ResponseBuilder for NgynResponse {
         Self::build_with_state(req, routes, middlewares, ()).await
     }
 
-    async fn build_with_state<T: AppState>(
+    async fn build_with_state(
         req: Request<Vec<u8>>,
         routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
         middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
-        state: T,
+        state: impl AppState,
     ) -> Self {
         let mut cx = NgynContext::from_request(req);
         let mut res = Response::new(Full::new(Bytes::default()));

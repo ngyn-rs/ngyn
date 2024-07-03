@@ -5,6 +5,7 @@ use hyper::Request;
 use super::{Handler, RouteHandle};
 use crate::{
     server::{
+        context::AppState,
         response::{Middlewares, ResponseBuilder, Routes},
         Method, NgynContext, NgynResponse,
     },
@@ -15,6 +16,7 @@ use crate::{
 pub struct PlatformData {
     routes: Arc<Mutex<Routes>>,
     middlewares: Arc<Mutex<Middlewares>>,
+    state: Option<Arc<dyn AppState>>,
 }
 
 /// Represents platform data.
@@ -29,7 +31,9 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
-        NgynResponse::build(req, self.routes.clone(), self.middlewares.clone()).await
+        let state = self.state.as_ref().unwrap().clone();
+        NgynResponse::build_with_state(req, self.routes.clone(), self.middlewares.clone(), state)
+            .await
     }
 
     /// Adds a route to the platform data.
@@ -119,6 +123,10 @@ pub trait NgynEngine: NgynPlatform {
     /// * `middleware` - The middleware to add.
     fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
         self.data_mut().add_middleware(Box::new(middleware));
+    }
+
+    fn use_state(&mut self, state: impl AppState) {
+        self.data_mut().state = Some(Arc::new(state));
     }
 
     fn build<AppModule: NgynModule>() -> Self {

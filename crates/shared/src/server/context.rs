@@ -23,7 +23,7 @@ impl<V> NgynContextValue<V> {
 }
 
 /// Represents the state of an application in Ngyn
-pub trait AppState: Any + Send {
+pub trait AppState: Any + Send + Sync {
     fn as_any(&self) -> &dyn Any
     where
         Self: Sized,
@@ -33,7 +33,7 @@ pub trait AppState: Any + Send {
     fn get_state(&self) -> &dyn Any;
 }
 
-impl<T: Send + Sized + 'static> AppState for T {
+impl<T: Send + Sync + 'static> AppState for T {
     fn get_state(&self) -> &dyn Any {
         self
     }
