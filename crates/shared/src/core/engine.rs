@@ -31,9 +31,19 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
-        let state = self.state.as_ref().unwrap().clone();
-        NgynResponse::build_with_state(req, self.routes.clone(), self.middlewares.clone(), state)
-            .await
+        match self.state {
+            Some(ref state) => {
+                let state = state.clone();
+                NgynResponse::build_with_state(
+                    req,
+                    self.routes.clone(),
+                    self.middlewares.clone(),
+                    state,
+                )
+                .await
+            }
+            None => NgynResponse::build(req, self.routes.clone(), self.middlewares.clone()).await,
+        }
     }
 
     /// Adds a route to the platform data.
@@ -125,7 +135,7 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
-    fn use_state(&mut self, state: impl AppState) {
+    fn set_state(&mut self, state: impl AppState) {
         self.data_mut().state = Some(Arc::new(state));
     }
 
