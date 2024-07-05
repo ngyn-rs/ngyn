@@ -10,7 +10,7 @@ fi
 root_dir=$(git rev-parse --show-toplevel)
 
 # Find all subfolders in the crates directory
-crate_names=("shared" "macros" "core" "hyper" "vercel" "shuttle")
+crate_names=("shared" "macros" "hyper" "vercel" "shuttle")
 examples_dirs=()
 
 while IFS= read -r -d $'\0' example_dir; do
