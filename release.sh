@@ -22,8 +22,10 @@ done < <(find examples -maxdepth 1 -type d -print0)
 
 # Bump the version of all crates
 for crate_name in "${crate_names[@]}"; do
-  echo "Bumping version of $crate_name to $new_version"
+  echo "Bumping & Publishing version of $crate_name to $new_version"
   cog bump --minor --package "ngyn-$crate_name" --skip-untracked --skip-ci -d
+  # sleep for two minutes to avoid rate limiting
+  sleep 120 # 2 minutes
 done
 
 
