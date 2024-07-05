@@ -3,7 +3,7 @@ use ngyn::prelude::*;
 #[injectable]
 pub struct NotFoundMiddleware;
 
-impl NgynMiddleware for NotFoundMiddleware {
+impl NgynMiddleware<'_> for NotFoundMiddleware {
     fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
         if cx.is_valid_route() {
             return;
