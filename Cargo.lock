@@ -543,7 +543,7 @@ name = "basic_app"
 version = "0.1.0"
 dependencies = [
  "async-std",
- "ngyn 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn 0.3.1",
  "nject",
 ]
 
@@ -1285,13 +1285,13 @@ dependencies = [
 
 [[package]]
 name = "graphql"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "http-body-util",
  "hyper 1.3.1",
  "juniper",
  "juniper_hyper",
- "ngyn 0.3.1",
+ "ngyn 0.4.0",
  "ngyn-hyper",
  "serde",
  "serde_json",
@@ -2066,54 +2066,32 @@ dependencies = [
 [[package]]
 name = "ngyn"
 version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14d60007fdf1ee508c009ac6cfde9578dba68072e4c8fff776650991dbafb9be"
+dependencies = [
+ "async-std",
+ "ngyn_macros",
+ "ngyn_shared",
+ "nject",
+ "tide",
+]
+
+[[package]]
+name = "ngyn"
+version = "0.4.0"
 dependencies = [
  "async-std",
  "async-trait",
  "http-body-util",
  "hyper 1.3.1",
  "hyper-util",
- "ngyn_macros 0.3.1",
- "ngyn_shared 0.3.1",
+ "ngyn-macros",
+ "ngyn-shared",
  "tokio",
 ]
 
 [[package]]
-name = "ngyn"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14d60007fdf1ee508c009ac6cfde9578dba68072e4c8fff776650991dbafb9be"
-dependencies = [
- "async-std",
- "ngyn_macros 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "ngyn_shared 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "nject",
- "tide",
-]
-
-[[package]]
-name = "ngyn-hyper"
-version = "0.3.1"
-dependencies = [
- "http-body-util",
- "hyper 1.3.1",
- "hyper-util",
- "ngyn_shared 0.3.1",
- "tokio",
-]
-
-[[package]]
-name = "ngyn-vercel"
-version = "0.3.1"
-dependencies = [
- "http-body-util",
- "hyper 1.3.1",
- "ngyn_shared 0.3.1",
- "tokio",
- "vercel_runtime",
-]
-
-[[package]]
-name = "ngyn_cli"
+name = "ngyn-cli"
 version = "0.0.1"
 dependencies = [
  "anyhow",
@@ -2130,29 +2108,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngyn_macros"
-version = "0.3.1"
+name = "ngyn-hyper"
+version = "0.1.0"
 dependencies = [
- "ngyn_shared 0.3.1",
+ "http-body-util",
+ "hyper 1.3.1",
+ "hyper-util",
+ "ngyn-shared",
+ "tokio",
+]
+
+[[package]]
+name = "ngyn-macros"
+version = "0.4.0"
+dependencies = [
+ "ngyn-shared",
  "quote",
  "syn 2.0.66",
 ]
 
 [[package]]
-name = "ngyn_macros"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "146a2f3fed9fd02f1a093c5f194c773612d2ebbd3760b61b8e8bff8eb605d554"
-dependencies = [
- "ngyn_shared 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "nject",
- "quote",
- "syn 2.0.66",
-]
-
-[[package]]
-name = "ngyn_shared"
-version = "0.3.1"
+name = "ngyn-shared"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "http-body-util",
@@ -2162,6 +2139,37 @@ dependencies = [
  "serde",
  "serde_json",
  "url",
+]
+
+[[package]]
+name = "ngyn-shuttle"
+version = "0.1.0"
+dependencies = [
+ "ngyn-hyper",
+ "shuttle-runtime",
+]
+
+[[package]]
+name = "ngyn-vercel"
+version = "0.1.0"
+dependencies = [
+ "http-body-util",
+ "hyper 1.3.1",
+ "ngyn-shared",
+ "tokio",
+ "vercel_runtime",
+]
+
+[[package]]
+name = "ngyn_macros"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "146a2f3fed9fd02f1a093c5f194c773612d2ebbd3760b61b8e8bff8eb605d554"
+dependencies = [
+ "ngyn_shared",
+ "nject",
+ "quote",
+ "syn 2.0.66",
 ]
 
 [[package]]
@@ -3009,14 +3017,6 @@ dependencies = [
  "shuttle-common",
  "strfmt",
  "thiserror",
-]
-
-[[package]]
-name = "shuttle_ngyn"
-version = "0.3.1"
-dependencies = [
- "ngyn-hyper",
- "shuttle-runtime",
 ]
 
 [[package]]
@@ -3939,7 +3939,7 @@ dependencies = [
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.3.1",
+ "ngyn 0.4.0",
  "ngyn-vercel",
  "tokio",
  "vercel_runtime",
@@ -4096,14 +4096,14 @@ checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
 
 [[package]]
 name = "weather_api"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "dotenv",
- "ngyn 0.3.1",
+ "ngyn 0.4.0",
+ "ngyn-shuttle",
  "serde",
  "serde_json",
  "shuttle-runtime",
- "shuttle_ngyn",
  "ureq",
  "validator",
 ]

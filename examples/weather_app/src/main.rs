@@ -4,7 +4,7 @@ mod modules;
 use dotenv::dotenv;
 use modules::AppModule;
 use ngyn::prelude::*;
-use shuttle_ngyn::{ShuttleApplication, ShuttleNgyn};
+use ngyn_shuttle::{ShuttleApplication, ShuttleNgyn};
 
 use crate::middlewares::notfound_middleware::NotFoundMiddleware;
 
