@@ -3,19 +3,16 @@ mod modules;
 
 use dotenv::dotenv;
 use modules::AppModule;
-use ngyn::{
-    platforms::{NgynApplication, Result},
-    prelude::*,
-};
+use ngyn::prelude::*;
+use ngyn_shuttle::{ShuttleApplication, ShuttleNgyn};
 
-#[ngyn::macros::main]
-async fn main() -> Result<()> {
+use crate::middlewares::notfound_middleware::NotFoundMiddleware;
+
+#[shuttle_runtime::main]
+async fn main() -> ShuttleNgyn {
     dotenv().ok();
-    let app = NgynFactory::<NgynApplication>::create::<AppModule>();
+    let mut app = NgynFactory::<ShuttleApplication>::create::<AppModule>();
+    app.use_middleware(NotFoundMiddleware::new());
 
-    println!("Starting server at http://127.0.0.1:8080");
-
-    app.listen("127.0.0.1:8080").await?;
-
-    Ok(())
+    Ok(app.into())
 }

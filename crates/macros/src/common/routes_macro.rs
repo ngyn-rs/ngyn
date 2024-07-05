@@ -1,17 +1,41 @@
-use ngyn_shared::{HttpMethod, Path};
+use ngyn_shared::server::Method;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::ItemImpl;
+use syn::{ItemImpl, Signature};
 
-pub struct PathArg {
-    pub path: Option<Path>,
+/// Path Enum
+///
+/// This enum represents the possible types of paths that can be used in the application.
+/// It can either be a Single path represented as a String or Multiple paths represented as a Vector of Strings.
+#[derive(Debug, Clone)]
+pub(super) enum RoutePath {
+    /// Represents a single path as a String
+    Single(String),
+    /// Represents multiple paths as a Vector of Strings
+    Multiple(Vec<String>),
+}
+
+impl RoutePath {
+    pub fn each<F>(&self, mut f: F)
+    where
+        F: FnMut(&str),
+    {
+        match self {
+            RoutePath::Single(path) => f(path),
+            RoutePath::Multiple(paths) => paths.iter().for_each(|path| f(path)),
+        }
+    }
+}
+
+pub(super) struct PathArg {
+    pub path: Option<RoutePath>,
 }
 
 impl syn::parse::Parse for PathArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let path = if input.peek(syn::LitStr) {
             let path = input.parse::<syn::LitStr>()?;
-            Some(Path::Single(path.value()))
+            Some(RoutePath::Single(path.value()))
         } else if input.peek(syn::token::Bracket) {
             let content;
             syn::bracketed!(content in input);
@@ -23,7 +47,7 @@ impl syn::parse::Parse for PathArg {
                     content.parse::<syn::Token![,]>()?;
                 }
             }
-            Some(Path::Multiple(paths))
+            Some(RoutePath::Multiple(paths))
         } else {
             None
         };
@@ -32,16 +56,16 @@ impl syn::parse::Parse for PathArg {
     }
 }
 
-pub struct Args {
-    pub path: Option<Path>,
+pub(super) struct RouteArgs {
+    pub path: Option<RoutePath>,
     pub http_method: String,
 }
 
-impl syn::parse::Parse for Args {
+impl syn::parse::Parse for RouteArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let http_method = input.parse::<syn::LitStr>()?.value();
 
-        if HttpMethod::from(&http_method) == HttpMethod::Unknown {
+        if Method::from_bytes(http_method.as_bytes()).is_err() {
             panic!("Unsupported HTTP method: {}", http_method)
         } else {
             input.parse::<syn::Token![,]>()?;
@@ -49,11 +73,32 @@ impl syn::parse::Parse for Args {
 
         let PathArg { path } = input.parse::<PathArg>()?;
 
-        Ok(Args { path, http_method })
+        Ok(RouteArgs { path, http_method })
     }
 }
 
-pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
+struct CheckArgs {
+    gates: Vec<syn::Path>,
+}
+
+impl syn::parse::Parse for CheckArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let mut gates = vec![];
+        while !input.is_empty() {
+            let path: syn::Path = input.parse()?;
+            gates.push(path);
+            if !input.is_empty() {
+                input.parse::<syn::Token![,]>()?;
+            }
+        }
+        if gates.is_empty() {
+            return Err(syn::Error::new(input.span(), "expected at least one gate"));
+        }
+        Ok(Self { gates })
+    }
+}
+
+pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
     let ItemImpl {
         items,
         attrs,
@@ -69,9 +114,24 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
         Err(_err) => panic!("Only impl blocks are supported"),
     };
 
-    match trait_ {
-        Some((..)) => panic!("Trait impls are not supported"),
-        None => quote! {},
+    if let Some((..)) = trait_ {
+        panic!("Trait impls are not supported");
+    }
+
+    let generics_params = if generics.params.iter().count() > 0 {
+        let generics_params = generics.params.iter().map(|param| {
+            if let syn::GenericParam::Type(ty) = param {
+                let ident = &ty.ident;
+                quote! { #ident }
+            } else {
+                quote! { #param }
+            }
+        });
+        quote! {
+            <#(#generics_params),*>
+        }
+    } else {
+        quote! {}
     };
 
     let mut route_defs: Vec<_> = Vec::new();
@@ -91,7 +151,8 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                 {
                     let (path, http_method) = {
                         if attr.path().is_ident("route") {
-                            let Args { path, http_method } = attr.parse_args::<Args>().unwrap();
+                            let RouteArgs { path, http_method } =
+                                attr.parse_args::<RouteArgs>().unwrap();
                             (path, http_method)
                         } else {
                             let PathArg { path } = attr.parse_args::<PathArg>().unwrap();
@@ -100,19 +161,118 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         }
                     };
                     path.unwrap().each(|path| {
-                        let ident = method.sig.ident.clone();
+                        let Signature {
+                            ident,
+                            inputs,
+                            asyncness,
+                            output,
+                            ..
+                        } = method.sig.clone();
                         let ident_str = ident.to_string();
                         route_defs.push(quote! {(
                             #path,
                             #http_method,
                             #ident_str,
                         )});
-                        handle_routes.push(quote! {
-                            #ident_str => {
-                                let body = self.#ident(req, res).await;
-                                res.peek(body);
+                        let args = inputs.iter().fold(None, |args, input| {
+                            if let syn::FnArg::Typed(pat) = input {
+                                let ty = &pat.ty;
+                                let (path, and_token, mutability) = {
+                                    if let syn::Type::Reference(path_ref) = *ty.clone() {
+                                        if let syn::Type::Path(path) = *path_ref.elem.clone() {
+                                            (
+                                                path.path,
+                                                Some(path_ref.and_token),
+                                                path_ref.mutability,
+                                            )
+                                        } else {
+                                            panic!("Expected a reference or a path");
+                                        }
+                                    } else if let syn::Type::Path(path) = *ty.clone() {
+                                        (path.path, None, None)
+                                    } else {
+                                        panic!("Expected a reference or a path");
+                                    }
+                                };
+                                let arg_def = quote! {
+                                    #and_token #mutability ngyn::prelude::Transducer::reduce::<#and_token #mutability #path>(cx, res)
+                                };
+                                if args.is_none() {
+                                    Some(quote! {
+                                        #arg_def
+                                    })
+                                } else {
+                                    Some(quote! {
+                                        #args, #arg_def
+                                    })
+                                }
+                            } else {
+                                args
                             }
                         });
+                        let gates = method.attrs.iter().filter_map(|attr| {
+                            if attr.path().is_ident("check") {
+                                Some(attr.meta.clone())
+                            } else {
+                                None
+                            }
+                        });
+                        let gate_handlers: Vec<_> = gates
+                            .map(|gate| {
+                                if let syn::Meta::List(path) = gate {
+                                    let CheckArgs { gates } =
+                                        path.parse_args::<CheckArgs>().unwrap();
+                                    gates.iter().fold(quote! {}, |gates, path| {
+                                        quote! {
+                                            #gates
+                                            {
+                                                use ngyn::prelude::NgynGate;
+                                                let gate = #path::default();
+                                                gate.inject(cx);
+                                                if !gate.can_activate(cx, res) {
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                    })
+                                } else {
+                                    panic!("Expected a list of gates")
+                                }
+                            })
+                            .collect();
+                        if asyncness.is_some() {
+                            let handle_body = match output {
+                                syn::ReturnType::Type(_, _) => quote! {
+                                    let body = self.#ident(#args).await;
+                                    res.send(body);
+                                },
+                                _ => quote! {
+                                    self.#ident(#args).await;
+                                },
+                            };
+                            handle_routes.push(quote! {
+                                #ident_str => {
+                                    #(#gate_handlers)*
+                                    #handle_body
+                                }
+                            });
+                        } else {
+                            let handle_body = match output {
+                                syn::ReturnType::Type(_, _) => quote! {
+                                    let body = self.#ident(#args);
+                                    res.send(body);
+                                },
+                                _ => quote! {
+                                    self.#ident(#args);
+                                },
+                            };
+                            handle_routes.push(quote! {
+                                #ident_str => {
+                                    #(#gate_handlers)*
+                                    #handle_body
+                                }
+                            });
+                        }
                     })
                 }
             }
@@ -121,9 +281,8 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #defaultness #unsafety #(#attrs)*
-        #impl_token #generics #self_ty {
-            #[allow(non_upper_case_globals)]
-            const routes: &'static [(&'static str, &'static str, &'static str)] = &[
+        #impl_token #generics #self_ty #generics_params {
+            const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[
                 #(#route_defs),*
             ];
             #(#items)*
@@ -131,14 +290,12 @@ pub fn routes_macro(raw_input: TokenStream) -> TokenStream {
             async fn __handle_route(
                 &self,
                 handler: &str,
-                req: &mut ngyn::prelude::NgynRequest,
+                cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse
             ) {
                 match handler {
                     #(#handle_routes),*
-                    _ => {
-                        res.set_status(404);
-                    }
+                    _ => {}
                 }
             }
         }

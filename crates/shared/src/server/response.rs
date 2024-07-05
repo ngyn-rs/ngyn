@@ -1,157 +1,188 @@
-use std::{
-    future::Future,
-    pin::Pin,
-    sync::Arc,
-    task::{Context, Poll},
+use std::sync::{Arc, Mutex};
+
+use http_body_util::Full;
+use hyper::{body::Bytes, header::IntoHeaderName, Method, Request, Response, StatusCode};
+
+use crate::{
+    core::Handler,
+    server::{NgynContext, NgynResponse, ToBytes, Transformer},
 };
 
-use crate::{body::IntoNgynBody, transformer::Transformer, NgynBody, NgynController, NgynRequest};
+use super::context::AppState;
 
-#[derive(Clone)]
-pub struct NgynResponseRoute {
-    controller: Arc<dyn NgynController>,
-    handler: String,
-    request: NgynRequest,
+/// Trait representing a full response.
+pub trait FullResponse {
+    /// Sets the status code of the response.
+    ///
+    /// # Arguments
+    ///
+    /// * `status` - The status code to set.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use http_body_util::Full;
+    /// use hyper::StatusCode;
+    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
+    ///
+    /// struct MyResponse {
+    ///     status: StatusCode,
+    /// }
+    ///
+    /// let mut response = MyResponse { status: StatusCode::OK };
+    /// response.set_status(200);
+    /// assert_eq!(response.status, StatusCode::OK);
+    /// ```
+    fn set_status(&mut self, status: u16);
+
+    /// Sets a header - name, value pair - of the response.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the header.
+    /// * `value` - The value of the header.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// let mut response = NgynResponse::default();
+    /// response.set_header("Content-Type", "application/json");
+    /// assert_eq!(response.headers.get("Content-Type"), Some(&"application/json".to_string()));
+    /// ```
+    fn set_header<K: IntoHeaderName>(&mut self, name: K, value: &str);
+
+    /// Sends the body of the response.
+    ///
+    /// # Arguments
+    ///
+    /// * `item` - The item to parse the body from.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use http_body_util::Full;
+    /// use hyper::StatusCode;
+    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
+    ///
+    /// struct MyResponse {
+    ///     body: Full,
+    /// }
+    ///
+    /// let mut response = MyResponse { body: Full::new(vec![1, 2, 3]) };
+    /// response.send(vec![4, 5, 6]);
+    /// assert_eq!(response.body.as_slice(), &[4, 5, 6]);
+    /// ```
+    fn send(&mut self, item: impl ToBytes);
 }
 
-/// NgynResponse is a struct that represents a server response.
-#[derive(Clone)]
-pub struct NgynResponse {
-    status_code: u16,
-    raw_body: NgynBody,
-    raw_headers: Vec<String>,
-    route: Option<NgynResponseRoute>,
+impl FullResponse for NgynResponse {
+    fn set_status(&mut self, status: u16) {
+        *self.status_mut() = StatusCode::from_u16(status).unwrap();
+    }
+
+    fn set_header<K: IntoHeaderName>(&mut self, name: K, value: &str) {
+        self.headers_mut().insert(name, value.parse().unwrap());
+    }
+
+    fn send(&mut self, item: impl ToBytes) {
+        *self.body_mut() = Full::new(item.to_bytes());
+    }
 }
 
-impl NgynResponse {
-    pub fn from_status(code: u16) -> Self {
-        Self {
-            status_code: code,
-            raw_body: NgynBody::None,
-            raw_headers: Vec::new(),
-            route: None,
-        }
+impl<'a> Transformer<'a> for &'a NgynResponse {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res
+    }
+}
+
+impl<'a> Transformer<'a> for &'a mut NgynResponse {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res
+    }
+}
+
+pub(crate) type Routes = Vec<(String, Method, Box<Handler>)>;
+pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
+
+#[async_trait::async_trait]
+pub(crate) trait ResponseBuilder: FullResponse {
+    /// Creates a new response.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The request to create the response from.
+    ///
+    /// # Returns
+    ///
+    /// A new response.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use http_body_util::Full;
+    /// use hyper::StatusCode;
+    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
+    ///
+    /// let response = NgynResponse::build(req, routes);
+    /// assert_eq!(response.status, StatusCode::OK);
+    /// assert_eq!(response.body.as_slice(), &[1, 2, 3]);
+    /// ```
+    async fn build(
+        req: Request<Vec<u8>>,
+        routes: Arc<Mutex<Routes>>,
+        middlewares: Arc<Mutex<Middlewares>>,
+    ) -> Self;
+
+    async fn build_with_state(
+        req: Request<Vec<u8>>,
+        routes: Arc<Mutex<Routes>>,
+        middlewares: Arc<Mutex<Middlewares>>,
+        state: impl AppState,
+    ) -> Self;
+}
+
+#[async_trait::async_trait]
+impl ResponseBuilder for NgynResponse {
+    async fn build(
+        req: Request<Vec<u8>>,
+        routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
+        middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
+    ) -> Self {
+        Self::build_with_state(req, routes, middlewares, ()).await
     }
 
-    /// Sets the status code of the `NgynResponse`.
-    ///
-    /// ### Arguments
-    ///
-    /// * `status` - A u16 that represents the status code to be set.
-    ///
-    /// ### Returns
-    ///
-    /// * A mutable reference to the `NgynResponse`.
-    pub fn set_status(&mut self, status: u16) -> &mut Self {
-        self.status_code = status;
-        self
-    }
+    async fn build_with_state(
+        req: Request<Vec<u8>>,
+        routes: Arc<Mutex<Vec<(String, Method, Box<Handler>)>>>,
+        middlewares: Arc<Mutex<Vec<Box<dyn crate::traits::NgynMiddleware>>>>,
+        state: impl AppState,
+    ) -> Self {
+        let mut cx = NgynContext::from_request(req);
+        let mut res = Response::new(Full::new(Bytes::default()));
 
-    /// Gets the status code of the response
-    pub fn status(&self) -> u16 {
-        self.status_code
-    }
+        cx.set_state(Box::new(state));
 
-    /// Sets the body of the response
-    ///
-    /// ### Arguments
-    ///
-    /// * `data` - A string that represents the body
-    ///
-    /// ### Returns
-    ///
-    /// * A mutable reference to the `NgynResponse`.
-    pub fn send(&mut self, data: &str) -> &mut Self {
-        if self.raw_body == NgynBody::None {
-            self.raw_body = NgynBody::String(data.to_string());
-        } else {
-            panic!("Response body already set");
-        }
-        self
-    }
-
-    /// Gets the raw value for response body
-    pub fn body_raw(&self) -> NgynBody {
-        self.raw_body.clone()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        match self.raw_body {
-            NgynBody::String(ref value) => value.is_empty(),
-            NgynBody::None => true,
-            _ => false,
-        }
-    }
-
-    /// Gets a header value by key
-    pub fn header(&self, key: &str) -> Option<String> {
-        self.raw_headers
+        let mut is_handled = false;
+        let _ = &routes
+            .lock()
+            .unwrap()
             .iter()
-            .find(|header| header.starts_with(key))
-            .map(|header| header.split(':').nth(1).unwrap().trim().to_string())
-    }
+            .for_each(|(path, method, route_handler)| {
+                if !is_handled && cx.with(path, method).is_some() {
+                    middlewares
+                        .lock()
+                        .unwrap()
+                        .iter()
+                        .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+                    route_handler(&mut cx, &mut res);
+                    is_handled = true;
+                }
+            });
 
-    pub fn headers(&self) -> Vec<String> {
-        self.raw_headers.clone()
-    }
-
-    pub fn set_header(&mut self, key: &str, value: &str) -> &mut Self {
-        self.raw_headers.push(format!("{}: {}", key, value));
-        self
-    }
-
-    pub fn peek(&mut self, item: impl IntoNgynBody) -> &mut Self {
-        match item.parse_body() {
-            NgynBody::String(value) => self.send(&value),
-            NgynBody::Bool(value) => self.send(&value.to_string()),
-            NgynBody::Number(value) => self.send(&value.to_string()),
-            _ => self,
+        if is_handled {
+            cx.execute(&mut res).await;
         }
-    }
 
-    /// Handles the `NgynResponse` from a route.
-    pub fn with_controller(
-        &mut self,
-        controller: Arc<dyn NgynController>,
-        handler: String,
-        request: &mut NgynRequest,
-    ) {
-        self.route = Some(NgynResponseRoute {
-            controller,
-            handler,
-            request: request.clone(),
-        });
-    }
-}
-
-impl Future for NgynResponse {
-    type Output = NgynResponse;
-
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let NgynResponse { route, .. } = self.as_mut().get_mut();
-
-        if let Some(NgynResponseRoute {
-            controller,
-            handler,
-            mut request,
-        }) = route.clone()
-        {
-            let mut response = self.clone();
-
-            let _ = controller
-                .handle(&handler, &mut request, &mut response)
-                .as_mut()
-                .poll(cx);
-
-            Poll::Ready(response)
-        } else {
-            Poll::Ready(self.clone())
-        }
-    }
-}
-
-impl Transformer for NgynResponse {
-    fn transform(_req: &mut NgynRequest, res: &mut NgynResponse) -> Self {
-        res.clone()
+        res
     }
 }

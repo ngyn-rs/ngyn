@@ -1,0 +1,12 @@
+[package]
+name = "ngyn-shuttle"
+version = "0.1.0"
+edition = "2021"
+description = "Shuttle Runtime Platform for ngyn web framework"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ngyn-hyper = { version = "^0.1.0", path = "../../crates/hyper" }
+shuttle-runtime = "0"

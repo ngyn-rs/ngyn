@@ -1,6 +1,8 @@
+use ngyn::prelude::*;
+
 use super::sample_repository::SampleRepository;
 
-#[ngyn::macros::injectable]
+#[injectable]
 pub struct SampleService {
     sample_repository: SampleRepository,
 }

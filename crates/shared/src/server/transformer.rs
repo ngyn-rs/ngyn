@@ -1,27 +1,99 @@
+use serde::Deserialize;
+
+use crate::server::{NgynContext, NgynResponse};
 use std::borrow::Cow;
-use url::Url;
 
-use crate::{NgynRequest, NgynResponse};
-
-pub trait Transformer {
-    fn transform(req: &mut NgynRequest, res: &mut NgynResponse) -> Self;
+/// Represents a transformer trait.
+pub trait Transformer<'a> {
+    /// Transforms the given `NgynContext` and `NgynResponse` and returns an instance of `Self`.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The mutable reference to the `NgynContext`.
+    /// * `res` - The mutable reference to the `NgynResponse`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// struct MyTransformer;
+    ///
+    /// impl Transformer for MyTransformer {
+    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
+    ///         // Transformation logic goes here
+    ///         MyTransformer
+    ///     }
+    /// }
+    /// ```
+    fn transform(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self
+    where
+        Self: Sized;
 }
 
+/// Represents a transducer struct.
 pub struct Transducer;
 
-impl Transducer {
-    #[allow(dead_code)]
-    pub fn reduce<S: Transformer>(req: &mut NgynRequest, res: &mut NgynResponse) -> S {
-        S::transform(req, res)
+impl<'a> Transducer {
+    /// Reduces the given `NgynContext` and `NgynResponse` using the specified `Transformer` and returns an instance of `S`.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The mutable reference to the `NgynContext`.
+    /// * `res` - The mutable reference to the `NgynResponse`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    ///
+    /// struct MyTransformer;
+    ///
+    /// impl Transformer for MyTransformer {
+    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
+    ///         // Transformation logic goes here
+    ///         MyTransformer
+    ///     }
+    /// }
+    ///
+    /// let mut cx = NgynContext::new();
+    /// let mut res = NgynResponse::new();
+    ///
+    /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
+    /// ```
+    pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> S {
+        S::transform(cx, res)
     }
 }
 
+/// Represents a parameter struct.
 pub struct Param {
     data: Vec<(Cow<'static, str>, Cow<'static, str>)>,
 }
 
 impl Param {
-    #[allow(dead_code)]
+    /// Retrieves the value associated with the specified `id` from the parameter data.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The identifier to search for.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - The value associated with the `id`, if found.
+    /// * `None` - If no value is associated with the `id`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// let param = Param {
+    ///     data: vec![
+    ///         (Cow::Borrowed("id"), Cow::Borrowed("123")),
+    ///         (Cow::Borrowed("name"), Cow::Borrowed("John")),
+    ///     ],
+    /// };
+    ///
+    /// assert_eq!(param.get("id"), Some("123".to_string()));
+    /// assert_eq!(param.get("name"), Some("John".to_string()));
+    /// assert_eq!(param.get("age"), None);
+    /// ```
     pub fn get(&self, id: &str) -> Option<String> {
         for (key, value) in &self.data {
             if key == id {
@@ -32,10 +104,32 @@ impl Param {
     }
 }
 
-impl Transformer for Param {
-    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Param {
-        let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = req
+impl Transformer<'_> for Param {
+    /// Transforms the given `NgynContext` and `_res` into a `Param` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The mutable reference to the `NgynContext`.
+    /// * `_res` - The mutable reference to the `NgynResponse`.
+    ///
+    /// # Returns
+    ///
+    /// * `Param` - The transformed `Param` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use crate::{context::NgynContext, NgynResponse};
+    ///
+    /// let mut cx = NgynContext::new();
+    /// let mut res = NgynResponse::new();
+    ///
+    /// let param: Param = Param::transform(&mut cx, &mut res);
+    /// ```
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+        let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params()
+            .unwrap()
             .iter()
             .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
             .collect();
@@ -43,44 +137,143 @@ impl Transformer for Param {
     }
 }
 
+/// Represents a query struct.
 pub struct Query {
-    url: Url,
+    url: hyper::http::uri::Uri,
 }
 
 impl Query {
-    #[allow(dead_code)]
+    /// Retrieves the value associated with the specified `id` from the query parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The identifier to search for.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - The value associated with the `id`, if found.
+    /// * `None` - If no value is associated with the `id`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use hyper::Uri;
+    ///
+    /// let uri: Uri = "https://example.com/?id=123&name=John".parse().unwrap();
+    /// let query = Query { url: uri };
+    ///
+    /// assert_eq!(query.get("id"), Some("123".to_string()));
+    /// assert_eq!(query.get("name"), Some("John".to_string()));
+    /// assert_eq!(query.get("age"), None);
+    /// ```
     pub fn get(&self, id: &str) -> Option<String> {
-        self.url
-            .query_pairs()
-            .filter(|(key, _)| key == id)
-            .map(|(_, value)| value.to_string())
-            .next()
+        let query = self.url.query().unwrap_or("");
+        let query = url::form_urlencoded::parse(query.as_bytes());
+        for (key, value) in query {
+            if key == id {
+                return Some(value.to_string());
+            }
+        }
+        None
     }
 }
 
-impl Transformer for Query {
-    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Query {
+impl Transformer<'_> for Query {
+    /// Transforms the given `NgynContext` and `_res` into a `Query` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The mutable reference to the `NgynContext`.
+    /// * `_res` - The mutable reference to the `NgynResponse`.
+    ///
+    /// # Returns
+    ///
+    /// * `Query` - The transformed `Query` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use crate::{context::NgynContext, NgynResponse};
+    /// use hyper::Uri;
+    ///
+    /// let mut cx = NgynContext::new();
+    /// let mut res = NgynResponse::new();
+    ///
+    /// let uri: Uri = "https://example.com/?id=123&name=John".parse().unwrap();
+    /// cx.request.set_uri(uri);
+    ///
+    /// let query: Query = Query::transform(&mut cx, &mut res);
+    /// ```
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         Query {
-            url: req.url().clone(),
+            url: cx.request().uri().clone(),
         }
     }
 }
 
-pub struct Dto {
+/// Represents a data transfer object struct.
+pub struct Body {
     data: String,
 }
 
-impl Dto {
-    #[allow(dead_code)]
-    pub fn parse<S: for<'a> serde::Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
+impl Body {
+    /// Parses the data into the specified type using serde deserialization.
+    ///
+    /// # Arguments
+    ///
+    /// * `S` - The type to deserialize the data into.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<S, serde_json::Error>` - The deserialized result, if successful.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use serde::Deserialize;
+    ///
+    /// let dto = Dto {
+    ///     data: r#"{"name": "John", "age": 30}"#.to_string(),
+    /// };
+    ///
+    /// #[derive(Deserialize)]
+    /// struct Person {
+    ///     name: String,
+    ///     age: u32,
+    /// }
+    ///
+    /// let result: Result<Person, serde_json::Error> = dto.parse();
+    /// ```
+    pub fn parse<S: for<'a> Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
         let data = self.data.as_str();
         serde_json::from_str(data)
     }
 }
 
-impl Transformer for Dto {
-    fn transform(req: &mut NgynRequest, _res: &mut NgynResponse) -> Dto {
-        let data = req.body_string().unwrap_or("{}".to_string());
-        Dto { data }
+impl Transformer<'_> for Body {
+    /// Transforms the given `NgynContext` and `_res` into a `Dto` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The mutable reference to the `NgynContext`.
+    /// * `_res` - The mutable reference to the `NgynResponse`.
+    ///
+    /// # Returns
+    ///
+    /// * `Dto` - The transformed `Dto` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust ignore
+    /// use crate::{context::NgynContext, NgynResponse};
+    ///
+    /// let mut cx = NgynContext::new();
+    /// let mut res = NgynResponse::new();
+    ///
+    /// let dto: Dto = Dto::transform(&mut cx, &mut res);
+    /// ```
+    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+        let data = String::from_utf8_lossy(cx.request().body()).to_string();
+        Body { data }
     }
 }

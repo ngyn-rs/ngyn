@@ -1,6 +1,6 @@
 [package]
 name = "ngyn_shared"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
@@ -8,8 +8,11 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-trait = "0.1.74"
-nject = "0.3.0"
+async-trait = "0.1"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+regex = "1.10"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 url = "2.5.0"

@@ -1,7 +1,10 @@
-use crate::{NgynRequest, NgynResponse};
+use crate::{
+    server::{NgynContext, NgynResponse},
+    traits::NgynInjectable,
+};
 
 /// Trait for implementing a middleware.
-pub trait NgynMiddleware: Send + Sync {
+pub trait NgynMiddleware: NgynInjectable + Sync {
     /// Handles the request.
-    fn handle(&self, request: &mut NgynRequest, response: &mut NgynResponse);
+    fn handle(&self, context: &mut NgynContext, response: &mut NgynResponse);
 }

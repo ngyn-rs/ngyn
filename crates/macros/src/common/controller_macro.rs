@@ -1,23 +1,46 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::parse_macro_data;
+use crate::utils::parse_macro_data::parse_macro_data;
 
 struct ControllerArgs {
+    prefix: Option<syn::LitStr>,
     middlewares: Vec<syn::Path>,
+    init: Option<syn::LitStr>,
+    inject: Option<syn::LitStr>,
 }
 
 impl syn::parse::Parse for ControllerArgs {
-    /// Parses a string like `routes = "get_location, get_location_weather", middlewares = [WeatherGate]`
+    /// Parses a string like `prefix="/weather", middlewares = [WeatherGate]`
     /// into a `ControllerArgs` struct.
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut middlewares = vec![];
+        let mut prefix = None;
+        let mut init = None;
+        let mut inject = None;
+
+        // match the input with format "/prefix"
+        if !input.is_empty() && input.peek(syn::LitStr) {
+            let path: syn::LitStr = input.parse()?;
+            prefix = Some(path);
+
+            return Ok(ControllerArgs {
+                middlewares,
+                prefix,
+                init,
+                inject,
+            });
+        }
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
             input.parse::<syn::Token![=]>()?;
 
             match ident.to_string().as_str() {
+                "prefix" => {
+                    let path: syn::LitStr = input.parse()?;
+                    prefix = Some(path);
+                }
                 "middlewares" => {
                     let content;
                     syn::bracketed!(content in input);
@@ -28,6 +51,12 @@ impl syn::parse::Parse for ControllerArgs {
                             content.parse::<syn::Token![,]>()?;
                         }
                     }
+                }
+                "init" => {
+                    init = input.parse()?;
+                }
+                "inject" => {
+                    inject = input.parse()?;
                 }
                 _ => {
                     return Err(syn::Error::new(
@@ -41,89 +70,167 @@ impl syn::parse::Parse for ControllerArgs {
             }
         }
 
-        Ok(ControllerArgs { middlewares })
+        Ok(ControllerArgs {
+            middlewares,
+            prefix,
+            init,
+            inject,
+        })
     }
 }
 
-pub fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
+pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
     let syn::DeriveInput {
         attrs,
         ident,
         data,
         vis,
-        ..
+        generics,
     } = syn::parse_macro_input!(input as syn::DeriveInput);
-    let args = syn::parse_macro_input!(args as ControllerArgs);
-    let (types, keys) = parse_macro_data(data);
+    let ControllerArgs {
+        middlewares,
+        prefix,
+        init,
+        inject,
+    } = syn::parse_macro_input!(args as ControllerArgs);
 
-    let fields: Vec<_> = types
-        .iter()
-        .zip(keys.iter())
-        .map(|(ty, key)| {
-            quote! {
-                #key: #ty
+    let generics_params = if generics.params.iter().count() > 0 {
+        let generics_params = generics.params.iter().map(|param| {
+            if let syn::GenericParam::Type(ty) = param {
+                let ident = &ty.ident;
+                quote! { #ident }
+            } else {
+                quote! { #param }
             }
-        })
+        });
+        quote! {
+            <#(#generics_params),*>
+        }
+    } else {
+        quote! {}
+    };
+
+    let controller_fields = parse_macro_data(data);
+
+    let fields: Vec<_> = controller_fields
+        .iter()
+        .map(
+            |syn::Field {
+                 ident,
+                 ty,
+                 vis,
+                 attrs,
+                 colon_token,
+                 ..
+             }| {
+                quote! {
+                    #(#attrs),* #vis #ident #colon_token #ty
+                }
+            },
+        )
         .collect();
 
-    let add_middlewares: Vec<_> = args
-        .middlewares
+    let add_fields: Vec<_> = controller_fields
+        .iter()
+        .map(
+            |syn::Field {
+                 ident,
+                 ty,
+                 colon_token,
+                 attrs,
+                 vis,
+                 ..
+             }| {
+                quote! {
+                    #(#attrs),*
+                   #vis #ident #colon_token #ty::default()
+                }
+            },
+        )
+        .collect();
+
+    let add_middlewares: Vec<_> = middlewares
         .iter()
         .map(|m| {
             quote! {
-                let middleware: #m = ngyn::prelude::NgynProvider.provide();
-                middlewares.push(std::sync::Arc::new(middleware));
+                let middleware = #m::default();
+                middleware.inject(cx);
+                middleware.handle(cx, res);
             }
         })
         .collect();
 
+    let path_prefix = {
+        if let Some(prefix) = prefix {
+            quote! {
+                format!("{}{}", #prefix, "/")
+            }
+        } else {
+            quote! {
+                "".to_string()
+            }
+        }
+    };
+
+    let init_controller = {
+        if let Some(init) = init {
+            let init_ident = init.parse::<syn::Ident>().unwrap();
+            quote! {
+                #ident::#init_ident()
+            }
+        } else {
+            quote! {
+                #ident {
+                    #(#add_fields),*
+                }
+            }
+        }
+    };
+
+    let inject_controller = {
+        if let Some(inject) = inject {
+            let inject_ident = inject.parse::<syn::Ident>().unwrap();
+            quote! {
+                #ident::#inject_ident()
+            }
+        } else {
+            quote! {}
+        }
+    };
+
     let expanded = quote! {
         #(#attrs)*
-        #[ngyn::macros::dependency]
-        #vis struct #ident {
-            middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>,
+        #vis struct #ident #generics {
             #(#fields),*
         }
 
-        #[ngyn::prelude::async_trait]
-        impl ngyn::prelude::NgynControllerRoutePlaceholder for #ident {
-            #[allow(non_upper_case_globals)]
-            const routes: &'static [(&'static str, &'static str, &'static str)] = &[];
+        impl #generics ngyn::shared::traits::NgynControllerHandler for #ident #generics_params {}
 
-            async fn __handle_route(
-                &self,
-                _handler: &str,
-                _req: &mut ngyn::prelude::NgynRequest,
-                _res: &mut ngyn::prelude::NgynResponse,
-            ) {
-                // This is a placeholder for the routing logic of the controller.
+        impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics_params {
+            fn new() -> Self {
+                #init_controller
+            }
+
+            fn inject(&self, cx: &ngyn::prelude::NgynContext) {
+                #inject_controller
             }
         }
 
         #[ngyn::prelude::async_trait]
-        impl ngyn::prelude::NgynController for #ident {
-            fn new(middlewares: Vec<std::sync::Arc<dyn ngyn::prelude::NgynMiddleware>>) -> Self {
-                #(#add_middlewares)*
-                let mut controller = #ident {
-                    middlewares,
-                    #(#keys: ngyn::prelude::NgynProvider.provide()),*
-                };
-                controller
-            }
-
+        impl #generics ngyn::shared::traits::NgynController for #ident #generics_params {
             fn routes(&self) -> Vec<(String, String, String)> {
-                use ngyn::prelude::NgynControllerRoutePlaceholder;
-                Self::routes.iter().map(|(path, method, handler)| {
-                    (path.to_string(), method.to_string(), handler.to_string())
+                Self::ROUTES.iter().map(|(path, method, handler)| {
+                    ((format!("{}{}", #path_prefix, path)).replace("//", "/"), method.to_string(), handler.to_string())
                 }).collect()
             }
 
-            async fn handle(&self, handler: &str, req: &mut ngyn::prelude::NgynRequest, res: &mut ngyn::prelude::NgynResponse) {
-                use ngyn::prelude::NgynControllerRoutePlaceholder;
-                self.middlewares.iter().for_each(|middleware| {
-                    middleware.handle(req, res);
-                });
-                self.__handle_route(handler, req, res).await;
+            async fn handle(
+                &self, handler: &str,
+                cx: &mut ngyn::prelude::NgynContext,
+                res: &mut ngyn::prelude::NgynResponse,
+            ) {
+                #(#add_middlewares)*
+                self.__handle_route(handler, cx, res).await;
             }
         }
     };
