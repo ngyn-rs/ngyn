@@ -2,10 +2,8 @@
 
 new_version=$1
 
-# Install cocogitto if it's not already installed
-if ! command -v cog &> /dev/null; then
-  cargo install cocogitto
-fi
+# Install smart-release if it's not already installed
+cargo install smart-release
 
 root_dir=$(git rev-parse --show-toplevel)
 
@@ -20,12 +18,21 @@ while IFS= read -r -d $'\0' example_dir; do
   fi
 done < <(find examples -maxdepth 1 -type d -print0)
 
-# Bump the version of all crates
+# bump core version used in the examples
+for example_dir in "${examples_dirs[@]}"; do
+  echo "Bumping version in $example_dir"
+  sed -i '' -e "s/^ngyn = .*/ngyn = \"$new_version\"/" $example_dir/Cargo.toml
+done
+
+# publish the version of all crates
 for crate_name in "${crate_names[@]}"; do
-  echo "Bumping & Publishing version of $crate_name to $new_version"
-  cog bump --minor --package "ngyn-$crate_name" --skip-untracked --skip-ci -d
+  echo "Publishing version $new_version of $crate_name"
+  cargo smart-release --execute --no-changelog -b keep -d keep $crate_name
   # sleep for two minutes to avoid rate limiting
   sleep 120 # 2 minutes
 done
 
-
+cd $root_dir/crates/core
+# publish the version of the core crate
+echo "Publishing version $new_version of ngyn"
+cargo publish
