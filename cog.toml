@@ -9,7 +9,7 @@ authors = [
 [packages]
 ngyn = { path = "crates/core" }
 ngyn-cli = { path = "crates/cli" }
-ngyn-macros = { path = "crates/macros" }
+ngyn_macros = { path = "crates/macros" }
 ngyn_shared = { path = "crates/shared" }
 ngyn-hyper = { path = "crates/hyper" }
 ngyn-vercel = { path = "crates/vercel" }

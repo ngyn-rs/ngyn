@@ -14,6 +14,6 @@ async-trait = "0.1"
 http-body-util = "0.1"
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
-ngyn-macros = { version = "0.4.0", path = "../macros" }
+ngyn_macros = { version = "^0.4.0", path = "../macros" }
 ngyn_shared = { version = "^0.4.0", path = "../shared" }
 tokio = { version = "1", features = ["full"] }

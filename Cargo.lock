@@ -2070,7 +2070,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14d60007fdf1ee508c009ac6cfde9578dba68072e4c8fff776650991dbafb9be"
 dependencies = [
  "async-std",
- "ngyn_macros",
+ "ngyn_macros 0.3.1",
  "ngyn_shared 0.3.1",
  "nject",
  "tide",
@@ -2085,7 +2085,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.3.1",
  "hyper-util",
- "ngyn-macros",
+ "ngyn_macros 0.4.0",
  "ngyn_shared 0.4.0",
  "tokio",
 ]
@@ -2119,15 +2119,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngyn-macros"
-version = "0.4.0"
-dependencies = [
- "ngyn_shared 0.4.0",
- "quote",
- "syn 2.0.66",
-]
-
-[[package]]
 name = "ngyn-shuttle"
 version = "0.1.0"
 dependencies = [
@@ -2154,6 +2145,15 @@ checksum = "146a2f3fed9fd02f1a093c5f194c773612d2ebbd3760b61b8e8bff8eb605d554"
 dependencies = [
  "ngyn_shared 0.3.1",
  "nject",
+ "quote",
+ "syn 2.0.66",
+]
+
+[[package]]
+name = "ngyn_macros"
+version = "0.4.0"
+dependencies = [
+ "ngyn_shared 0.4.0",
  "quote",
  "syn 2.0.66",
 ]
