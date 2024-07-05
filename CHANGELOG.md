@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 
-## Unreleased (44348c2..230d43e)
+## 0.4.0 - 2024-07-05
 #### Bug Fixes
 - **(macros)** default controller methods output to response type - (b736094) - elcharitas
 - **(routes)** grouped routes resolving with blank screen issue - (c0c890c) - elcharitas
