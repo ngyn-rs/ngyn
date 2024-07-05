@@ -1,5 +1,5 @@
 [package]
-name = "ngyn-shared"
+name = "ngyn_shared"
 version = "0.4.0"
 edition = "2021"
 description = "Modular backend framework for web applications"

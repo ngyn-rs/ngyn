@@ -10,6 +10,6 @@ authors = [
 ngyn = { path = "crates/core" }
 ngyn-cli = { path = "crates/cli" }
 ngyn-macros = { path = "crates/macros" }
-ngyn-shared = { path = "crates/shared" }
+ngyn_shared = { path = "crates/shared" }
 ngyn-hyper = { path = "crates/hyper" }
 ngyn-vercel = { path = "crates/vercel" }

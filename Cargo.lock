@@ -2071,7 +2071,7 @@ checksum = "14d60007fdf1ee508c009ac6cfde9578dba68072e4c8fff776650991dbafb9be"
 dependencies = [
  "async-std",
  "ngyn_macros",
- "ngyn_shared",
+ "ngyn_shared 0.3.1",
  "nject",
  "tide",
 ]
@@ -2086,7 +2086,7 @@ dependencies = [
  "hyper 1.3.1",
  "hyper-util",
  "ngyn-macros",
- "ngyn-shared",
+ "ngyn_shared 0.4.0",
  "tokio",
 ]
 
@@ -2114,7 +2114,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.3.1",
  "hyper-util",
- "ngyn-shared",
+ "ngyn_shared 0.4.0",
  "tokio",
 ]
 
@@ -2122,23 +2122,9 @@ dependencies = [
 name = "ngyn-macros"
 version = "0.4.0"
 dependencies = [
- "ngyn-shared",
+ "ngyn_shared 0.4.0",
  "quote",
  "syn 2.0.66",
-]
-
-[[package]]
-name = "ngyn-shared"
-version = "0.4.0"
-dependencies = [
- "async-trait",
- "http-body-util",
- "hyper 1.3.1",
- "hyper-util",
- "regex",
- "serde",
- "serde_json",
- "url",
 ]
 
 [[package]]
@@ -2155,7 +2141,7 @@ version = "0.1.0"
 dependencies = [
  "http-body-util",
  "hyper 1.3.1",
- "ngyn-shared",
+ "ngyn_shared 0.4.0",
  "tokio",
  "vercel_runtime",
 ]
@@ -2166,7 +2152,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "146a2f3fed9fd02f1a093c5f194c773612d2ebbd3760b61b8e8bff8eb605d554"
 dependencies = [
- "ngyn_shared",
+ "ngyn_shared 0.3.1",
  "nject",
  "quote",
  "syn 2.0.66",
@@ -2180,6 +2166,20 @@ checksum = "b221b14d889b5500dde44958a14fe4f8ec21ab5cb738450b2136065260da061e"
 dependencies = [
  "async-trait",
  "nject",
+ "serde",
+ "serde_json",
+ "url",
+]
+
+[[package]]
+name = "ngyn_shared"
+version = "0.4.0"
+dependencies = [
+ "async-trait",
+ "http-body-util",
+ "hyper 1.3.1",
+ "hyper-util",
+ "regex",
  "serde",
  "serde_json",
  "url",
