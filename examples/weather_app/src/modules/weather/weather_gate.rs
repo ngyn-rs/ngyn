@@ -3,7 +3,7 @@ use ngyn::prelude::*;
 #[injectable]
 pub struct WeatherGate;
 
-impl NgynGate for WeatherGate {
+impl NgynGate<'_> for WeatherGate {
     fn can_activate(&self, cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
         let query = Query::transform(cx, res);
         if query.get("location").is_some() {

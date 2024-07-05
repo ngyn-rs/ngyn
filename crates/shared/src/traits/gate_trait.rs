@@ -4,7 +4,7 @@ use crate::{
 };
 
 /// Trait for implementing a gate.
-pub trait NgynGate: NgynInjectable {
+pub trait NgynGate<'a>: NgynInjectable {
     /// Determines if the gate can activate for the given request.
     ///
     /// ### Arguments
@@ -15,7 +15,7 @@ pub trait NgynGate: NgynInjectable {
     /// ### Returns
     ///
     /// Returns `true` if the route can activate, `false` otherwise.
-    fn can_activate(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) -> bool {
+    fn can_activate(&self, _cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> bool {
         true
     }
 }

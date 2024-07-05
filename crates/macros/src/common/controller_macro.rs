@@ -137,10 +137,13 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                  ident,
                  ty,
                  colon_token,
+                 attrs,
+                 vis,
                  ..
              }| {
                 quote! {
-                    #ident #colon_token #ty::default()
+                    #(#attrs),*
+                   #vis #ident #colon_token #ty::default()
                 }
             },
         )
