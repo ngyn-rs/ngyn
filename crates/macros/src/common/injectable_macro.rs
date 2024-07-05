@@ -48,6 +48,22 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
     let InjectableArgs { init, inject } = syn::parse_macro_input!(args as InjectableArgs);
     let injectable_fields = parse_macro_data(data);
 
+    let generics_params = if generics.params.iter().count() > 0 {
+        let generics_params = generics.params.iter().map(|param| {
+            if let syn::GenericParam::Type(ty) = param {
+                let ident = &ty.ident;
+                quote! { #ident }
+            } else {
+                quote! { #param }
+            }
+        });
+        quote! {
+            <#(#generics_params),*>
+        }
+    } else {
+        quote! {}
+    };
+
     let fields: Vec<_> = injectable_fields
         .iter()
         .map(
@@ -112,7 +128,7 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
             #(#fields),*
         }
 
-        impl #generics ngyn::prelude::NgynInjectable for #ident #generics {
+        impl #generics ngyn::prelude::NgynInjectable for #ident #generics_params {
             fn new() -> Self {
                 #init_injectable
             }
@@ -122,7 +138,7 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
             }
         }
 
-        impl #generics Default for #ident #generics {
+        impl #generics Default for #ident #generics_params {
             fn default() -> Self {
                 Self::new()
             }
