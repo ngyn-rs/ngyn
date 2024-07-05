@@ -2,6 +2,8 @@
 name = "ngyn-hyper"
 version = "0.1.0"
 edition = "2021"
+description = "Hyper Platform for ngyn web framework"
+license = "MIT"
 
 [dependencies]
 http-body-util = "0.1"
