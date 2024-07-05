@@ -1,17 +1,41 @@
-use ngyn_shared::{enums::Path, server::Method};
+use ngyn_shared::server::Method;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemImpl, Signature};
 
-pub(crate) struct PathArg {
-    pub path: Option<Path>,
+/// Path Enum
+///
+/// This enum represents the possible types of paths that can be used in the application.
+/// It can either be a Single path represented as a String or Multiple paths represented as a Vector of Strings.
+#[derive(Debug, Clone)]
+pub(super) enum RoutePath {
+    /// Represents a single path as a String
+    Single(String),
+    /// Represents multiple paths as a Vector of Strings
+    Multiple(Vec<String>),
+}
+
+impl RoutePath {
+    pub fn each<F>(&self, mut f: F)
+    where
+        F: FnMut(&str),
+    {
+        match self {
+            RoutePath::Single(path) => f(path),
+            RoutePath::Multiple(paths) => paths.iter().for_each(|path| f(path)),
+        }
+    }
+}
+
+pub(super) struct PathArg {
+    pub path: Option<RoutePath>,
 }
 
 impl syn::parse::Parse for PathArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let path = if input.peek(syn::LitStr) {
             let path = input.parse::<syn::LitStr>()?;
-            Some(Path::Single(path.value()))
+            Some(RoutePath::Single(path.value()))
         } else if input.peek(syn::token::Bracket) {
             let content;
             syn::bracketed!(content in input);
@@ -23,7 +47,7 @@ impl syn::parse::Parse for PathArg {
                     content.parse::<syn::Token![,]>()?;
                 }
             }
-            Some(Path::Multiple(paths))
+            Some(RoutePath::Multiple(paths))
         } else {
             None
         };
@@ -32,12 +56,12 @@ impl syn::parse::Parse for PathArg {
     }
 }
 
-pub(crate) struct Args {
-    pub path: Option<Path>,
+pub(super) struct RouteArgs {
+    pub path: Option<RoutePath>,
     pub http_method: String,
 }
 
-impl syn::parse::Parse for Args {
+impl syn::parse::Parse for RouteArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let http_method = input.parse::<syn::LitStr>()?.value();
 
@@ -49,7 +73,7 @@ impl syn::parse::Parse for Args {
 
         let PathArg { path } = input.parse::<PathArg>()?;
 
-        Ok(Args { path, http_method })
+        Ok(RouteArgs { path, http_method })
     }
 }
 
@@ -94,6 +118,22 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
         panic!("Trait impls are not supported");
     }
 
+    let generics_params = if generics.params.iter().count() > 0 {
+        let generics_params = generics.params.iter().map(|param| {
+            if let syn::GenericParam::Type(ty) = param {
+                let ident = &ty.ident;
+                quote! { #ident }
+            } else {
+                quote! { #param }
+            }
+        });
+        quote! {
+            <#(#generics_params),*>
+        }
+    } else {
+        quote! {}
+    };
+
     let mut route_defs: Vec<_> = Vec::new();
     let mut handle_routes: Vec<_> = Vec::new();
 
@@ -111,7 +151,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                 {
                     let (path, http_method) = {
                         if attr.path().is_ident("route") {
-                            let Args { path, http_method } = attr.parse_args::<Args>().unwrap();
+                            let RouteArgs { path, http_method } =
+                                attr.parse_args::<RouteArgs>().unwrap();
                             (path, http_method)
                         } else {
                             let PathArg { path } = attr.parse_args::<PathArg>().unwrap();
@@ -240,7 +281,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #defaultness #unsafety #(#attrs)*
-        #impl_token #generics #self_ty #generics {
+        #impl_token #generics #self_ty #generics_params {
             const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[
                 #(#route_defs),*
             ];

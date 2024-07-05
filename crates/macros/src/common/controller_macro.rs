@@ -93,6 +93,23 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         init,
         inject,
     } = syn::parse_macro_input!(args as ControllerArgs);
+
+    let generics_params = if generics.params.iter().count() > 0 {
+        let generics_params = generics.params.iter().map(|param| {
+            if let syn::GenericParam::Type(ty) = param {
+                let ident = &ty.ident;
+                quote! { #ident }
+            } else {
+                quote! { #param }
+            }
+        });
+        quote! {
+            <#(#generics_params),*>
+        }
+    } else {
+        quote! {}
+    };
+
     let controller_fields = parse_macro_data(data);
 
     let fields: Vec<_> = controller_fields
@@ -120,10 +137,13 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                  ident,
                  ty,
                  colon_token,
+                 attrs,
+                 vis,
                  ..
              }| {
                 quote! {
-                    #ident #colon_token #ty::default()
+                    #(#attrs),*
+                   #vis #ident #colon_token #ty::default()
                 }
             },
         )
@@ -184,9 +204,9 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
             #(#fields),*
         }
 
-        impl #generics ngyn::shared::traits::NgynControllerHandler for #ident #generics {}
+        impl #generics ngyn::shared::traits::NgynControllerHandler for #ident #generics_params {}
 
-        impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics {
+        impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics_params {
             fn new() -> Self {
                 #init_controller
             }
@@ -197,7 +217,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         }
 
         #[ngyn::prelude::async_trait]
-        impl #generics ngyn::shared::traits::NgynController for #ident #generics {
+        impl #generics ngyn::shared::traits::NgynController for #ident #generics_params {
             fn routes(&self) -> Vec<(String, String, String)> {
                 Self::ROUTES.iter().map(|(path, method, handler)| {
                     ((format!("{}{}", #path_prefix, path)).replace("//", "/"), method.to_string(), handler.to_string())

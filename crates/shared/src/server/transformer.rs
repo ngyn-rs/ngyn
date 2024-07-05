@@ -212,11 +212,11 @@ impl Transformer<'_> for Query {
 }
 
 /// Represents a data transfer object struct.
-pub struct Dto {
+pub struct Body {
     data: String,
 }
 
-impl Dto {
+impl Body {
     /// Parses the data into the specified type using serde deserialization.
     ///
     /// # Arguments
@@ -250,7 +250,7 @@ impl Dto {
     }
 }
 
-impl Transformer<'_> for Dto {
+impl Transformer<'_> for Body {
     /// Transforms the given `NgynContext` and `_res` into a `Dto` instance.
     ///
     /// # Arguments
@@ -274,6 +274,6 @@ impl Transformer<'_> for Dto {
     /// ```
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         let data = String::from_utf8_lossy(cx.request().body()).to_string();
-        Dto { data }
+        Body { data }
     }
 }

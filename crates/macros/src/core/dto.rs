@@ -10,7 +10,7 @@ pub(crate) fn dto_macro(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         impl #generics ngyn::prelude::Transformer<'_> for #ident #generics {
             fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Self {
-                let dto = ngyn::prelude::Dto::transform(cx, res);
+                let dto = ngyn::prelude::Body::transform(cx, res);
                 dto.parse::<#ident>().unwrap()
             }
         }
