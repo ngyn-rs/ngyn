@@ -361,7 +361,7 @@ name = "basic_app"
 version = "0.1.0"
 dependencies = [
  "async-std",
- "ngyn 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn 0.4.0",
  "ngyn-hyper 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
 ]
@@ -893,7 +893,7 @@ dependencies = [
  "hyper 1.4.0",
  "juniper",
  "juniper_hyper",
- "ngyn 0.4.0",
+ "ngyn 0.4.1",
  "ngyn-hyper 0.1.0",
  "serde",
  "serde_json",
@@ -1467,6 +1467,8 @@ dependencies = [
 [[package]]
 name = "ngyn"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "059c25f5ffdae715aa5de7a1acf04d417cd230bbd513ecbe97f6ff605dc74f11"
 dependencies = [
  "async-std",
  "async-trait",
@@ -1480,17 +1482,15 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "059c25f5ffdae715aa5de7a1acf04d417cd230bbd513ecbe97f6ff605dc74f11"
+version = "0.4.1"
 dependencies = [
  "async-std",
  "async-trait",
  "http-body-util",
  "hyper 1.4.0",
  "hyper-util",
- "ngyn_macros 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ngyn_shared 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_macros 0.4.1",
+ "ngyn_shared 0.4.1",
  "tokio",
 ]
 
@@ -1518,7 +1518,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.4.0",
  "hyper-util",
- "ngyn_shared 0.4.0",
+ "ngyn_shared 0.4.1",
  "tokio",
 ]
 
@@ -1531,7 +1531,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.4.0",
  "hyper-util",
- "ngyn_shared 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_shared 0.4.0",
  "tokio",
 ]
 
@@ -1549,18 +1549,9 @@ version = "0.1.0"
 dependencies = [
  "http-body-util",
  "hyper 1.4.0",
- "ngyn_shared 0.4.0",
+ "ngyn_shared 0.4.1",
  "tokio",
  "vercel_runtime",
-]
-
-[[package]]
-name = "ngyn_macros"
-version = "0.4.0"
-dependencies = [
- "ngyn_shared 0.4.0",
- "quote",
- "syn 2.0.68",
 ]
 
 [[package]]
@@ -1569,7 +1560,16 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "680a239163c32cd3d3f1d18e020ee74b7415f898a0660b5ce220ff175556ac4b"
 dependencies = [
- "ngyn_shared 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_shared 0.4.0",
+ "quote",
+ "syn 2.0.68",
+]
+
+[[package]]
+name = "ngyn_macros"
+version = "0.4.1"
+dependencies = [
+ "ngyn_shared 0.4.1",
  "quote",
  "syn 2.0.68",
 ]
@@ -1577,6 +1577,8 @@ dependencies = [
 [[package]]
 name = "ngyn_shared"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28b475a4ca263dbf7435908a6bbd61fc89f02034f32841ff60d9e32be0679bda"
 dependencies = [
  "async-trait",
  "http-body-util",
@@ -1590,9 +1592,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28b475a4ca263dbf7435908a6bbd61fc89f02034f32841ff60d9e32be0679bda"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "http-body-util",
@@ -2903,7 +2903,7 @@ checksum = "5a84c137d37ab0142f0f2ddfe332651fdbf252e7b7dbb4e67b6c1f1b2e925101"
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.4.0",
+ "ngyn 0.4.1",
  "ngyn-vercel",
  "tokio",
  "vercel_runtime",
@@ -3055,7 +3055,7 @@ name = "weather_api"
 version = "0.2.0"
 dependencies = [
  "dotenv",
- "ngyn 0.4.0",
+ "ngyn 0.4.1",
  "ngyn-shuttle",
  "serde",
  "serde_json",
