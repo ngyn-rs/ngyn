@@ -11,7 +11,7 @@ path = "api/[[...all]].rs"
 path = "src/lib.rs"
 
 [dependencies]
-ngyn = { version = "^0.4.0", path = "../../crates/core" }
-ngyn-vercel = { version = "^0.1.0", path = "../../crates/vercel" }
+ngyn = { version = "0.4", path = "../../crates/core" }
+ngyn-vercel = { version = "0.1", path = "../../crates/vercel" }
 tokio = { version = "1.32.0", features = ["full"] }
 vercel_runtime = { version = "1.1.0" }
