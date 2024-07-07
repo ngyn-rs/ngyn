@@ -9,14 +9,14 @@ pub struct SampleController {
 
 #[routes]
 impl SampleController {
-    #[get("/hello")]
-    fn say_hello(&self) {
+    #[get(["/", "/hello"])]
+    fn say_hello(&self) -> &str {
         self.sample_service.say_hello();
-        "Hello, Ngyn from Vercel!".to_string();
+        "Hello from Ngyn!"
     }
 
     #[get(["/bye", "/goodbye"])]
-    fn say_goodbye(&self) {
-        "Goodbye from Vercel!".to_string();
+    fn say_goodbye(&self) -> &str {
+        "Goodbye from Ngyn!"
     }
 }
