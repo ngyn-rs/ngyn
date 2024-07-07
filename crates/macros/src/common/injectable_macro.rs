@@ -64,6 +64,8 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
         quote! {}
     };
 
+    let mut add_fields = Vec::new();
+    let mut inject_fields = Vec::new();
     let fields: Vec<_> = injectable_fields
         .iter()
         .map(
@@ -75,27 +77,17 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
                  colon_token,
                  ..
              }| {
+                add_fields.push(quote! {
+                    #ident #colon_token #ty::default()
+                });
+                if attrs.iter().any(|attr| attr.path().is_ident("inject")) {
+                    inject_fields.push(quote! {
+                        self.#ident.inject(cx);
+                    });
+                }
+                let attrs = attrs.iter().filter(|attr| !attr.path().is_ident("inject"));
                 quote! {
                     #(#attrs),* #vis #ident #colon_token #ty
-                }
-            },
-        )
-        .collect();
-
-    let add_fields: Vec<_> = injectable_fields
-        .iter()
-        .map(
-            |syn::Field {
-                 ident,
-                 ty,
-                 colon_token,
-                 attrs,
-                 vis,
-                 ..
-             }| {
-                quote! {
-                    #(#attrs),*
-                   #vis #ident #colon_token #ty::default()
                 }
             },
         )
@@ -136,7 +128,8 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
                 #init_injectable
             }
 
-            fn inject(&self, cx: &ngyn::prelude::NgynContext) {
+            fn inject(&mut self, cx: &ngyn::prelude::NgynContext) {
+                #(#inject_fields)*
                 #inject_injectable
             }
         }

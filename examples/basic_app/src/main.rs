@@ -1,25 +1,21 @@
 mod modules;
 
 use modules::sample::sample_module::SampleModule;
-use ngyn::{
-    platforms::{NgynApplication, Result},
-    prelude::*,
-};
+use ngyn::prelude::*;
+use ngyn_hyper::HyperApplication;
 
-#[ngyn::macros::main]
-async fn main() -> Result<()> {
-    let mut app = NgynFactory::<NgynApplication>::create::<SampleModule>();
+#[tokio::main]
+async fn main() {
+    let mut app = NgynFactory::<HyperApplication>::create::<SampleModule>();
 
     app.get(
         "/author",
-        |_req: &mut NgynRequest, res: &mut NgynResponse| {
+        |_cx: &mut NgynContext, res: &mut NgynResponse| {
             res.send("Ngyn is created by @elcharitas.");
         },
     );
 
     println!("Starting server at http://127.0.0.1:8080");
 
-    app.listen("0.0.0.0:8080").await?;
-
-    Ok(())
+    let _ = app.listen("0.0.0.0:8080").await;
 }

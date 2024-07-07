@@ -3,11 +3,11 @@
 
 use hyper::Request;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{any::Any, collections::HashMap};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::NgynController,
+    traits::ControllerList,
 };
 
 /// Represents the value of a context in Ngyn
@@ -43,7 +43,7 @@ impl<T: Send + Sync + 'static> AppState for T {
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
-    route_info: Option<(String, Arc<dyn NgynController>)>,
+    route_info: Option<(String, ControllerList)>,
     store: HashMap<String, String>,
     state: Option<Box<dyn AppState>>,
 }
@@ -391,7 +391,7 @@ impl NgynContext {
     ///
     /// context.prepare(Arc::new(controller), "index".to_string());
     /// ```
-    pub(crate) fn prepare(&mut self, controller: Arc<dyn NgynController>, handler: String) {
+    pub(crate) fn prepare(&mut self, controller: ControllerList, handler: String) {
         self.route_info = Some((handler, controller));
     }
 
@@ -413,7 +413,14 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        if let Some((handler, controller)) = self.route_info.clone() {
+        let route = self.route_info.as_mut().map(|(handle, controller_arc)| {
+            (
+                handle.clone(),
+                controller_arc.clone().lock().unwrap().pop().unwrap(),
+            )
+        });
+
+        if let Some((handler, mut controller)) = route {
             controller.inject(self);
             controller.handle(handler.as_str(), self, res).await;
         }

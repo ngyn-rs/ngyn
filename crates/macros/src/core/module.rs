@@ -66,6 +66,7 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
     let args = parse_macro_input!(args as ModuleArgs);
     let module_fields = parse_macro_data(data);
 
+    let mut add_fields = Vec::new();
     let fields: Vec<_> = module_fields
         .iter()
         .map(
@@ -77,24 +78,12 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
                  colon_token,
                  ..
              }| {
+                add_fields.push(quote! {
+                    #ident #colon_token #ty::default()
+                });
+                let attrs = attrs.iter().filter(|attr| !attr.path().is_ident("inject"));
                 quote! {
                     #(#attrs),* #vis #ident #colon_token #ty
-                }
-            },
-        )
-        .collect();
-
-    let add_fields: Vec<_> = module_fields
-        .iter()
-        .map(
-            |syn::Field {
-                 ident,
-                 ty,
-                 colon_token,
-                 ..
-             }| {
-                quote! {
-                    #ident #colon_token #ty::default()
                 }
             },
         )
@@ -106,7 +95,7 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
         .map(|controller| {
             quote! {
                 let controller: #controller = #controller::new();
-                controllers.push(std::sync::Arc::new(controller));
+                controllers.push(std::sync::Arc::new(std::sync::Mutex::new(vec![Box::new(controller)])));
             }
         })
         .collect();
@@ -151,10 +140,10 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
             fn name(&self) -> &str {
                 stringify!(#ident)
             }
-            fn get_controllers(&mut self) -> Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynController>> {
+            fn get_controllers(&mut self) -> Vec<std::sync::Arc<std::sync::Mutex<Vec<Box<dyn ngyn::shared::traits::NgynController>>>>> {
                 use ngyn::shared::traits::NgynInjectable;
                 let mut modules: Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynModule>> = vec![];
-                let mut controllers: Vec<std::sync::Arc<dyn ngyn::shared::traits::NgynController>> = vec![];
+                let mut controllers: Vec<std::sync::Arc<std::sync::Mutex<Vec<Box<dyn ngyn::shared::traits::NgynController>>>>> = vec![];
                 #(#add_controllers)*
                 #(#add_imported_modules_controllers)*
                 controllers
