@@ -3,15 +3,11 @@
 
 use hyper::Request;
 use serde::{Deserialize, Serialize};
-use std::{
-    any::Any,
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::{any::Any, collections::HashMap};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::NgynController,
+    traits::ControllerList,
 };
 
 /// Represents the value of a context in Ngyn
@@ -47,7 +43,7 @@ impl<T: Send + Sync + 'static> AppState for T {
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
-    route_info: Option<(String, Arc<Mutex<Vec<Box<dyn NgynController>>>>)>,
+    route_info: Option<(String, ControllerList)>,
     store: HashMap<String, String>,
     state: Option<Box<dyn AppState>>,
 }
@@ -395,11 +391,7 @@ impl NgynContext {
     ///
     /// context.prepare(Arc::new(controller), "index".to_string());
     /// ```
-    pub(crate) fn prepare(
-        &mut self,
-        controller: Arc<Mutex<Vec<Box<dyn NgynController>>>>,
-        handler: String,
-    ) {
+    pub(crate) fn prepare(&mut self, controller: ControllerList, handler: String) {
         self.route_info = Some((handler, controller));
     }
 
@@ -421,19 +413,16 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        let mut handler = None;
-        let mut controller = None;
-
-        self.route_info.as_mut().map(|(handle, controller_arc)| {
-            handler = Some(handle.clone());
-            controller = Some(controller_arc.clone().lock().unwrap().pop().unwrap());
+        let route = self.route_info.as_mut().map(|(handle, controller_arc)| {
+            (
+                handle.clone(),
+                controller_arc.clone().lock().unwrap().pop().unwrap(),
+            )
         });
 
-        if let Some(mut controller) = controller {
+        if let Some((handler, mut controller)) = route {
             controller.inject(self);
-            controller
-                .handle(handler.unwrap_or_default().as_str(), self, res)
-                .await;
+            controller.handle(handler.as_str(), self, res).await;
         }
     }
 }
