@@ -9,7 +9,7 @@ pub trait NgynController: NgynInjectable + Sync {
 
     /// This is for internal use only. It handles the routing logic of the controller.
     async fn handle(
-        &self,
+        &mut self,
         handler: &str,
         cx: &mut crate::server::NgynContext,
         res: &mut crate::server::NgynResponse,

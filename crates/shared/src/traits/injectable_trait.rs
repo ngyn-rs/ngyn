@@ -9,5 +9,5 @@ pub trait NgynInjectable: Send {
     where
         Self: Sized;
 
-    fn inject(&self, _cx: &NgynContext) {}
+    fn inject(&mut self, _cx: &NgynContext) {}
 }
