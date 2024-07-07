@@ -112,6 +112,8 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
 
     let controller_fields = parse_macro_data(data);
 
+    let mut add_fields = Vec::new();
+    let mut inject_fields = Vec::new();
     let fields: Vec<_> = controller_fields
         .iter()
         .map(
@@ -123,27 +125,17 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                  colon_token,
                  ..
              }| {
+                add_fields.push(quote! {
+                    #ident #colon_token #ty::default()
+                });
+                if attrs.iter().any(|attr| attr.path().is_ident("inject")) {
+                    inject_fields.push(quote! {
+                        self.#ident.inject(cx);
+                    });
+                }
+                let attrs = attrs.iter().filter(|attr| !attr.path().is_ident("inject"));
                 quote! {
                     #(#attrs),* #vis #ident #colon_token #ty
-                }
-            },
-        )
-        .collect();
-
-    let add_fields: Vec<_> = controller_fields
-        .iter()
-        .map(
-            |syn::Field {
-                 ident,
-                 ty,
-                 colon_token,
-                 attrs,
-                 vis,
-                 ..
-             }| {
-                quote! {
-                    #(#attrs),*
-                   #vis #ident #colon_token #ty::default()
                 }
             },
         )
@@ -153,7 +145,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         .iter()
         .map(|m| {
             quote! {
-                let middleware = #m::default();
+                let mut middleware = #m::default();
                 middleware.inject(cx);
                 middleware.handle(cx, res);
             }
@@ -211,7 +203,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                 #init_controller
             }
 
-            fn inject(&self, cx: &ngyn::prelude::NgynContext) {
+            fn inject(&mut self, cx: &ngyn::prelude::NgynContext) {
                 #inject_controller
             }
         }
@@ -225,10 +217,12 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
             }
 
             async fn handle(
-                &self, handler: &str,
+                &mut self,
+                handler: &str,
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse,
             ) {
+                #(#inject_fields)*
                 #(#add_middlewares)*
                 self.__handle_route(handler, cx, res).await;
             }

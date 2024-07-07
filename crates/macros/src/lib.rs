@@ -9,6 +9,7 @@ use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, ro
 use crate::core::dto::dto_macro;
 use crate::core::module::*;
 use common::check_macro::check_impl_macro;
+use common::inject_macro::inject_macro;
 use proc_macro::TokenStream;
 
 #[proc_macro_attribute]
@@ -61,6 +62,13 @@ pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
     injectable_macro(args, input)
+}
+
+#[proc_macro_attribute]
+/// The `inject` attribute is used to mark a field as injectable.
+/// The field must be a struct that is marked with the `injectable` attribute.
+pub fn inject(args: TokenStream, input: TokenStream) -> TokenStream {
+    inject_macro(args, input)
 }
 
 #[proc_macro_attribute]

@@ -143,7 +143,13 @@ pub trait NgynEngine: NgynPlatform {
         let mut module = AppModule::new();
         let mut server = Self::default();
         for controller in module.get_controllers() {
-            for (path, http_method, handler) in controller.routes() {
+            let routes = controller
+                .lock()
+                .unwrap()
+                .iter()
+                .flat_map(|c| c.routes())
+                .collect::<Vec<_>>();
+            for (path, http_method, handler) in routes {
                 server.route(
                     path.as_str(),
                     Method::from_bytes(http_method.to_uppercase().as_bytes()).unwrap(),
