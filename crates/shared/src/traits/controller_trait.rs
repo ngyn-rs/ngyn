@@ -1,11 +1,9 @@
-use std::any::Any;
-
 use super::NgynInjectable;
 
 /// `NgynController` defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
 #[async_trait::async_trait]
-pub trait NgynController: NgynInjectable + Any + Sync + Send {
+pub trait NgynController: NgynInjectable + Sync + Send {
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)>;
 
@@ -15,13 +13,6 @@ pub trait NgynController: NgynInjectable + Any + Sync + Send {
         _cx: &mut crate::server::NgynContext,
         _res: &mut crate::server::NgynResponse,
     ) {
-    }
-
-    fn as_any(&self) -> &dyn Any
-    where
-        Self: Sized,
-    {
-        self
     }
 }
 
