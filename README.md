@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
 [![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://ngyn.rs)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-![MSRV](https://img.shields.io/badge/MSRV-1.63-blue)
+![MSRV](https://img.shields.io/badge/MSRV-1.75-blue)
 
 A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web servers through an opinionated architecture.
 

@@ -229,7 +229,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                                 use ngyn::prelude::NgynGate;
                                                 let mut gate = #path::default();
                                                 gate.inject(cx);
-                                                if !gate.can_activate(cx, res) {
+                                                if !gate.can_activate(cx, res).await {
                                                     return;
                                                 }
                                             }
