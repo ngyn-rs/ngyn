@@ -163,17 +163,17 @@ impl ResponseBuilder for NgynResponse {
         cx.set_state(Box::new(state));
 
         let mut is_handled = false;
+        middlewares
+            .lock()
+            .unwrap()
+            .iter()
+            .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
         let _ = &routes
             .lock()
             .unwrap()
             .iter()
             .for_each(|(path, method, route_handler)| {
                 if !is_handled && cx.with(path, method).is_some() {
-                    middlewares
-                        .lock()
-                        .unwrap()
-                        .iter()
-                        .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
                     route_handler(&mut cx, &mut res);
                     is_handled = true;
                 }

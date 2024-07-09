@@ -288,7 +288,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
             #(#items)*
 
             async fn __handle_route(
-                &self,
+                &mut self,
                 handler: &str,
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse

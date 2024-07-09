@@ -22,7 +22,7 @@ pub trait NgynControllerHandler {
     const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[];
 
     async fn __handle_route(
-        &self,
+        &mut self,
         _handler: &str,
         _cx: &mut crate::server::NgynContext,
         _res: &mut crate::server::NgynResponse,

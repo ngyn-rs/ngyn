@@ -21,7 +21,7 @@ pub mod prelude {
             Body, FullResponse, NgynContext, NgynRequest, NgynResponse, Param, Query, Transducer,
             Transformer,
         },
-        traits::{NgynGate, NgynInjectable, NgynMiddleware},
+        traits::{NgynControllerHandler, NgynGate, NgynInjectable, NgynMiddleware},
     };
 }
 
