@@ -24,6 +24,7 @@ impl WeatherController {
     #[get("/<location>/<city>")]
     #[check(WeatherGate)]
     async fn get_location(&self, params: Query) -> String {
+        println!("{:?}", "Getting location weather");
         self.weather_service
             .get_location_weather(params.get("location").unwrap().as_str())
             .await

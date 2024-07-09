@@ -7,7 +7,7 @@ use std::{any::Any, collections::HashMap};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::ControllerList,
+    traits::{ControllerList, NgynController, NgynControllerHandler},
 };
 
 /// Represents the value of a context in Ngyn
@@ -370,7 +370,7 @@ impl NgynContext {
     ///
     /// `true` if the context has a valid route, `false` otherwise.
     pub fn is_valid_route(&self) -> bool {
-        self.route_info.is_some() && self.params.is_some()
+        self.params.is_some()
     }
 
     /// Prepares the context for execution by setting the route information.
@@ -413,16 +413,22 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        let route = self.route_info.as_mut().map(|(handle, controller_arc)| {
-            (
-                handle.clone(),
-                controller_arc.clone().lock().unwrap().pop().unwrap(),
-            )
-        });
+        if self.route_info.is_none() {
+            return;
+        }
 
-        if let Some((handler, mut controller)) = route {
+        let (handler, controller) = match self.route_info.clone().as_mut() {
+            Some((handler, controller)) => match controller.lock() {
+                Ok(mut controller) => (handler.clone(), controller.pop()),
+                Err(_) => return,
+            },
+            None => return,
+        };
+
+        if let Some(mut controller) = controller {
             controller.inject(self);
-            controller.handle(handler.as_str(), self, res).await;
+            impl NgynControllerHandler for dyn NgynController {}
+            controller.handle(&handler, self, res).await;
         }
     }
 }

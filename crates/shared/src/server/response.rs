@@ -104,7 +104,6 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
 pub(crate) type Routes = Vec<(String, Method, Box<Handler>)>;
 pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
 
-#[async_trait::async_trait]
 pub(crate) trait ResponseBuilder: FullResponse {
     /// Creates a new response.
     ///
@@ -141,7 +140,6 @@ pub(crate) trait ResponseBuilder: FullResponse {
     ) -> Self;
 }
 
-#[async_trait::async_trait]
 impl ResponseBuilder for NgynResponse {
     async fn build(
         req: Request<Vec<u8>>,
@@ -163,24 +161,33 @@ impl ResponseBuilder for NgynResponse {
         cx.set_state(Box::new(state));
 
         let mut is_handled = false;
-        middlewares
-            .lock()
-            .unwrap()
-            .iter()
-            .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+
         let _ = &routes
             .lock()
             .unwrap()
             .iter()
             .for_each(|(path, method, route_handler)| {
                 if !is_handled && cx.with(path, method).is_some() {
-                    route_handler(&mut cx, &mut res);
                     is_handled = true;
+                    // trigger global middlewares
+                    middlewares
+                        .lock()
+                        .unwrap()
+                        .iter()
+                        .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+                    route_handler(&mut cx, &mut res);
                 }
             });
 
         if is_handled {
             cx.execute(&mut res).await;
+        } else {
+            // trigger global middlewares if no route is found
+            middlewares
+                .lock()
+                .unwrap()
+                .iter()
+                .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
         }
 
         res
