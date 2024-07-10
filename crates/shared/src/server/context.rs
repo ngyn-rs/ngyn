@@ -417,8 +417,8 @@ impl NgynContext {
             return;
         }
 
-        let (handler, controller) = match self.route_info.clone().as_mut() {
-            Some((handler, controller)) => match controller.lock() {
+        let (handler, controller) = match self.route_info.as_ref() {
+            Some((handler, controller)) => match controller.clone().lock() {
                 Ok(mut controller) => (handler.clone(), controller.pop()),
                 Err(_) => return,
             },
@@ -429,6 +429,14 @@ impl NgynContext {
             controller.inject(self);
             impl NgynControllerHandler for dyn NgynController {}
             controller.handle(&handler, self, res).await;
+            // TODO this is a weird fix and should be improved
+            self.route_info
+                .as_mut()
+                .unwrap()
+                .1
+                .lock()
+                .unwrap()
+                .push(controller);
         }
     }
 }

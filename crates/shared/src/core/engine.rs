@@ -1,6 +1,5 @@
-use std::sync::{Arc, Mutex};
-
 use hyper::Request;
+use std::sync::{Arc, Mutex};
 
 use super::{Handler, RouteHandle};
 use crate::{
