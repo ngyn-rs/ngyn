@@ -9,6 +9,7 @@ use crate::common::{controller::*, injectable::*, route::*, routes::*};
 use crate::core::dto::dto_macro;
 use crate::core::module::*;
 use common::check::check_impl_macro;
+use common::http_code::http_code_macro;
 use common::inject::inject_macro;
 use proc_macro::TokenStream;
 
@@ -309,6 +310,23 @@ pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
         Ok(syn::Item::Impl(impl_item)) => check_impl_macro(impl_item, args),
         _ => panic!("`check` attribute can only be used on methods or impl blocks"),
     }
+}
+
+#[proc_macro_attribute]
+/// The `http_code` macro is used to set the default HTTP status code for a route.
+///
+/// ##### Arguments
+/// * `code` - The HTTP status code to set.
+///
+/// ##### Example
+/// ```rust ignore
+/// #[http_code(200)]
+/// fn my_route(&self) {
+///    // route implementation
+/// }
+/// ```
+pub fn http_code(args: TokenStream, input: TokenStream) -> TokenStream {
+    http_code_macro(args, input)
 }
 
 #[proc_macro_derive(Dto)]

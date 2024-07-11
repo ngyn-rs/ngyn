@@ -6,6 +6,7 @@ description = "Modular backend framework for web applications"
 license = "MIT"
 
 [dependencies]
+http = "1.1"
 syn = "2.0"
 quote = "1.0"
 ngyn_shared = { version = "0.4", path = "../shared" }
