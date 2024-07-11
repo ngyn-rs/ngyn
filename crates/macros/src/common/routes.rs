@@ -210,6 +210,19 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 args
                             }
                         });
+                        let http_code = method.attrs.iter().find_map(|attr| {
+                            if attr.path().is_ident("http_code") {
+                                Some(attr.meta.clone())
+                            } else {
+                                None
+                            }
+                        });
+                        let http_code = match http_code {
+                            Some(http_code) => quote! {
+                                res.set_status(#http_code);
+                            },
+                            None => quote! {},
+                        };
                         let gates = method.attrs.iter().filter_map(|attr| {
                             if attr.path().is_ident("check") {
                                 Some(attr.meta.clone())
@@ -240,8 +253,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 }
                             })
                             .collect();
-                        if asyncness.is_some() {
-                            let handle_body = match output {
+                        let handle_body = if asyncness.is_some() {
+                            match output {
                                 syn::ReturnType::Type(_, _) => quote! {
                                     let body = self.#ident(#args).await;
                                     res.send(body);
@@ -249,15 +262,9 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 _ => quote! {
                                     self.#ident(#args).await;
                                 },
-                            };
-                            handle_routes.push(quote! {
-                                #ident_str => {
-                                    #(#gate_handlers)*
-                                    #handle_body
-                                }
-                            });
+                            }
                         } else {
-                            let handle_body = match output {
+                            match output {
                                 syn::ReturnType::Type(_, _) => quote! {
                                     let body = self.#ident(#args);
                                     res.send(body);
@@ -265,14 +272,15 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 _ => quote! {
                                     self.#ident(#args);
                                 },
-                            };
-                            handle_routes.push(quote! {
-                                #ident_str => {
-                                    #(#gate_handlers)*
-                                    #handle_body
-                                }
-                            });
-                        }
+                            }
+                        };
+                        handle_routes.push(quote! {
+                            #ident_str => {
+                                #http_code
+                                #(#gate_handlers)*
+                                #handle_body
+                            }
+                        });
                     })
                 }
             }
