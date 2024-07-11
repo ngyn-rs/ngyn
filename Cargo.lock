@@ -1536,6 +1536,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "ngyn-redoc"
+version = "0.1.0"
+dependencies = [
+ "ngyn 0.4.1",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ngyn-redoc-macros"
+version = "0.1.0"
+dependencies = [
+ "ngyn-hyper 0.1.0",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ngyn-shuttle"
 version = "0.1.0"
 dependencies = [
@@ -1569,6 +1587,7 @@ dependencies = [
 name = "ngyn_macros"
 version = "0.4.1"
 dependencies = [
+ "http 1.1.0",
  "ngyn_shared 0.4.1",
  "quote",
  "syn 2.0.68",

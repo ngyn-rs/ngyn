@@ -13,3 +13,4 @@ ngyn_macros = { path = "crates/macros" }
 ngyn_shared = { path = "crates/shared" }
 ngyn-hyper = { path = "crates/hyper" }
 ngyn-vercel = { path = "crates/vercel" }
+ngyn-redoc = { path = "crates/redoc" }
