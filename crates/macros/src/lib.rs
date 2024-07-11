@@ -4,12 +4,12 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::check_macro::check_fn_macro;
-use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
+use crate::common::check::check_fn_macro;
+use crate::common::{controller::*, injectable::*, route::*, routes::*};
 use crate::core::dto::dto_macro;
 use crate::core::module::*;
-use common::check_macro::check_impl_macro;
-use common::inject_macro::inject_macro;
+use common::check::check_impl_macro;
+use common::inject::inject_macro;
 use proc_macro::TokenStream;
 
 #[proc_macro_attribute]
