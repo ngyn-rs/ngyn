@@ -57,6 +57,11 @@ impl ReDocController {
 
         let html = include_str!("templates/redoc.html");
         html.replace("% REDOC_SPEC_URL %", &self.config.spec_url)
+            .replace("% REDOC_DOC_TITLE %", &self.config.title)
+            .replace(
+                "% REDOC_DOC_DESCRIPTION %",
+                &self.config.description.clone().unwrap_or("".to_string()),
+            )
     }
 
     #[get("/openapi.json")]

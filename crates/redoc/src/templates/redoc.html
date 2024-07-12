@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html>
-
     <head>
-        <title>Redoc</title>
+        <title>% REDOC_DOC_TITLE %</title>
         <!-- needed for adaptive design -->
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="% REDOC_DOC_DESCRIPTION %">
         <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
 
-        <!--
-    Redoc doesn't change outer page styles
-    -->
+        <!-- Redoc doesn't change outer page styles -->
         <style>
             body {
                 margin: 0;
                 padding: 0;
             }
-
         </style>
     </head>
 
@@ -24,5 +21,4 @@
         <redoc spec-url='% REDOC_SPEC_URL %'></redoc>
         <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
     </body>
-
 </html>
