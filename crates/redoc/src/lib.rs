@@ -1,21 +1,16 @@
-use ngyn::prelude::*;
+use ngyn::shared::{core::NgynEngine, traits::NgynController};
+use std::sync::{Arc, Mutex};
 
-#[module(controllers = [ReDocController])]
-pub struct ReDocModule;
+pub mod routing;
 
-#[controller]
-pub struct ReDocController;
-
-#[routes]
-impl ReDocController {
-    #[get("/docs")]
-    async fn index(&self, res: &mut NgynResponse) -> String {
-        res.set_header("Content-Type", "text/html");
-
-        let html = include_str!("templates/redoc.html");
-        html.replace("% REDOC_SPEC_URL %", "")
+pub trait NgynEngineReDoc: NgynEngine {
+    fn use_redoc(&mut self, config: routing::ReDocConfig) {
+        let controller = routing::ReDocModule::with_config(config);
+        let controller = Arc::new(Mutex::new(vec![
+            Box::new(controller) as Box<dyn NgynController>
+        ]));
+        self.load_controller(controller);
     }
-
-    #[get("/docs/openapi.json")]
-    async fn openapi_spec(&self) {}
 }
+
+impl<T: NgynEngine> NgynEngineReDoc for T {}

@@ -8,7 +8,7 @@ use crate::{
         response::{Middlewares, ResponseBuilder, Routes},
         Method, NgynContext, NgynResponse,
     },
-    traits::{NgynMiddleware, NgynModule},
+    traits::{NgynController, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
@@ -138,29 +138,37 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().state = Some(Arc::new(state));
     }
 
-    fn build<AppModule: NgynModule>() -> Self {
-        let mut module = AppModule::new();
-        let mut server = Self::default();
+    fn load_module(&mut self, mut module: impl NgynModule) {
         for controller in module.get_controllers() {
-            let routes = controller
-                .lock()
-                .unwrap()
-                .iter()
-                .flat_map(|c| c.routes())
-                .collect::<Vec<_>>();
-            for (path, http_method, handler) in routes {
-                server.route(
-                    path.as_str(),
-                    Method::from_bytes(http_method.to_uppercase().as_bytes()).unwrap(),
-                    Box::new({
-                        let controller = controller.clone();
-                        move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                            cx.prepare(controller.clone(), handler.clone());
-                        }
-                    }),
-                );
-            }
+            self.load_controller(controller);
         }
+    }
+
+    fn load_controller(&mut self, controller: Arc<Mutex<Vec<Box<dyn NgynController>>>>) {
+        let routes = controller
+            .lock()
+            .unwrap()
+            .iter()
+            .flat_map(|c| c.routes())
+            .collect::<Vec<_>>();
+        for (path, http_method, handler) in routes {
+            self.route(
+                path.as_str(),
+                Method::from_bytes(http_method.to_uppercase().as_bytes()).unwrap(),
+                Box::new({
+                    let controller = controller.clone();
+                    move |cx: &mut NgynContext, _res: &mut NgynResponse| {
+                        cx.prepare(controller.clone(), handler.clone());
+                    }
+                }),
+            );
+        }
+    }
+
+    fn build<AppModule: NgynModule>() -> Self {
+        let module = AppModule::new();
+        let mut server = Self::default();
+        server.load_module(module);
         server
     }
 }
