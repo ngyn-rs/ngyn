@@ -285,6 +285,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse
             ) {
+                res.set_status(201);
                 match handler {
                     #(#handle_routes),*
                     _ => {}
