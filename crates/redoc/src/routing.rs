@@ -18,6 +18,7 @@ pub struct ReDocConfig {
     pub app_module: Box<dyn NgynModule + Sync>,
     pub title: String,
     pub version: String,
+    pub server_url: String,
     pub description: Option<String>,
     pub terms_of_service: Option<String>,
     pub contact: Option<String>,
@@ -32,6 +33,7 @@ impl Default for ReDocConfig {
             app_module: Box::new(ReDocModule {}),
             title: "API Documentation".to_string(),
             version: "1.0.0".to_string(),
+            server_url: "/".to_string(),
             description: None,
             terms_of_service: None,
             contact: None,
@@ -98,7 +100,7 @@ impl ReDocController {
                 },
             },
             "servers": [{
-                "url": "/api/v3"
+                "url": self.config.server_url,
             }],
             "paths": paths_spec,
             "components": {
