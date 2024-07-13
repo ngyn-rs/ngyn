@@ -1,4 +1,7 @@
-use ngyn::{prelude::*, shared::traits::NgynModule};
+use ngyn::{
+    prelude::*,
+    shared::traits::{NgynController, NgynModule},
+};
 use serde_json::{json, Value};
 
 pub trait ReDocValue {
@@ -41,35 +44,47 @@ impl Default for ReDocConfig {
 #[controller("/docs")]
 pub struct ReDocController {
     config: ReDocConfig,
+    spec: Value,
 }
 
-impl ReDocModule {
-    pub fn with_config(config: ReDocConfig) -> ReDocController {
-        ReDocController { config }
-    }
-}
-
-#[routes]
 impl ReDocController {
-    #[get("/")]
-    async fn index(&self, res: &mut NgynResponse) -> String {
-        res.set_header("Content-Type", "text/html");
-
-        let html = include_str!("templates/redoc.html");
-        html.replace("% REDOC_SPEC_URL %", &self.config.spec_url)
-            .replace("% REDOC_DOC_TITLE %", &self.config.title)
-            .replace(
-                "% REDOC_DOC_DESCRIPTION %",
-                &self.config.description.clone().unwrap_or("".to_string()),
-            )
-    }
-
-    #[get("/openapi.json")]
-    async fn openapi_spec(&self) -> String {
-        let app_module = &self.config.app_module;
-        impl ReDocValue for Box<dyn NgynModule + Sync> {} // type coercion
-        let paths_spec = app_module.redoc_value();
-        let full_spec = json!({
+    pub fn build(&mut self) {
+        let app_module = &mut self.config.app_module;
+        impl ReDocValue for Box<dyn NgynController> {} // type coercion
+        let paths_spec = {
+            let controllers = app_module.get_controllers();
+            let mut paths = json!({});
+            for controller_list in controllers {
+                let controller_list = controller_list.lock().unwrap();
+                for controller in controller_list.iter() {
+                    let routes = controller.routes();
+                    let controller_spec = routes
+                        .iter()
+                        .map(|(path, method, _)| {
+                            json!({
+                                path.to_string().to_lowercase(): {
+                                    method.to_string().to_lowercase(): {
+                                        "summary": "TODO",
+                                        "description": "TODO",
+                                        "responses": {
+                                            "200": {
+                                                "description": "OK"
+                                            }
+                                        }
+                                    }
+                                }
+                            })
+                        })
+                        .fold(json!({}), |mut acc, x| {
+                            merge(&mut acc, x);
+                            acc
+                        });
+                    merge(&mut paths, controller_spec);
+                }
+            }
+            paths
+        };
+        self.spec = json!({
             "openapi": "3.0.0",
             "info": {
                 "title": self.config.title,
@@ -90,6 +105,49 @@ impl ReDocController {
                 "schemas": {}
             }
         });
-        serde_json::to_string_pretty(&full_spec).unwrap_or("{}".to_string())
+    }
+}
+
+impl ReDocModule {
+    pub fn with_config(config: ReDocConfig) -> ReDocController {
+        let mut ctrl = ReDocController {
+            config,
+            spec: json!({}),
+        };
+        ctrl.build();
+        ctrl
+    }
+}
+
+#[routes]
+impl ReDocController {
+    #[get("/")]
+    async fn index(&self, res: &mut NgynResponse) -> String {
+        res.set_header("Content-Type", "text/html");
+
+        let html = include_str!("templates/redoc.html");
+        html.replace("% REDOC_SPEC_URL %", &self.config.spec_url)
+            .replace("% REDOC_DOC_TITLE %", &self.config.title)
+            .replace(
+                "% REDOC_DOC_DESCRIPTION %",
+                &self.config.description.clone().unwrap_or("".to_string()),
+            )
+    }
+
+    #[get("/openapi.json")]
+    async fn openapi_spec(&mut self) -> String {
+        serde_json::to_string_pretty(&self.spec).unwrap_or("{}".to_string())
+    }
+}
+
+fn merge(a: &mut Value, b: Value) {
+    match (a, b) {
+        (a @ &mut Value::Object(_), Value::Object(b)) => {
+            let a = a.as_object_mut().unwrap();
+            for (k, v) in b {
+                merge(a.entry(k).or_insert(Value::Null), v);
+            }
+        }
+        (a, b) => *a = b,
     }
 }
