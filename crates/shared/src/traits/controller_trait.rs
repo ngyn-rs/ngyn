@@ -7,6 +7,10 @@ pub trait NgynController: NgynInjectable + Sync + Send {
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)>;
 
+    fn prefix(&self) -> String {
+        "/".to_string()
+    }
+
     async fn handle(
         &mut self,
         _handler: &str,
