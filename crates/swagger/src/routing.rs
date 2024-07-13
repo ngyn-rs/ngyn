@@ -4,16 +4,16 @@ use ngyn::{
 };
 use serde_json::{json, Value};
 
-pub trait ReDocValue {
-    fn redoc_value(&self) -> Value {
+pub trait SwaggerValue {
+    fn swagger_value(&self) -> Value {
         json!({})
     }
 }
 
 #[module]
-pub struct ReDocModule;
+pub struct SwaggerModule;
 
-pub struct ReDocConfig {
+pub struct SwaggerConfig {
     pub spec_url: String,
     pub app_module: Box<dyn NgynModule + Sync>,
     pub title: String,
@@ -26,11 +26,11 @@ pub struct ReDocConfig {
     pub license_url: Option<String>,
 }
 
-impl Default for ReDocConfig {
+impl Default for SwaggerConfig {
     fn default() -> Self {
-        ReDocConfig {
+        SwaggerConfig {
             spec_url: "/docs/openapi.json".to_string(),
-            app_module: Box::new(ReDocModule {}),
+            app_module: Box::new(SwaggerModule {}),
             title: "API Documentation".to_string(),
             version: "1.0.0".to_string(),
             server_url: "/".to_string(),
@@ -44,15 +44,15 @@ impl Default for ReDocConfig {
 }
 
 #[controller("/docs")]
-pub struct ReDocController {
-    config: ReDocConfig,
+pub struct SwaggerController {
+    config: SwaggerConfig,
     spec: Value,
 }
 
-impl ReDocController {
+impl SwaggerController {
     pub fn build(&mut self) {
         let app_module = &mut self.config.app_module;
-        impl ReDocValue for Box<dyn NgynController> {} // type coercion
+        impl SwaggerValue for Box<dyn NgynController> {} // type coercion
         let paths_spec = {
             let controllers = app_module.get_controllers();
             let mut paths = json!({});
@@ -110,9 +110,9 @@ impl ReDocController {
     }
 }
 
-impl ReDocModule {
-    pub fn with_config(config: ReDocConfig) -> ReDocController {
-        let mut ctrl = ReDocController {
+impl SwaggerModule {
+    pub fn with_config(config: SwaggerConfig) -> SwaggerController {
+        let mut ctrl = SwaggerController {
             config,
             spec: json!({}),
         };
@@ -122,16 +122,16 @@ impl ReDocModule {
 }
 
 #[routes]
-impl ReDocController {
+impl SwaggerController {
     #[get("/")]
     async fn index(&self, res: &mut NgynResponse) -> String {
         res.set_header("Content-Type", "text/html");
 
-        let html = include_str!("templates/redoc.html");
-        html.replace("% REDOC_SPEC_URL %", &self.config.spec_url)
-            .replace("% REDOC_DOC_TITLE %", &self.config.title)
+        let html = include_str!("templates/swagger.html");
+        html.replace("% SWAGGER_SPEC_URL %", &self.config.spec_url)
+            .replace("% SWAGGER_DOC_TITLE %", &self.config.title)
             .replace(
-                "% REDOC_DOC_DESCRIPTION %",
+                "% SWAGGER_DOC_DESCRIPTION %",
                 &self.config.description.clone().unwrap_or("".to_string()),
             )
     }

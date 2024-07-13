@@ -1,5 +1,5 @@
 [package]
-name = "ngyn-redoc"
+name = "ngyn-swagger"
 version = "0.1.0"
 edition = "2021"
 description = "Shuttle Runtime Platform for ngyn web framework"

@@ -3,9 +3,9 @@ use std::sync::{Arc, Mutex};
 
 pub mod routing;
 
-pub trait NgynEngineReDoc: NgynEngine {
-    fn use_redoc(&mut self, config: routing::ReDocConfig) {
-        let controller = routing::ReDocModule::with_config(config);
+pub trait NgynEngineSwagger: NgynEngine {
+    fn use_swagger(&mut self, config: routing::SwaggerConfig) {
+        let controller = routing::SwaggerModule::with_config(config);
         let controller = Arc::new(Mutex::new(vec![
             Box::new(controller) as Box<dyn NgynController>
         ]));
@@ -13,4 +13,4 @@ pub trait NgynEngineReDoc: NgynEngine {
     }
 }
 
-impl<T: NgynEngine> NgynEngineReDoc for T {}
+impl<T: NgynEngine> NgynEngineSwagger for T {}

@@ -1,5 +1,5 @@
 [package]
-name = "ngyn-redoc-macros"
+name = "ngyn-swagger-macros"
 version = "0.1.0"
 edition = "2021"
 description = "Shuttle Runtime Platform for ngyn web framework"

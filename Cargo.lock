@@ -1536,7 +1536,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngyn-redoc"
+name = "ngyn-shuttle"
+version = "0.1.0"
+dependencies = [
+ "ngyn-hyper 0.1.0",
+ "shuttle-runtime",
+]
+
+[[package]]
+name = "ngyn-swagger"
 version = "0.1.0"
 dependencies = [
  "ngyn 0.4.1",
@@ -1545,20 +1553,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngyn-redoc-macros"
+name = "ngyn-swagger-macros"
 version = "0.1.0"
 dependencies = [
  "ngyn-hyper 0.1.0",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "ngyn-shuttle"
-version = "0.1.0"
-dependencies = [
- "ngyn-hyper 0.1.0",
- "shuttle-runtime",
 ]
 
 [[package]]
