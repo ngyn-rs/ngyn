@@ -66,11 +66,11 @@ impl ReDocController {
                             json!({
                                 path.to_string().to_lowercase(): {
                                     method.to_string().to_lowercase(): {
-                                        "summary": "TODO",
-                                        "description": "TODO",
+                                        "summary": format!("{} {}", method.to_ascii_uppercase(), path),
+                                        "description": "",
                                         "responses": {
                                             "200": {
-                                                "description": "OK"
+                                                "description": ""
                                             }
                                         }
                                     }
