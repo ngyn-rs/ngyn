@@ -53,13 +53,20 @@ impl SwaggerController {
     pub fn build(&mut self) {
         let app_module = &mut self.config.app_module;
         impl SwaggerValue for Box<dyn NgynController> {} // type coercion
-        let paths_spec = {
+        let (paths_spec, tags_spec) = {
             let controllers = app_module.get_controllers();
             let mut paths = json!({});
+            let mut tags = json!({});
             for controller_list in controllers {
                 let controller_list = controller_list.lock().unwrap();
                 for controller in controller_list.iter() {
                     let routes = controller.routes();
+                    let tag_name = controller.prefix().trim_matches('/').to_string();
+                    let tag_spec = json!({
+                        "name": tag_name,
+                        "description": "",
+                    });
+                    merge(&mut tags, json!({ tag_name.clone(): tag_spec }));
                     let controller_spec = routes
                         .iter()
                         .map(|(path, method, _)| {
@@ -72,7 +79,8 @@ impl SwaggerController {
                                             "200": {
                                                 "description": ""
                                             }
-                                        }
+                                        },
+                                        "tags": [tag_name],
                                     }
                                 }
                             })
@@ -84,7 +92,7 @@ impl SwaggerController {
                     merge(&mut paths, controller_spec);
                 }
             }
-            paths
+            (paths, tags)
         };
         self.spec = json!({
             "openapi": "3.0.0",
@@ -93,7 +101,9 @@ impl SwaggerController {
                 "version": self.config.version,
                 "description": self.config.description,
                 "termsOfService": self.config.terms_of_service,
-                "contact": self.config.contact,
+                "contact": {
+                    "name": self.config.contact,
+                },
                 "license": {
                     "name": self.config.license,
                     "url": self.config.license_url,
@@ -105,7 +115,8 @@ impl SwaggerController {
             "paths": paths_spec,
             "components": {
                 "schemas": {}
-            }
+            },
+            "tags": tags_spec,
         });
     }
 }
