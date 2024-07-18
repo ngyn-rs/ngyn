@@ -35,7 +35,7 @@ impl Default for SwaggerConfig {
             version: "1.0.0".to_string(),
             server_url: "/".to_string(),
             description: None,
-            terms_of_service: None,
+            terms_of_service: Some("".to_string()),
             contact: None,
             license: "MIT".to_string(),
             license_url: None,
@@ -53,20 +53,16 @@ impl SwaggerController {
     pub fn build(&mut self) {
         let app_module = &mut self.config.app_module;
         impl SwaggerValue for Box<dyn NgynController> {} // type coercion
-        let (paths_spec, tags_spec) = {
+        let (paths_spec, tags) = {
             let controllers = app_module.get_controllers();
             let mut paths = json!({});
-            let mut tags = json!({});
+            let mut tags = Vec::new();
             for controller_list in controllers {
                 let controller_list = controller_list.lock().unwrap();
                 for controller in controller_list.iter() {
                     let routes = controller.routes();
                     let tag_name = controller.prefix().trim_matches('/').to_string();
-                    let tag_spec = json!({
-                        "name": tag_name,
-                        "description": "",
-                    });
-                    merge(&mut tags, json!({ tag_name.clone(): tag_spec }));
+                    tags.push(tag_name.clone());
                     let controller_spec = routes
                         .iter()
                         .map(|(path, method, operation_id)| {
@@ -117,7 +113,7 @@ impl SwaggerController {
             "components": {
                 "schemas": {}
             },
-            "tags": tags_spec,
+            "tags": tags,
         });
     }
 }
