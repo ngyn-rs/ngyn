@@ -69,12 +69,13 @@ impl SwaggerController {
                     merge(&mut tags, json!({ tag_name.clone(): tag_spec }));
                     let controller_spec = routes
                         .iter()
-                        .map(|(path, method, _)| {
+                        .map(|(path, method, operation_id)| {
                             json!({
-                                path.to_string().to_lowercase(): {
-                                    method.to_string().to_lowercase(): {
-                                        "summary": format!("{} {}", method.to_ascii_uppercase(), path),
+                                path.to_lowercase(): {
+                                    method.to_lowercase(): {
+                                        "summary": format!("{} {}", method.to_uppercase(), path),
                                         "description": "",
+                                        "operationId": operation_id,
                                         "responses": {
                                             "200": {
                                                 "description": ""
