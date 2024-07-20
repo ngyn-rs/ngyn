@@ -33,7 +33,7 @@ impl Default for SwaggerConfig {
             app_module: Box::new(SwaggerModule {}),
             title: "API Documentation".to_string(),
             version: "1.0.0".to_string(),
-            server_url: "/".to_string(),
+            server_url: '/'.to_string(),
             description: None,
             terms_of_service: Some("".to_string()),
             contact: None,
