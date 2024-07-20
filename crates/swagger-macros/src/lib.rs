@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput};
+use syn::{parse_macro_input, Data, DeriveInput, ItemImpl, ReturnType, Signature};
 
 #[proc_macro_derive(SwaggerDto)]
 pub fn swagger_derive(input: TokenStream) -> TokenStream {
@@ -112,15 +112,86 @@ pub fn swagger_derive(input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn swagger_attribute(_attr: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let input = match syn::parse::<ItemImpl>(input) {
+        Ok(input) => input,
+        Err(_err) => panic!("Only impl blocks are supported"),
+    };
+
+    let ItemImpl {
+        items,
+        impl_token,
+        generics,
+        self_ty,
+        ..
+    } = input.clone();
+
+    let components: Vec<_> = items
+        .iter()
+        .map(|item| match item {
+            syn::ImplItem::Fn(method) => {
+                let Signature { inputs, output, .. } = method.sig.clone();
+                let mut retrieved_paths = Vec::new();
+                let args = inputs.iter().fold(None, |args, input| match input {
+                    syn::FnArg::Typed(pat) => {
+                        let ty = &pat.ty;
+                        if let syn::Type::Reference(ty) = ty.as_ref() {
+                            let ty = &ty.elem;
+                            if let syn::Type::Path(ty) = ty.as_ref() {
+                                let ty = ty.path.get_ident().unwrap();
+                                let ty_str = ty.to_string();
+                                if !retrieved_paths.contains(&ty_str) {
+                                    retrieved_paths.push(ty_str);
+                                    Some(quote! { #args, #ty::to_swagger() })
+                                } else {
+                                    args
+                                }
+                            } else {
+                                args
+                            }
+                        } else if let syn::Type::Path(ty) = ty.as_ref() {
+                            let ty = ty.path.get_ident().unwrap();
+                            let ty_str = ty.to_string();
+                            if !retrieved_paths.contains(&ty_str) {
+                                retrieved_paths.push(ty_str);
+                                Some(quote! { #args, #ty::to_swagger() })
+                            } else {
+                                args
+                            }
+                        } else {
+                            args
+                        }
+                    }
+                    _ => args,
+                });
+                if let ReturnType::Type(_, ty) = output {
+                    if let syn::Type::Path(ty) = ty.as_ref() {
+                        let ty = ty.path.get_ident().unwrap();
+                        let ty_str = ty.to_string();
+                        if !retrieved_paths.contains(&ty_str) {
+                            retrieved_paths.push(ty_str);
+                            Some(quote! { #args, #ty::to_swagger() })
+                        } else {
+                            args
+                        }
+                    } else {
+                        args
+                    }
+                } else {
+                    args
+                }
+            }
+            _ => unimplemented!(),
+        })
+        .collect();
+
     let expanded = quote! {
         #input
 
-        impl ngyn_swagger::SwaggerDto for #input {
-            fn to_swagger() -> serde_json::Value {
-                serde_json::json!({
-                    "components": []
-                })
+        #impl_token #generics ngyn_swagger::SwaggerController for #self_ty {
+            fn swagger_meta(&self) -> ngyn_swagger::SwaggerMeta {
+                ngyn_swagger::SwaggerMeta {
+                    components: vec![#(#components),*]
+                }
             }
         }
     };

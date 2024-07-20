@@ -4,6 +4,8 @@ use ngyn::{
 };
 use serde_json::{json, Value};
 
+use crate::SwaggerController;
+
 pub trait SwaggerValue {
     fn swagger_value(&self) -> Value {
         json!({})
@@ -44,18 +46,20 @@ impl Default for SwaggerConfig {
 }
 
 #[controller("/docs")]
-pub struct SwaggerController {
+pub struct SwaggerRoutesController {
     config: SwaggerConfig,
     spec: Value,
 }
 
-impl SwaggerController {
+impl SwaggerRoutesController {
     pub fn build(&mut self) {
         let app_module = &mut self.config.app_module;
         impl SwaggerValue for Box<dyn NgynController> {} // type coercion
-        let (paths_spec, tags) = {
+        impl SwaggerController for Box<dyn NgynController> {} // type coercion
+        let (paths_spec, tags, components) = {
             let controllers = app_module.get_controllers();
             let mut paths = json!({});
+            let mut components = json!({});
             let mut tags = Vec::new();
             for controller_list in controllers {
                 let controller_list = controller_list.lock().unwrap();
@@ -87,9 +91,15 @@ impl SwaggerController {
                             acc
                         });
                     merge(&mut paths, controller_spec);
+                    let meta = controller.swagger_meta();
+                    let components_spec = meta.components.iter().fold(json!({}), |mut acc, x| {
+                        merge(&mut acc, x.clone());
+                        acc
+                    });
+                    merge(&mut components, components_spec);
                 }
             }
-            (paths, tags)
+            (paths, tags, components)
         };
         self.spec = json!({
             "openapi": "3.0.0",
@@ -111,7 +121,7 @@ impl SwaggerController {
             }],
             "paths": paths_spec,
             "components": {
-                "schemas": {}
+                "schemas": components,
             },
             "tags": tags,
         });
@@ -119,10 +129,10 @@ impl SwaggerController {
 }
 
 impl SwaggerModule {
-    pub fn with_config(config: SwaggerConfig) -> SwaggerController {
-        let mut ctrl = SwaggerController {
+    pub fn with_config(config: SwaggerConfig) -> SwaggerRoutesController {
+        let mut ctrl = SwaggerRoutesController {
             config,
-            spec: json!({}),
+            spec: Value::Null,
         };
         ctrl.build();
         ctrl
@@ -130,7 +140,7 @@ impl SwaggerModule {
 }
 
 #[routes]
-impl SwaggerController {
+impl SwaggerRoutesController {
     #[get("/")]
     async fn index(&self, res: &mut NgynResponse) -> String {
         res.set_header("Content-Type", "text/html");

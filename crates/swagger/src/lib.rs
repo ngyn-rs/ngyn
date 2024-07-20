@@ -9,6 +9,18 @@ pub trait SwaggerDto {
     fn to_swagger() -> serde_json::Value;
 }
 
+pub struct SwaggerMeta {
+    pub components: Vec<serde_json::Value>,
+}
+
+pub trait SwaggerController {
+    fn swagger_meta(&self) -> SwaggerMeta {
+        SwaggerMeta {
+            components: Vec::new(),
+        }
+    }
+}
+
 pub trait NgynEngineSwagger: NgynEngine {
     fn use_swagger(&mut self, config: routing::SwaggerConfig) {
         let controller = routing::SwaggerModule::with_config(config);
