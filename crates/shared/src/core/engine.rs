@@ -89,7 +89,7 @@ pub trait NgynEngine: NgynPlatform {
     /// struct MyEngine;
     ///
     /// let mut engine = MyEngine::default();
-    /// engine.route("/", Method::GET, Box::new(|_, _| {}));
+    /// engine.route('/', Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
         self.data_mut().add_route(path.to_string(), method, handler);

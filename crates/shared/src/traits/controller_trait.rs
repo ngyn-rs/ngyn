@@ -8,7 +8,7 @@ pub trait NgynController: NgynInjectable + Sync + Send {
     fn routes(&self) -> Vec<(String, String, String)>;
 
     fn prefix(&self) -> String {
-        "/".to_string()
+        '/'.to_string()
     }
 
     async fn handle(

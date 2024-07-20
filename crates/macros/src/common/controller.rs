@@ -155,7 +155,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
     let path_prefix = {
         if let Some(prefix) = prefix {
             let str_prefix = prefix.value();
-            if !str_prefix.starts_with("/") {
+            if !str_prefix.starts_with('/') {
                 quote! {
                     format!("/{}", #prefix)
                 }
@@ -221,8 +221,8 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
             fn routes(&self) -> Vec<(String, String, String)> {
                 Self::ROUTES.iter().map(|(path, method, handler)| {
                     // prefix path with controller prefix, and remove double slashes
-                    let path = format!("{}", path).trim_start_matches("/").to_string();
-                    let prefix = #path_prefix.trim_end_matches("/").to_string();
+                    let path = format!("{}", path).trim_start_matches('/').to_string();
+                    let prefix = #path_prefix.trim_end_matches('/').to_string();
                     (format!("{}/{}", prefix, path), method.to_string(), handler.to_string())
                 }).collect()
             }

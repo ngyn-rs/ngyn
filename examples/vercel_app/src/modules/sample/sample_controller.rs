@@ -1,6 +1,13 @@
 use ngyn::prelude::*;
+use ngyn_swagger::SwaggerDto;
 
 use super::sample_service::SampleService;
+
+#[derive(SwaggerDto)]
+pub struct SampleDto {
+    pub name: String,
+    pub age: i32,
+}
 
 #[controller]
 pub struct SampleController {
@@ -10,9 +17,9 @@ pub struct SampleController {
 #[routes]
 impl SampleController {
     #[get("/hello")]
-    fn say_hello(&self) -> &str {
+    fn say_hello(&self) -> String {
         self.sample_service.say_hello();
-        "Hello, Ngyn from Vercel!"
+        SampleDto::to_swagger().to_string()
     }
 
     #[get(["/bye", "/goodbye"])]
