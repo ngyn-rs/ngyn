@@ -13,5 +13,8 @@ path = "src/lib.rs"
 [dependencies]
 ngyn = { version = "0.4", path = "../../crates/core" }
 ngyn-vercel = { version = "0.1", path = "../../crates/vercel" }
+ngyn-swagger = { version = "0.1", path = "../../crates/swagger" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 tokio = { version = "1.32.0", features = ["full"] }
 vercel_runtime = { version = "1.1.0" }

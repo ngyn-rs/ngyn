@@ -1548,6 +1548,7 @@ name = "ngyn-swagger"
 version = "0.1.0"
 dependencies = [
  "ngyn 0.4.1",
+ "ngyn-swagger-macros",
  "serde",
  "serde_json",
 ]
@@ -1557,8 +1558,10 @@ name = "ngyn-swagger-macros"
 version = "0.1.0"
 dependencies = [
  "ngyn-hyper 0.1.0",
+ "quote",
  "serde",
  "serde_json",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -2923,7 +2926,10 @@ name = "vercel_app"
 version = "0.2.8"
 dependencies = [
  "ngyn 0.4.1",
+ "ngyn-swagger",
  "ngyn-vercel",
+ "serde",
+ "serde_json",
  "tokio",
  "vercel_runtime",
 ]
