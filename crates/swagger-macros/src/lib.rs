@@ -47,7 +47,7 @@ pub fn swagger_derive(input: TokenStream) -> TokenStream {
                     if ty.starts_with("Vec<") {
                         "array"
                     } else if ty.starts_with("Option<") {
-                        let ty = ty.trim_start_matches("Option<").trim_end_matches(">");
+                        let ty = ty.trim_start_matches("Option<").trim_end_matches('>');
                         if ty == "String" {
                             "string"
                         } else if ty == "i32" || ty == "i64" || ty == "u32" || ty == "u64" {
