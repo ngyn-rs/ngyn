@@ -6,7 +6,7 @@ pub mod routing;
 pub use ngyn_swagger_macros::SwaggerDto;
 
 pub trait SwaggerDto {
-    fn to_swagger(&self) -> serde_json::Value;
+    fn to_swagger() -> serde_json::Value;
 }
 
 pub trait NgynEngineSwagger: NgynEngine {

@@ -93,7 +93,7 @@ pub fn swagger_derive(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl ngyn_swagger::SwaggerDto for #name {
-            fn to_swagger(&self) -> serde_json::Value {
+            fn to_swagger() -> serde_json::Value {
                 serde_json::json!({
                     #str_quote_name: {
                         "type": "object",
@@ -107,5 +107,22 @@ pub fn swagger_derive(input: TokenStream) -> TokenStream {
         }
     };
 
+    expanded.into()
+}
+
+#[proc_macro_attribute]
+pub fn swagger_attribute(_attr: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let expanded = quote! {
+        #input
+
+        impl ngyn_swagger::SwaggerDto for #input {
+            fn to_swagger() -> serde_json::Value {
+                serde_json::json!({
+                    "components": []
+                })
+            }
+        }
+    };
     expanded.into()
 }

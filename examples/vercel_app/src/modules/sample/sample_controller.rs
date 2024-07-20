@@ -19,11 +19,7 @@ impl SampleController {
     #[get("/hello")]
     fn say_hello(&self) -> String {
         self.sample_service.say_hello();
-        let sample = SampleDto {
-            name: "Ngyn".to_string(),
-            age: 1,
-        };
-        sample.to_swagger().to_string()
+        SampleDto::to_swagger().to_string()
     }
 
     #[get(["/bye", "/goodbye"])]
