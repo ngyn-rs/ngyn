@@ -278,7 +278,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                 #(#route_defs),*
             ];
             #(#items)*
-
+        }
+        #impl_token #generics #self_ty {
             async fn __handle_route(
                 &mut self,
                 handler: &str,

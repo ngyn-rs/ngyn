@@ -21,7 +21,7 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     ///
     /// let server = NgynFactory::<HyperApplication>::create::<YourAppModule>();
     /// ```
-    pub fn create<AppModule: NgynModule>() -> Application {
+    pub fn create<AppModule: NgynModule + 'static>() -> Application {
         Application::build::<AppModule>()
     }
 }

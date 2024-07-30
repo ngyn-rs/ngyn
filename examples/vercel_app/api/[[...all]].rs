@@ -1,4 +1,5 @@
 use ngyn::app::NgynFactory;
+use ngyn_swagger::NgynEngineSwagger;
 use ngyn_vercel::VercelApplication;
 use vercel_app::modules::sample::sample_module::SampleModule;
 use vercel_runtime::{run, Body, Error, Request, Response};
@@ -9,6 +10,7 @@ async fn main() -> Result<(), Error> {
 }
 
 pub async fn handler(req: Request) -> Result<Response<Body>, Error> {
-    let app = NgynFactory::<VercelApplication>::create::<SampleModule>();
+    let mut app = NgynFactory::<VercelApplication>::create::<SampleModule>();
+    app.use_swagger::<SampleModule>(Default::default());
     app.handle(req).await
 }

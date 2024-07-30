@@ -1,20 +1,20 @@
 use hyper::Request;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
 use crate::{
     server::{
         context::AppState,
         response::{Middlewares, ResponseBuilder, Routes},
-        Method, NgynContext, NgynResponse,
+        Method, NgynResponse,
     },
     traits::{NgynController, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
-    routes: Arc<Mutex<Routes>>,
-    middlewares: Arc<Mutex<Middlewares>>,
+    routes: Routes,
+    middlewares: Middlewares,
     state: Option<Arc<dyn AppState>>,
 }
 
@@ -33,15 +33,9 @@ impl PlatformData {
         match self.state {
             Some(ref state) => {
                 let state = state.clone();
-                NgynResponse::build_with_state(
-                    req,
-                    self.routes.clone(),
-                    self.middlewares.clone(),
-                    state,
-                )
-                .await
+                NgynResponse::build_with_state(req, &self.routes, &self.middlewares, state).await
             }
-            None => NgynResponse::build(req, self.routes.clone(), self.middlewares.clone()).await,
+            None => NgynResponse::build(req, &self.routes, &self.middlewares).await,
         }
     }
 
@@ -53,7 +47,7 @@ impl PlatformData {
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
     pub(crate) fn add_route(&mut self, path: String, method: Method, handler: Box<Handler>) {
-        self.routes.lock().unwrap().push((path, method, handler));
+        self.routes.push((path, method, handler));
     }
 
     /// Adds a middleware to the platform data.
@@ -62,7 +56,7 @@ impl PlatformData {
     ///
     /// * `middleware` - The middleware to add.
     pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
-        self.middlewares.lock().unwrap().push(middleware);
+        self.middlewares.push(middleware);
     }
 }
 
@@ -138,34 +132,19 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().state = Some(Arc::new(state));
     }
 
-    fn load_module(&mut self, mut module: impl NgynModule) {
+    fn load_module(&mut self, module: impl NgynModule + 'static) {
         for controller in module.get_controllers() {
             self.load_controller(controller);
         }
     }
 
-    fn load_controller(&mut self, controller: Arc<Mutex<Vec<Box<dyn NgynController>>>>) {
-        let routes = controller
-            .lock()
-            .unwrap()
-            .iter()
-            .flat_map(|c| c.routes())
-            .collect::<Vec<_>>();
-        for (path, http_method, handler) in routes {
-            self.route(
-                path.as_str(),
-                Method::from_bytes(http_method.to_uppercase().as_bytes()).unwrap(),
-                Box::new({
-                    let controller = controller.clone();
-                    move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                        cx.prepare(controller.clone(), handler.clone());
-                    }
-                }),
-            );
-        }
+    fn load_controller(&mut self, controller: impl NgynController + 'static + Clone) {
+        controller.route_platform(|path, method, handler| {
+            self.route(path, method, handler);
+        });
     }
 
-    fn build<AppModule: NgynModule>() -> Self {
+    fn build<AppModule: NgynModule + 'static>() -> Self {
         let module = AppModule::new();
         let mut server = Self::default();
         server.load_module(module);

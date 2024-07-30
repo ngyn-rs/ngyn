@@ -3,6 +3,7 @@ use ngyn::prelude::*;
 use super::sample_repository::SampleRepository;
 
 #[injectable]
+#[derive(Clone)]
 pub struct SampleService {
     sample_repository: SampleRepository,
 }

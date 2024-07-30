@@ -237,6 +237,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse,
             ) {
+                self.inject(cx);
                 #(#add_middlewares)*
                 self.__handle_route(handler, cx, res).await;
             }

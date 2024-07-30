@@ -2,6 +2,7 @@ use ngyn::prelude::*;
 use std::env;
 
 #[injectable]
+#[derive(Clone)]
 pub struct WeatherRepository;
 
 impl WeatherRepository {

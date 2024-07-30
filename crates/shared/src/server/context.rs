@@ -7,7 +7,7 @@ use std::{any::Any, collections::HashMap};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::{ControllerList, NgynController, NgynControllerHandler},
+    traits::BoxedController,
 };
 
 /// Represents the value of a context in Ngyn
@@ -24,12 +24,6 @@ impl<V> NgynContextValue<V> {
 
 /// Represents the state of an application in Ngyn
 pub trait AppState: Any + Send + Sync {
-    fn as_any(&self) -> &dyn Any
-    where
-        Self: Sized,
-    {
-        self
-    }
     fn get_state(&self) -> &dyn Any;
 }
 
@@ -43,7 +37,7 @@ impl<T: Send + Sync + 'static> AppState for T {
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
-    route_info: Option<(String, ControllerList)>,
+    route_info: Option<(String, BoxedController)>,
     store: HashMap<String, String>,
     state: Option<Box<dyn AppState>>,
 }
@@ -389,9 +383,9 @@ impl NgynContext {
     /// let mut context = NgynContext::from_request(request);
     /// let controller = MyController::new();
     ///
-    /// context.prepare(Arc::new(controller), "index".to_string());
+    /// context.prepare(Box::new(controller), "index".to_string());
     /// ```
-    pub(crate) fn prepare(&mut self, controller: ControllerList, handler: String) {
+    pub(crate) fn prepare(&mut self, controller: BoxedController, handler: String) {
         self.route_info = Some((handler, controller));
     }
 
@@ -413,31 +407,11 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        if self.route_info.is_none() {
-            return;
-        }
-
-        let (handler, controller) = match self.route_info.as_ref() {
-            Some((handler, controller)) => match controller.clone().lock() {
-                Ok(mut controller) => (handler.clone(), controller.pop()),
-                Err(_) => return,
-            },
+        let (handler, mut controller) = match self.route_info.take() {
+            Some((handler, ctrl)) => (handler.clone(), ctrl),
             None => return,
         };
-
-        if let Some(mut controller) = controller {
-            controller.inject(self);
-            impl NgynControllerHandler for dyn NgynController {}
-            controller.handle(&handler, self, res).await;
-            // TODO this is a weird fix and should be improved
-            self.route_info
-                .as_mut()
-                .unwrap()
-                .1
-                .lock()
-                .unwrap()
-                .push(controller);
-        }
+        controller.handle(&handler, self, res).await;
     }
 }
 
