@@ -27,7 +27,12 @@ pub trait NgynController: NgynInjectable + Sync + Send {
     ) {
     }
 
-    fn route_platform(&self, mut f: impl FnMut(&str, Method, Box<Handler>))
+    /// Iterates over the routes of the controller.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - The closure to execute for each route.
+    fn iter_routes(&self, mut f: impl FnMut(&str, Method, Box<Handler>))
     where
         Self: Clone + 'static,
     {
@@ -95,8 +100,7 @@ impl NgynController for Box<dyn NgynController> {
     ) {
         self.as_mut().handle(handler, cx, res).await;
     }
-    #[allow(unused_variables)]
-    fn route_platform(&self, f: impl FnMut(&str, Method, Box<Handler>)) {
+    fn iter_routes(&self, _f: impl FnMut(&str, Method, Box<Handler>)) {
         unimplemented!()
     }
 }

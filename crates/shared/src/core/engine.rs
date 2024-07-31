@@ -139,7 +139,7 @@ pub trait NgynEngine: NgynPlatform {
     }
 
     fn load_controller(&mut self, controller: impl NgynController + 'static + Clone) {
-        controller.route_platform(|path, method, handler| {
+        controller.iter_routes(|path, method, handler| {
             self.route(path, method, handler);
         });
     }
