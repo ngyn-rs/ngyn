@@ -4,7 +4,7 @@ use crate::server::NgynContext;
 
 use crate::core::Handler;
 
-use super::NgynInjectable;
+use super::{CloneBox, NgynInjectable};
 
 /// `NgynController` defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
@@ -50,22 +50,6 @@ pub trait NgynController: NgynInjectable + Sync + Send {
                 }),
             );
         }
-    }
-}
-
-pub trait CloneBox<T: NgynController + Clone> {
-    fn clone_box(&self) -> Box<T>;
-}
-
-impl<T: NgynController + Clone> CloneBox<T> for T {
-    fn clone_box(&self) -> Box<T> {
-        let mut fat_ptr = self as *const T;
-        unsafe {
-            let data_ptr = &mut fat_ptr as *mut *const T as *mut *mut ();
-            assert_eq!(*data_ptr as *const (), self as *const T as *const ());
-            *data_ptr = Box::into_raw(Box::new(self.clone())) as *mut ();
-        }
-        unsafe { Box::from_raw(fat_ptr as *mut T) }
     }
 }
 
