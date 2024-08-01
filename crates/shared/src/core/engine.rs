@@ -142,16 +142,14 @@ pub trait NgynEngine: NgynPlatform {
         for (path, http_method, handler) in controller.routes() {
             self.route(
                 path.as_str(),
-                hyper::Method::from_bytes(http_method.to_uppercase().as_bytes())
-                    .unwrap_or_default(),
+                hyper::Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
                 Box::new({
-                    let controller: Arc<Box<dyn NgynController + 'static>> =
-                        Arc::from(controller.clone());
+                    let controller = controller.clone();
                     move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                        let controller = Arc::from(controller.clone());
+                        let controller = controller.clone();
                         cx.prepare(controller, handler.clone());
                     }
-                }) as Box<Handler>,
+                }),
             );
         }
     }

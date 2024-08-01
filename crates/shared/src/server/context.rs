@@ -408,7 +408,7 @@ impl NgynContext {
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
         let (handler, controller) = match self.route_info.take() {
-            Some((handler, ctrl)) => (handler.clone(), ctrl.clone()),
+            Some((handler, ctrl)) => (handler.clone(), ctrl),
             None => return,
         };
         let mut controller =

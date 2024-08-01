@@ -131,7 +131,6 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                     || attr.path().is_ident("delete")
                     || attr.path().is_ident("patch")
                     || attr.path().is_ident("head")
-                    || attr.path().is_ident("options")
                 {
                     let (path, http_method) = {
                         if attr.path().is_ident("route") {
@@ -140,7 +139,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             (path, http_method)
                         } else {
                             let PathArg { path } = attr.parse_args::<PathArg>().unwrap();
-                            let http_method = attr.path().get_ident().unwrap().to_string();
+                            let http_method =
+                                attr.path().get_ident().unwrap().to_string().to_uppercase();
                             (path, http_method)
                         }
                     };
