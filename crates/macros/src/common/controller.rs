@@ -203,8 +203,6 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
             #(#fields),*
         }
 
-        impl #generics ngyn::shared::traits::NgynControllerHandler for #ident #generics_params {}
-
         impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics_params {
             fn new() -> Self {
                 #init_controller
@@ -219,6 +217,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         #[ngyn::prelude::async_trait]
         impl #generics ngyn::shared::traits::NgynController for #ident #generics_params {
             fn routes(&self) -> Vec<(String, String, String)> {
+                use ngyn::shared::traits::NgynControllerHandler;
                 Self::ROUTES.iter().map(|(path, method, handler)| {
                     // prefix path with controller prefix, and remove double slashes
                     let path = format!("{}", path).trim_start_matches('/').to_string();
@@ -237,6 +236,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse,
             ) {
+                use ngyn::shared::traits::NgynControllerHandler;
                 self.inject(cx);
                 #(#add_middlewares)*
                 self.__handle_route(handler, cx, res).await;

@@ -43,7 +43,10 @@ impl From<Arc<Box<dyn NgynController>>> for Box<dyn NgynController> {
     }
 }
 
-/// `NgynControllerHandler` defines placeholders for routing logic of a controller.
+impl<T: NgynController> NgynControllerHandler for T {}
+
+/// `NgynControllerHandler` is an internal trait that defines placeholders for routing logic of a controller.
+#[allow(unused)]
 pub trait NgynControllerHandler {
     const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[];
 
