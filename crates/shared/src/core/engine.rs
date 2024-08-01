@@ -128,7 +128,7 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
-    fn set_state(&mut self, state: impl AppState) {
+    fn set_state(&mut self, state: impl AppState + 'static) {
         self.data_mut().state = Some(Arc::new(state));
     }
 

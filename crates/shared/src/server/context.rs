@@ -24,14 +24,18 @@ impl<V> NgynContextValue<V> {
 
 /// Represents the state of an application in Ngyn
 pub trait AppState: Any + Send + Sync {
-    fn get_state(&self) -> &dyn Any;
-}
-
-impl<T: Send + Sync + 'static> AppState for T {
-    fn get_state(&self) -> &dyn Any {
+    fn as_any(&self) -> &dyn Any
+    where
+        Self: Sized,
+    {
         self
     }
 }
+
+impl AppState for Arc<dyn AppState> {}
+
+pub struct EmptyState;
+impl AppState for EmptyState {}
 
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
@@ -39,7 +43,7 @@ pub struct NgynContext {
     params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<Box<dyn NgynController>>)>,
     store: HashMap<String, String>,
-    state: Option<Box<dyn AppState>>,
+    state: Option<Arc<dyn AppState>>,
 }
 
 impl NgynContext {
@@ -110,7 +114,7 @@ impl NgynContext {
         let state = self.state.as_ref();
 
         match state {
-            Some(value) => value.get_state().downcast_ref::<T>(),
+            Some(value) => value.as_any().downcast_ref::<T>(),
             None => None,
         }
     }
@@ -314,7 +318,7 @@ impl NgynContext {
         }
     }
 
-    pub(crate) fn set_state(&mut self, state: Box<dyn AppState>) {
+    pub(crate) fn set_state(&mut self, state: Arc<dyn AppState>) {
         self.state = Some(state);
     }
 

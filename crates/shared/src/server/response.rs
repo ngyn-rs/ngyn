@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use http_body_util::Full;
 use hyper::{body::Bytes, header::IntoHeaderName, Method, Request, Response, StatusCode};
 
@@ -6,7 +8,7 @@ use crate::{
     server::{NgynContext, NgynResponse, ToBytes, Transformer},
 };
 
-use super::context::AppState;
+use super::context::{AppState, EmptyState};
 
 /// Trait representing a full response.
 pub trait FullResponse {
@@ -130,25 +132,25 @@ pub(crate) trait ResponseBuilder: FullResponse {
         req: Request<Vec<u8>>,
         routes: &Routes,
         middlewares: &Middlewares,
-        state: impl AppState,
+        state: Arc<dyn AppState>,
     ) -> Self;
 }
 
 impl ResponseBuilder for NgynResponse {
     async fn build(req: Request<Vec<u8>>, routes: &Routes, middlewares: &Middlewares) -> Self {
-        Self::build_with_state(req, routes, middlewares, ()).await
+        Self::build_with_state(req, routes, middlewares, Arc::new(EmptyState {})).await
     }
 
     async fn build_with_state(
         req: Request<Vec<u8>>,
         routes: &Routes,
         middlewares: &Middlewares,
-        state: impl AppState,
+        state: Arc<dyn AppState>,
     ) -> Self {
         let mut cx = NgynContext::from_request(req);
         let mut res = Response::new(Full::new(Bytes::default()));
 
-        cx.set_state(Box::new(state));
+        cx.set_state(state);
 
         let mut is_handled = false;
 
