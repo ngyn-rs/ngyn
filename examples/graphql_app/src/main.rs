@@ -10,7 +10,6 @@ use juniper_hyper::{graphiql, graphql, playground};
 use ngyn::prelude::*;
 use ngyn_hyper::HyperApplication;
 
-#[derive(Clone)]
 #[controller(init = "setup")]
 struct GraphQLController {
     db: Arc<Database>,

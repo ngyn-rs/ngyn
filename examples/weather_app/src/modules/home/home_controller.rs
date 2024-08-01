@@ -1,7 +1,6 @@
 use ngyn::prelude::*;
 
 #[controller]
-#[derive(Clone)]
 pub struct HomeController;
 
 #[routes]

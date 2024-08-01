@@ -10,7 +10,6 @@ pub struct SampleDto {
     pub age: i32,
 }
 
-#[derive(Clone)]
 #[controller]
 pub struct SampleController {
     sample_service: SampleService,

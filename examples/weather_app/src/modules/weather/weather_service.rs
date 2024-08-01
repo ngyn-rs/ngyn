@@ -3,7 +3,6 @@ use ngyn::prelude::*;
 use super::weather_repository::WeatherRepository;
 
 #[injectable]
-#[derive(Clone)]
 pub struct WeatherService {
     weather_repository: WeatherRepository,
 }

@@ -1,7 +1,6 @@
 use ngyn::prelude::*;
 
 #[injectable]
-#[derive(Clone)]
 pub struct SampleRepository;
 
 impl SampleRepository {

@@ -110,7 +110,7 @@ pub trait NgynEngineSwagger: NgynEngine {
         config: routing::SwaggerConfig<AppModule>,
     ) {
         let controller = routing::SwaggerModule::with_config(config);
-        self.load_controller(Arc::new(controller));
+        self.load_controller(Arc::new(Box::new(controller)));
     }
 }
 

@@ -12,7 +12,7 @@ pub trait NgynModule: Send + Sync {
     fn name(&self) -> &str;
 
     /// Returns the controllers of the module.
-    fn get_controllers(&self) -> Vec<Arc<dyn NgynController>> {
+    fn get_controllers(&self) -> Vec<Arc<Box<dyn NgynController + 'static>>> {
         vec![]
     }
 }

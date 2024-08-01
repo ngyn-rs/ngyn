@@ -1,14 +1,10 @@
-use ngyn::{
-    prelude::*,
-    shared::traits::{NgynController, NgynModule},
-};
+use ngyn::{prelude::*, shared::traits::NgynModule};
 use serde_json::{json, Value};
 
 use crate::SwaggerController;
 
 pub struct SwaggerModule;
 
-#[derive(Clone)]
 pub struct SwaggerConfig<AppModule: NgynModule + Clone> {
     pub spec_url: String,
     pub app_module: Box<AppModule>,
@@ -40,7 +36,6 @@ impl<AppModule: NgynModule + Clone + Default> Default for SwaggerConfig<AppModul
 }
 
 #[controller("/docs")]
-#[derive(Clone)]
 pub struct SwaggerRoutesController<AppModule: Default + NgynModule + Clone + 'static> {
     config: SwaggerConfig::<AppModule>,
     spec: Value,
@@ -55,7 +50,9 @@ impl<AppModule: Default + NgynModule + Clone + 'static> SwaggerRoutesController<
             let mut components = json!({});
             let mut tags = Vec::new();
             for controller in controllers {
-                let swagger_ctrl = controller.as_any().downcast_ref::<Box<dyn SwaggerController>>();
+                let swagger_ctrl = controller
+                    .as_any()
+                    .downcast_ref::<Box<dyn SwaggerController>>();
                 if let Some(swagger_ctrl) = swagger_ctrl {
                     let meta = swagger_ctrl.swagger_meta();
                     println!("{:?}", meta.components.len());

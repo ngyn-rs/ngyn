@@ -14,7 +14,6 @@ pub struct WeatherDto {
 }
 
 #[controller(prefix="/weather", middlewares=[TestMiddleware, TestMiddleware])]
-#[derive(Clone)]
 pub struct WeatherController {
     #[inject]
     weather_service: WeatherService,
