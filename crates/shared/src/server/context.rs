@@ -3,11 +3,11 @@
 
 use hyper::Request;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::HashMap};
+use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::BoxedController,
+    traits::NgynController,
 };
 
 /// Represents the value of a context in Ngyn
@@ -37,7 +37,7 @@ impl<T: Send + Sync + 'static> AppState for T {
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
-    route_info: Option<(String, BoxedController)>,
+    route_info: Option<(String, Arc<dyn NgynController>)>,
     store: HashMap<String, String>,
     state: Option<Box<dyn AppState>>,
 }
@@ -385,7 +385,7 @@ impl NgynContext {
     ///
     /// context.prepare(Box::new(controller), "index".to_string());
     /// ```
-    pub(crate) fn prepare(&mut self, controller: BoxedController, handler: String) {
+    pub(crate) fn prepare(&mut self, controller: Arc<dyn NgynController>, handler: String) {
         self.route_info = Some((handler, controller));
     }
 
@@ -407,10 +407,11 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        let (handler, mut controller) = match self.route_info.take() {
-            Some((handler, ctrl)) => (handler.clone(), ctrl),
-            None => return,
-        };
+        let (handler, mut controller): (String, Box<dyn NgynController>) =
+            match self.route_info.take() {
+                Some((handler, ctrl)) => (handler.clone(), ctrl.into()),
+                None => return,
+            };
         controller.handle(&handler, self, res).await;
     }
 }

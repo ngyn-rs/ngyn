@@ -1,6 +1,5 @@
 use crate::traits::NgynController;
-
-pub(crate) type BoxedController = Box<dyn NgynController>;
+use std::sync::Arc;
 
 /// `NgynModule` is a trait that defines the basic structure of a module in Ngyn.
 pub trait NgynModule: Send + Sync {
@@ -13,7 +12,7 @@ pub trait NgynModule: Send + Sync {
     fn name(&self) -> &str;
 
     /// Returns the controllers of the module.
-    fn get_controllers(&self) -> Vec<BoxedController> {
+    fn get_controllers(&self) -> Vec<Arc<dyn NgynController>> {
         vec![]
     }
 }

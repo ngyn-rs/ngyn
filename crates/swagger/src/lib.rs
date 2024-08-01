@@ -1,4 +1,10 @@
-use ngyn::shared::{core::NgynEngine, server::NgynResponse, traits::{NgynController, NgynModule}};
+use std::sync::Arc;
+
+use ngyn::shared::{
+    core::NgynEngine,
+    server::NgynResponse,
+    traits::{NgynController, NgynModule},
+};
 use serde_json::Value;
 
 pub mod routing;
@@ -99,9 +105,12 @@ pub trait SwaggerController: NgynController {
 }
 
 pub trait NgynEngineSwagger: NgynEngine {
-    fn use_swagger<AppModule: Default + NgynModule + Clone + 'static>(&mut self, config: routing::SwaggerConfig<AppModule>) {
+    fn use_swagger<AppModule: Default + NgynModule + Clone + 'static>(
+        &mut self,
+        config: routing::SwaggerConfig<AppModule>,
+    ) {
         let controller = routing::SwaggerModule::with_config(config);
-        self.load_controller(controller);
+        self.load_controller(Arc::new(controller));
     }
 }
 

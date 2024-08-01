@@ -6,7 +6,7 @@ use crate::{
     server::{
         context::AppState,
         response::{Middlewares, ResponseBuilder, Routes},
-        Method, NgynResponse,
+        Method, NgynContext, NgynResponse,
     },
     traits::{NgynController, NgynMiddleware, NgynModule},
 };
@@ -138,10 +138,21 @@ pub trait NgynEngine: NgynPlatform {
         }
     }
 
-    fn load_controller(&mut self, controller: impl NgynController + 'static + Clone) {
-        controller.iter_routes(|path, method, handler| {
-            self.route(path, method, handler);
-        });
+    fn load_controller(&mut self, controller: Arc<dyn NgynController>) {
+        for (path, http_method, handler) in controller.routes() {
+            self.route(
+                path.as_str(),
+                hyper::Method::from_bytes(http_method.to_uppercase().as_bytes())
+                    .unwrap_or_default(),
+                Box::new({
+                    let controller = controller.clone();
+                    move |cx: &mut NgynContext, _res: &mut NgynResponse| {
+                        let controller = controller.clone();
+                        cx.prepare(controller, handler.clone());
+                    }
+                }) as Box<Handler>,
+            );
+        }
     }
 
     fn build<AppModule: NgynModule + 'static>() -> Self {

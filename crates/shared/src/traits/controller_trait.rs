@@ -1,15 +1,11 @@
-use hyper::Method;
+use std::{any::Any, sync::Arc};
 
-use crate::server::NgynContext;
-
-use crate::core::Handler;
-
-use super::{CloneBox, NgynInjectable};
+use super::NgynInjectable;
 
 /// `NgynController` defines the basic structure of a controller in Ngyn.
 /// It is designed to be thread-safe.
 #[async_trait::async_trait]
-pub trait NgynController: NgynInjectable + Sync + Send {
+pub trait NgynController: NgynInjectable + Any + Sync + Send {
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)> {
         vec![]
@@ -26,72 +22,14 @@ pub trait NgynController: NgynInjectable + Sync + Send {
         _res: &mut crate::server::NgynResponse,
     ) {
     }
-
-    /// Iterates over the routes of the controller.
-    ///
-    /// # Arguments
-    ///
-    /// * `f` - The closure to execute for each route.
-    fn iter_routes(&self, mut f: impl FnMut(&str, Method, Box<Handler>))
-    where
-        Self: Clone + 'static,
-    {
-        for (path, http_method, handler) in self.routes() {
-            f(
-                path.clone().as_str(),
-                hyper::Method::from_bytes(http_method.to_uppercase().as_bytes())
-                    .unwrap_or_default(),
-                Box::new({
-                    let controller = self.clone_box();
-                    move |cx: &mut NgynContext, _res| {
-                        let controller = controller.clone_box();
-                        cx.prepare(controller, handler.clone());
-                    }
-                }),
-            );
-        }
-    }
 }
 
-impl NgynInjectable for Box<dyn NgynController> {
-    fn new() -> Self
-    where
-        Self: Sized,
-    {
-        unimplemented!()
-    }
-
-    fn inject(&mut self, cx: &NgynContext) {
-        self.as_mut().inject(cx);
-    }
-}
-
-#[async_trait::async_trait]
-impl NgynController for Box<dyn NgynController> {
-    fn routes(&self) -> Vec<(String, String, String)> {
-        self.as_ref().routes()
-    }
-
-    fn prefix(&self) -> String {
-        self.as_ref().prefix()
-    }
-
-    async fn handle(
-        &mut self,
-        handler: &str,
-        cx: &mut crate::server::NgynContext,
-        res: &mut crate::server::NgynResponse,
-    ) {
-        self.as_mut().handle(handler, cx, res).await;
-    }
-    fn iter_routes(&self, _f: impl FnMut(&str, Method, Box<Handler>)) {
-        unimplemented!()
-    }
-}
-
-impl Clone for Box<dyn NgynController> {
-    fn clone(&self) -> Self {
-        self.clone_box()
+impl From<Arc<dyn NgynController>> for Box<dyn NgynController> {
+    fn from(value: Arc<dyn NgynController>) -> Self {
+        println!("converting to box");
+        let val = unsafe { std::mem::transmute(value.as_ref()) };
+        println!("conversion success");
+        val
     }
 }
 
