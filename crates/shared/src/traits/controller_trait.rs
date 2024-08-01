@@ -26,10 +26,7 @@ pub trait NgynController: NgynInjectable + Any + Sync + Send {
 
 impl From<Arc<dyn NgynController>> for Box<dyn NgynController> {
     fn from(value: Arc<dyn NgynController>) -> Self {
-        println!("converting to box");
-        let val = unsafe { std::mem::transmute(value.as_ref()) };
-        println!("conversion success");
-        val
+        unsafe { std::mem::transmute(value.as_ref()) }
     }
 }
 
