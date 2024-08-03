@@ -94,7 +94,7 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
         .iter()
         .map(|controller| {
             quote! {
-                std::sync::Arc::new(Box::new(#controller::new()) as Box<dyn ngyn::shared::traits::NgynController + 'static>) 
+                std::sync::Arc::new(Box::new(#controller::new()) as Box<dyn ngyn::shared::traits::NgynController + 'static>)
             }
         })
         .collect();
