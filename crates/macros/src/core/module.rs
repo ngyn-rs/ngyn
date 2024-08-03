@@ -79,7 +79,7 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
                  ..
              }| {
                 add_fields.push(quote! {
-                    #ident #colon_token #ty::default()
+                    #ident #colon_token Default::default()
                 });
                 let attrs = attrs.iter().filter(|attr| !attr.path().is_ident("inject"));
                 quote! {

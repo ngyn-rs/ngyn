@@ -37,7 +37,7 @@ impl<AppModule: NgynModule + Clone + Default> Default for SwaggerConfig<AppModul
 
 #[controller("/docs")]
 pub struct SwaggerRoutesController<AppModule: Default + NgynModule + Clone + 'static> {
-    config: SwaggerConfig::<AppModule>,
+    config: SwaggerConfig<AppModule>,
     spec: Value,
 }
 
