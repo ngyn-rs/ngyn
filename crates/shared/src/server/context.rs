@@ -390,7 +390,7 @@ impl NgynContext {
     /// context.prepare(Box::new(controller), "index".to_string());
     /// ```
     pub(crate) fn prepare(&mut self, controller: Arc<Box<dyn NgynController>>, handler: String) {
-        self.route_info = Some((handler.clone(), controller));
+        self.route_info = Some((handler, controller));
     }
 
     /// Executes the handler associated with the route in the context.
@@ -412,7 +412,7 @@ impl NgynContext {
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
         let (handler, controller) = match self.route_info.take() {
-            Some((handler, ctrl)) => (handler.clone(), ctrl),
+            Some((handler, ctrl)) => (handler, ctrl),
             None => return,
         };
         let mut controller =

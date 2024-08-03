@@ -22,7 +22,7 @@ pub(crate) fn check_impl_macro(args: TokenStream, impl_item: ItemImpl) -> TokenS
     for item in impl_item.items {
         let new_item = match item {
             syn::ImplItem::Fn(mut method) => {
-                if method.attrs.clone().into_iter().any(|attr| {
+                if method.attrs.iter().any(|attr| {
                     attr.path().is_ident("route")
                         || attr.path().is_ident("get")
                         || attr.path().is_ident("post")
