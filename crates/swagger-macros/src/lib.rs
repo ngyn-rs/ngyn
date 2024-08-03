@@ -20,12 +20,10 @@ pub fn swagger_derive(input: TokenStream) -> TokenStream {
                 syn::Type::Path(ty) => {
                     if let Some(ident) = ty.path.get_ident() {
                         ident.to_string()
+                    } else if let Some(segment) = ty.path.segments.last() {
+                        segment.arguments.to_token_stream().to_string()
                     } else {
-                        if let Some(segment) = ty.path.segments.last() {
-                            segment.arguments.to_token_stream().to_string()
-                        } else {
-                            unimplemented!()
-                        }
+                        unimplemented!()
                     }
                 }
                 syn::Type::Array(ty) => {

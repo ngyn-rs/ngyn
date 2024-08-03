@@ -22,7 +22,7 @@ impl<AppModule: NgynModule + Clone + Default> Default for SwaggerConfig<AppModul
     fn default() -> Self {
         SwaggerConfig {
             spec_url: "/docs/openapi.json".to_string(),
-            app_module: Box::new(AppModule::default()),
+            app_module: Box::<AppModule>::default(),
             title: "API Documentation".to_string(),
             version: "1.0.0".to_string(),
             server_url: '/'.to_string(),
