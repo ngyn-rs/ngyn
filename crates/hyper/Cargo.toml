@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Hyper Platform for ngyn web framework"
 license = "MIT"
+rust-version = "1.75"
 
 [dependencies]
 http-body-util = "0.1"
