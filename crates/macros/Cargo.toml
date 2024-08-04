@@ -1,6 +1,6 @@
 [package]
 name = "ngyn_macros"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
