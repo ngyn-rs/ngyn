@@ -13,7 +13,7 @@ pub struct WeatherDto {
     pub humidity: f32,
 }
 
-#[controller(prefix="/weather", middlewares=[TestMiddleware])]
+#[controller(prefix="/weather", middlewares=[TestMiddleware, TestMiddleware])]
 pub struct WeatherController {
     #[inject]
     weather_service: WeatherService,

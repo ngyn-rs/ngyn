@@ -304,10 +304,10 @@ pub fn head(args: TokenStream, input: TokenStream) -> TokenStream {
 /// }
 /// ```
 pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
-    let parsed_input = syn::parse::<syn::Item>(input.clone());
+    let parsed_input = syn::parse::<syn::Item>(input);
     match parsed_input {
-        Ok(syn::Item::Fn(_)) => check_fn_macro(args, input),
-        Ok(syn::Item::Impl(impl_item)) => check_impl_macro(impl_item, args),
+        Ok(syn::Item::Fn(input)) => check_fn_macro(args, input),
+        Ok(syn::Item::Impl(impl_item)) => check_impl_macro(args, impl_item),
         _ => panic!("`check` attribute can only be used on methods or impl blocks"),
     }
 }

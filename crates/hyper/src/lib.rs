@@ -45,8 +45,8 @@ impl HyperApplication {
                     let mut buf = Vec::new();
                     if let Some(frame) = body.frame().await {
                         let chunk = frame?.into_data();
-                        if let Ok(data) = chunk {
-                            buf.extend_from_slice(&data)
+                        if let Ok(bytes) = chunk {
+                            buf.extend_from_slice(&bytes)
                         }
                     }
                     buf
