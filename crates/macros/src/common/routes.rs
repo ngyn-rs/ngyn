@@ -118,22 +118,6 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
         panic!("Trait impls are not supported");
     }
 
-    let generics_params = if generics.params.iter().count() > 0 {
-        let generics_params = generics.params.iter().map(|param| {
-            if let syn::GenericParam::Type(ty) = param {
-                let ident = &ty.ident;
-                quote! { #ident }
-            } else {
-                quote! { #param }
-            }
-        });
-        quote! {
-            <#(#generics_params),*>
-        }
-    } else {
-        quote! {}
-    };
-
     let mut route_defs: Vec<_> = Vec::new();
     let mut handle_routes: Vec<_> = Vec::new();
 
@@ -147,7 +131,6 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                     || attr.path().is_ident("delete")
                     || attr.path().is_ident("patch")
                     || attr.path().is_ident("head")
-                    || attr.path().is_ident("options")
                 {
                     let (path, http_method) = {
                         if attr.path().is_ident("route") {
@@ -156,7 +139,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             (path, http_method)
                         } else {
                             let PathArg { path } = attr.parse_args::<PathArg>().unwrap();
-                            let http_method = attr.path().get_ident().unwrap().to_string();
+                            let http_method =
+                                attr.path().get_ident().unwrap().to_string().to_uppercase();
                             (path, http_method)
                         }
                     };
@@ -210,6 +194,19 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 args
                             }
                         });
+                        let http_code = method.attrs.iter().find_map(|attr| {
+                            if attr.path().is_ident("http_code") {
+                                Some(attr.meta.clone())
+                            } else {
+                                None
+                            }
+                        });
+                        let http_code = match http_code {
+                            Some(http_code) => quote! {
+                                res.set_status(#http_code);
+                            },
+                            None => quote! {},
+                        };
                         let gates = method.attrs.iter().filter_map(|attr| {
                             if attr.path().is_ident("check") {
                                 Some(attr.meta.clone())
@@ -229,7 +226,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                                 use ngyn::prelude::NgynGate;
                                                 let mut gate = #path::default();
                                                 gate.inject(cx);
-                                                if !gate.can_activate(cx, res) {
+                                                if !gate.can_activate(cx, res).await {
                                                     return;
                                                 }
                                             }
@@ -240,8 +237,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 }
                             })
                             .collect();
-                        if asyncness.is_some() {
-                            let handle_body = match output {
+                        let handle_body = if asyncness.is_some() {
+                            match output {
                                 syn::ReturnType::Type(_, _) => quote! {
                                     let body = self.#ident(#args).await;
                                     res.send(body);
@@ -249,15 +246,9 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 _ => quote! {
                                     self.#ident(#args).await;
                                 },
-                            };
-                            handle_routes.push(quote! {
-                                #ident_str => {
-                                    #(#gate_handlers)*
-                                    #handle_body
-                                }
-                            });
+                            }
                         } else {
-                            let handle_body = match output {
+                            match output {
                                 syn::ReturnType::Type(_, _) => quote! {
                                     let body = self.#ident(#args);
                                     res.send(body);
@@ -265,14 +256,15 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                                 _ => quote! {
                                     self.#ident(#args);
                                 },
-                            };
-                            handle_routes.push(quote! {
-                                #ident_str => {
-                                    #(#gate_handlers)*
-                                    #handle_body
-                                }
-                            });
-                        }
+                            }
+                        };
+                        handle_routes.push(quote! {
+                            #ident_str => {
+                                #http_code
+                                #(#gate_handlers)*
+                                #handle_body
+                            }
+                        });
                     })
                 }
             }
@@ -281,18 +273,20 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #defaultness #unsafety #(#attrs)*
-        #impl_token #generics #self_ty #generics_params {
+        #impl_token #generics #self_ty  {
             const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[
                 #(#route_defs),*
             ];
             #(#items)*
-
+        }
+        #impl_token #generics #self_ty {
             async fn __handle_route(
-                &self,
+                &mut self,
                 handler: &str,
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse
             ) {
+                res.set_status(201);
                 match handler {
                     #(#handle_routes),*
                     _ => {}

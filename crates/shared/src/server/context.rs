@@ -3,11 +3,11 @@
 
 use hyper::Request;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::HashMap};
+use std::{any::Any, collections::HashMap, mem::ManuallyDrop, sync::Arc};
 
 use crate::{
     server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::ControllerList,
+    traits::NgynController,
 };
 
 /// Represents the value of a context in Ngyn
@@ -30,22 +30,20 @@ pub trait AppState: Any + Send + Sync {
     {
         self
     }
-    fn get_state(&self) -> &dyn Any;
 }
 
-impl<T: Send + Sync + 'static> AppState for T {
-    fn get_state(&self) -> &dyn Any {
-        self
-    }
-}
+impl AppState for Arc<dyn AppState> {}
+
+pub struct EmptyState;
+impl AppState for EmptyState {}
 
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
     params: Option<Vec<(String, String)>>,
-    route_info: Option<(String, ControllerList)>,
+    route_info: Option<(String, Arc<Box<dyn NgynController>>)>,
     store: HashMap<String, String>,
-    state: Option<Box<dyn AppState>>,
+    state: Option<Arc<dyn AppState>>,
 }
 
 impl NgynContext {
@@ -116,7 +114,7 @@ impl NgynContext {
         let state = self.state.as_ref();
 
         match state {
-            Some(value) => value.get_state().downcast_ref::<T>(),
+            Some(value) => value.as_any().downcast_ref::<T>(),
             None => None,
         }
     }
@@ -320,7 +318,7 @@ impl NgynContext {
         }
     }
 
-    pub(crate) fn set_state(&mut self, state: Box<dyn AppState>) {
+    pub(crate) fn set_state(&mut self, state: Arc<dyn AppState>) {
         self.state = Some(state);
     }
 
@@ -370,7 +368,7 @@ impl NgynContext {
     ///
     /// `true` if the context has a valid route, `false` otherwise.
     pub fn is_valid_route(&self) -> bool {
-        self.route_info.is_some() && self.params.is_some()
+        self.params.is_some()
     }
 
     /// Prepares the context for execution by setting the route information.
@@ -389,9 +387,9 @@ impl NgynContext {
     /// let mut context = NgynContext::from_request(request);
     /// let controller = MyController::new();
     ///
-    /// context.prepare(Arc::new(controller), "index".to_string());
+    /// context.prepare(Box::new(controller), "index".to_string());
     /// ```
-    pub(crate) fn prepare(&mut self, controller: ControllerList, handler: String) {
+    pub(crate) fn prepare(&mut self, controller: Arc<Box<dyn NgynController>>, handler: String) {
         self.route_info = Some((handler, controller));
     }
 
@@ -413,17 +411,13 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        let route = self.route_info.as_mut().map(|(handle, controller_arc)| {
-            (
-                handle.clone(),
-                controller_arc.clone().lock().unwrap().pop().unwrap(),
-            )
-        });
-
-        if let Some((handler, mut controller)) = route {
-            controller.inject(self);
-            controller.handle(handler.as_str(), self, res).await;
-        }
+        let (handler, controller) = match self.route_info.take() {
+            Some((handler, ctrl)) => (handler, ctrl),
+            None => return,
+        };
+        let mut controller =
+            ManuallyDrop::<Box<dyn NgynController>>::new(controller.clone().into());
+        controller.handle(&handler, self, res).await;
     }
 }
 

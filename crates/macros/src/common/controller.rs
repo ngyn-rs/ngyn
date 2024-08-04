@@ -126,7 +126,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                  ..
              }| {
                 add_fields.push(quote! {
-                    #ident #colon_token #ty::default()
+                    #ident #colon_token Default::default()
                 });
                 if attrs.iter().any(|attr| attr.path().is_ident("inject")) {
                     inject_fields.push(quote! {
@@ -154,8 +154,15 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
 
     let path_prefix = {
         if let Some(prefix) = prefix {
-            quote! {
-                format!("{}{}", #prefix, "/")
+            let str_prefix = prefix.value();
+            if !str_prefix.starts_with('/') {
+                quote! {
+                    format!("/{}", #prefix)
+                }
+            } else {
+                quote! {
+                    format!("{}", #prefix)
+                }
             }
         } else {
             quote! {
@@ -196,14 +203,13 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
             #(#fields),*
         }
 
-        impl #generics ngyn::shared::traits::NgynControllerHandler for #ident #generics_params {}
-
         impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics_params {
             fn new() -> Self {
                 #init_controller
             }
 
             fn inject(&mut self, cx: &ngyn::prelude::NgynContext) {
+                #(#inject_fields)*
                 #inject_controller
             }
         }
@@ -211,9 +217,17 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         #[ngyn::prelude::async_trait]
         impl #generics ngyn::shared::traits::NgynController for #ident #generics_params {
             fn routes(&self) -> Vec<(String, String, String)> {
+                use ngyn::shared::traits::NgynControllerHandler;
                 Self::ROUTES.iter().map(|(path, method, handler)| {
-                    ((format!("{}{}", #path_prefix, path)).replace("//", "/"), method.to_string(), handler.to_string())
+                    // prefix path with controller prefix, and remove double slashes
+                    let path = format!("{}", path).trim_start_matches('/').to_string();
+                    let prefix = #path_prefix.trim_end_matches('/').to_string();
+                    (format!("{}/{}", prefix, path), method.to_string(), handler.to_string())
                 }).collect()
+            }
+
+            fn prefix(&self) -> String {
+                #path_prefix
             }
 
             async fn handle(
@@ -222,7 +236,8 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse,
             ) {
-                #(#inject_fields)*
+                use ngyn::shared::traits::NgynControllerHandler;
+                self.inject(cx);
                 #(#add_middlewares)*
                 self.__handle_route(handler, cx, res).await;
             }

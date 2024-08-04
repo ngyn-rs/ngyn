@@ -1,14 +1,15 @@
 [package]
 name = "ngyn_macros"
-version = "0.4.0"
+version = "0.4.2"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
 
 [dependencies]
+http = "1.1"
 syn = "2.0"
 quote = "1.0"
-ngyn_shared = { version = "^0.4.0", path = "../shared" }
+ngyn_shared = { version = "0.4", path = "../shared" }
 
 [lib]
 path = "src/lib.rs"

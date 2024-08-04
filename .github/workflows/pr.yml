@@ -1,6 +1,7 @@
 name: PR Workflow
 on:
   pull_request:
+    types: ready_for_review
   push:
     branches:
       - dev

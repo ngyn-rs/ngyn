@@ -78,7 +78,7 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
                  ..
              }| {
                 add_fields.push(quote! {
-                    #ident #colon_token #ty::default()
+                    #ident #colon_token Default::default()
                 });
                 if attrs.iter().any(|attr| attr.path().is_ident("inject")) {
                     inject_fields.push(quote! {

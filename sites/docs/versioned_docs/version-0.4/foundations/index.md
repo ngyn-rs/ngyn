@@ -10,7 +10,7 @@ Ngyn is a web framework for Rust that is designed to be fast, secure, and easy t
 
 Before you start using Ngyn, you should have a basic understanding of Rust and web development. You should also have Rust installed. If you don't have Rust installed, you can follow the instructions [here](https://www.rust-lang.org/tools/install).
 
-By practice, Ngyn MSRV (Minimum Supported Rust Version) is set to `1.63.0` (always the same as hyper). This means that you need to have Rust version `1.63.0` or higher installed on your system to use Ngyn.
+By practice, Ngyn MSRV (Minimum Supported Rust Version) is set to `1.75.0`. This means that you need to have Rust version `1.75.0` or higher installed on your system to use Ngyn.
 
 ## Setting up a new project
 

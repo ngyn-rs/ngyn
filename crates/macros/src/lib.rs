@@ -4,12 +4,13 @@ mod common;
 mod core;
 mod utils;
 
-use crate::common::check_macro::check_fn_macro;
-use crate::common::{controller_macro::*, injectable_macro::*, route_macro::*, routes_macro::*};
+use crate::common::check::check_fn_macro;
+use crate::common::{controller::*, injectable::*, route::*, routes::*};
 use crate::core::dto::dto_macro;
 use crate::core::module::*;
-use common::check_macro::check_impl_macro;
-use common::inject_macro::inject_macro;
+use common::check::check_impl_macro;
+use common::http_code::http_code_macro;
+use common::inject::inject_macro;
 use proc_macro::TokenStream;
 
 #[proc_macro_attribute]
@@ -303,12 +304,29 @@ pub fn head(args: TokenStream, input: TokenStream) -> TokenStream {
 /// }
 /// ```
 pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
-    let parsed_input = syn::parse::<syn::Item>(input.clone());
+    let parsed_input = syn::parse::<syn::Item>(input);
     match parsed_input {
-        Ok(syn::Item::Fn(_)) => check_fn_macro(args, input),
-        Ok(syn::Item::Impl(impl_item)) => check_impl_macro(impl_item, args),
+        Ok(syn::Item::Fn(input)) => check_fn_macro(args, input),
+        Ok(syn::Item::Impl(impl_item)) => check_impl_macro(args, impl_item),
         _ => panic!("`check` attribute can only be used on methods or impl blocks"),
     }
+}
+
+#[proc_macro_attribute]
+/// The `http_code` macro is used to set the default HTTP status code for a route.
+///
+/// ##### Arguments
+/// * `code` - The HTTP status code to set.
+///
+/// ##### Example
+/// ```rust ignore
+/// #[http_code(200)]
+/// fn my_route(&self) {
+///    // route implementation
+/// }
+/// ```
+pub fn http_code(args: TokenStream, input: TokenStream) -> TokenStream {
+    http_code_macro(args, input)
 }
 
 #[proc_macro_derive(Dto)]
