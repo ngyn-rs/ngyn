@@ -23,11 +23,9 @@ impl VercelApplication {
             let mut buf = Vec::new();
             let frame = body.frame().await;
 
-            if let Some(frame) = frame {
-                if let Ok(chunk) = frame {
-                    let d = chunk.data_ref().unwrap();
-                    buf.extend_from_slice(d.to_vec().as_slice());
-                }
+            if let Some(Ok(chunk)) = frame {
+                let d = chunk.data_ref().unwrap();
+                buf.extend_from_slice(d.to_vec().as_slice());
             }
             Body::from(buf)
         };
