@@ -1,11 +1,12 @@
-use hyper::Request;
+use http_body_util::Full;
+use hyper::{body::Bytes, Request, Response};
 use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
 use crate::{
     server::{
         context::AppState,
-        response::{Middlewares, ResponseBuilder, Routes},
+        response::{Middlewares, Routes},
         Method, NgynContext, NgynResponse,
     },
     traits::{NgynController, NgynMiddleware, NgynModule},
@@ -30,13 +31,41 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
-        match self.state {
-            Some(ref state) => {
-                let state = state.clone();
-                NgynResponse::build_with_state(req, &self.routes, &self.middlewares, state).await
-            }
-            None => NgynResponse::build(req, &self.routes, &self.middlewares).await,
+        let mut cx = NgynContext::from_request(req);
+        let mut res = Response::new(Full::new(Bytes::default()));
+
+        if let Some(state) = &self.state {
+            cx.set_state(state.clone());
         }
+
+        let mut is_handled = false;
+
+        let _ = self
+            .routes
+            .iter()
+            .for_each(|(path, method, route_handler)| {
+                if !is_handled && cx.with(path, method).is_some() {
+                    is_handled = true;
+                    // trigger global middlewares
+                    self.middlewares
+                        .iter()
+                        .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+                    // trigger route handler
+                    route_handler(&mut cx, &mut res);
+                }
+            });
+
+        // execute controlled route if it is handled
+        if is_handled {
+            cx.execute(&mut res).await;
+        } else {
+            // trigger global middlewares if no route is found
+            self.middlewares
+                .iter()
+                .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+        }
+
+        res
     }
 
     /// Adds a route to the platform data.
