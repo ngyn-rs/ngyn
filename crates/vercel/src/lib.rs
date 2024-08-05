@@ -19,6 +19,17 @@ impl VercelApplication {
         let response = self.data.respond(request).await;
 
         let (parts, mut body) = response.into_parts();
+        std::str::from_utf8(
+            &body
+                .frame()
+                .await
+                .unwrap()
+                .unwrap()
+                .data_ref()
+                .unwrap()
+                .to_vec(),
+        )
+        .unwrap();
         let body = {
             let mut buf = Vec::new();
             let frame = body.frame().await;

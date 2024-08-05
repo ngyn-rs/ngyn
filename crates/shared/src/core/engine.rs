@@ -66,9 +66,11 @@ impl PlatformData {
                 .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
         }
 
-        self.interpreters
-            .iter()
-            .fold(res, |mut res, interpreter| interpreter.interpret(&mut res))
+        for interpreter in &self.interpreters {
+            interpreter.interpret(&mut res).await;
+        }
+
+        res
     }
 
     /// Adds a route to the platform data.
