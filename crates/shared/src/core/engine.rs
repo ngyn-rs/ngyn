@@ -41,8 +41,7 @@ impl PlatformData {
 
         let mut is_handled = false;
 
-        let _ = self
-            .routes
+        self.routes
             .iter()
             .for_each(|(path, method, route_handler)| {
                 if !is_handled && cx.with(path, method).is_some() {
