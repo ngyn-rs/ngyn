@@ -9,13 +9,14 @@ use crate::{
         response::{Middlewares, Routes},
         Method, NgynContext, NgynResponse,
     },
-    traits::{NgynController, NgynMiddleware, NgynModule},
+    traits::{NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
     routes: Routes,
     middlewares: Middlewares,
+    interpreters: Vec<Box<dyn NgynInterpreter>>,
     state: Option<Arc<dyn AppState>>,
 }
 
@@ -65,7 +66,9 @@ impl PlatformData {
                 .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
         }
 
-        res
+        self.interpreters
+            .iter()
+            .fold(res, |mut res, interpreter| interpreter.interpret(&mut res))
     }
 
     /// Adds a route to the platform data.
@@ -86,6 +89,15 @@ impl PlatformData {
     /// * `middleware` - The middleware to add.
     pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
         self.middlewares.push(middleware);
+    }
+
+    /// Adds an interpreter to the platform data.
+    ///
+    /// # Arguments
+    ///
+    /// * `interpreter` - The interpreter to add.
+    pub(crate) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
+        self.interpreters.push(interpreter);
     }
 }
 
@@ -157,16 +169,40 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
+    /// Adds an interpreter to the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `interpreter` - The interpreter to add.
+    fn use_interpreter(&mut self, interpreter: impl NgynInterpreter + 'static) {
+        self.data_mut().add_interpreter(Box::new(interpreter));
+    }
+
+    /// Sets the state of the application to any value that implements [`AppState`].
+    ///
+    /// # Arguments
+    ///
+    /// * `state` - The state to set.
     fn set_state(&mut self, state: impl AppState + 'static) {
         self.data_mut().state = Some(Arc::new(state));
     }
 
+    /// Loads a component which implements [`NgynModule`] into the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `module` - The module to load.
     fn load_module(&mut self, module: impl NgynModule + 'static) {
         for controller in module.get_controllers() {
             self.load_controller(controller);
         }
     }
 
+    /// Loads a component which implements [`NgynController`] into the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `controller` - The arc'd controller to load.
     fn load_controller(&mut self, controller: Arc<Box<dyn NgynController + 'static>>) {
         for (path, http_method, handler) in controller.routes() {
             self.route(
@@ -183,6 +219,7 @@ pub trait NgynEngine: NgynPlatform {
         }
     }
 
+    /// Builds the application with the specified module.
     fn build<AppModule: NgynModule + 'static>() -> Self {
         let module = AppModule::new();
         let mut server = Self::default();
