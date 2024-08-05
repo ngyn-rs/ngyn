@@ -67,7 +67,7 @@ impl PlatformData {
         }
 
         for interpreter in &self.interpreters {
-            interpreter.interpret(&mut res).await;
+            res = interpreter.interpret(&mut res).await;
         }
 
         res

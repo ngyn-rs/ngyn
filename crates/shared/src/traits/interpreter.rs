@@ -6,5 +6,5 @@ use crate::server::NgynResponse;
 /// This trait provides a way to do that.
 #[async_trait::async_trait]
 pub trait NgynInterpreter: Send + Sync {
-    async fn interpret(&self, res: &mut NgynResponse);
+    async fn interpret(&self, res: &mut NgynResponse) -> NgynResponse;
 }
