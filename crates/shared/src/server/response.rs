@@ -1,14 +1,10 @@
-use std::sync::Arc;
-
 use http_body_util::Full;
-use hyper::{body::Bytes, header::IntoHeaderName, Method, Request, Response, StatusCode};
+use hyper::{header::IntoHeaderName, Method, StatusCode};
 
 use crate::{
     core::Handler,
     server::{NgynContext, NgynResponse, ToBytes, Transformer},
 };
-
-use super::context::{AppState, EmptyState};
 
 /// Trait representing a full response.
 pub trait FullResponse {
@@ -103,79 +99,3 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
 
 pub(crate) type Routes = Vec<(String, Method, Box<Handler>)>;
 pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
-
-pub(crate) trait ResponseBuilder: FullResponse {
-    /// Creates a new response.
-    ///
-    /// # Arguments
-    ///
-    /// * `req` - The request to create the response from.
-    ///
-    /// # Returns
-    ///
-    /// A new response.
-    ///
-    /// # Examples
-    ///
-    /// ```rust ignore
-    /// use http_body_util::Full;
-    /// use hyper::StatusCode;
-    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
-    ///
-    /// let response = NgynResponse::build(req, routes);
-    /// assert_eq!(response.status, StatusCode::OK);
-    /// assert_eq!(response.body.as_slice(), &[1, 2, 3]);
-    /// ```
-    async fn build(req: Request<Vec<u8>>, routes: &Routes, middlewares: &Middlewares) -> Self;
-
-    async fn build_with_state(
-        req: Request<Vec<u8>>,
-        routes: &Routes,
-        middlewares: &Middlewares,
-        state: Arc<dyn AppState>,
-    ) -> Self;
-}
-
-impl ResponseBuilder for NgynResponse {
-    async fn build(req: Request<Vec<u8>>, routes: &Routes, middlewares: &Middlewares) -> Self {
-        Self::build_with_state(req, routes, middlewares, Arc::new(EmptyState {})).await
-    }
-
-    async fn build_with_state(
-        req: Request<Vec<u8>>,
-        routes: &Routes,
-        middlewares: &Middlewares,
-        state: Arc<dyn AppState>,
-    ) -> Self {
-        let mut cx = NgynContext::from_request(req);
-        let mut res = Response::new(Full::new(Bytes::default()));
-
-        cx.set_state(state);
-
-        let mut is_handled = false;
-
-        let _ = &routes.iter().for_each(|(path, method, route_handler)| {
-            if !is_handled && cx.with(path, method).is_some() {
-                is_handled = true;
-                // trigger global middlewares
-                middlewares
-                    .iter()
-                    .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
-                // trigger route handler
-                route_handler(&mut cx, &mut res);
-            }
-        });
-
-        // execute controlled route if it is handled
-        if is_handled {
-            cx.execute(&mut res).await;
-        } else {
-            // trigger global middlewares if no route is found
-            middlewares
-                .iter()
-                .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
-        }
-
-        res
-    }
-}
