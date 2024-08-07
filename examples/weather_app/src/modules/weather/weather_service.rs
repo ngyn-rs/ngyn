@@ -8,10 +8,8 @@ pub struct WeatherService {
 }
 
 impl WeatherService {
-    pub async fn get_location_weather(&self, location: &str) -> String {
+    pub async fn get_weather(&self, location: &str) -> Result<String, ureq::Error> {
         println!("Getting weather for {}", location);
-        self.weather_repository
-            .get_location_current_weather(location)
-            .await
+        self.weather_repository.get_current_weather(location).await
     }
 }

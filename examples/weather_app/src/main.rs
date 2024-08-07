@@ -1,5 +1,6 @@
 mod middlewares;
 mod modules;
+mod shared;
 
 use dotenv::dotenv;
 use modules::AppModule;
@@ -12,7 +13,9 @@ use crate::middlewares::notfound_middleware::NotFoundMiddleware;
 async fn main() -> ShuttleNgyn {
     dotenv().ok();
     let mut app = NgynFactory::<ShuttleApplication>::create::<AppModule>();
+
     app.use_middleware(NotFoundMiddleware::new());
+    app.use_interpreter(shared::ResponseInterpreter {});
 
     Ok(app.into())
 }

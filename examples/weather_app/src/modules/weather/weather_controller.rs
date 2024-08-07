@@ -1,5 +1,6 @@
 use ngyn::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use validator::Validate;
 
 use super::weather_gate::WeatherGate;
@@ -23,16 +24,24 @@ pub struct WeatherController {
 impl WeatherController {
     #[get("/<location>/<city>")]
     #[check(WeatherGate)]
-    async fn get_location(&self, params: Query) -> String {
+    async fn get_location(&self, params: Param) -> Result<String, Value> {
         println!("{:?}", "Getting location weather");
-        self.weather_service
-            .get_location_weather(params.get("location").unwrap().as_str())
-            .await
+        if let Some(location) = params.get("location") {
+            match self.weather_service.get_weather(&location).await {
+                Ok(r) => Ok(r),
+                Err(e) => Err(json!({ "status": 501, "message": e.to_string() })),
+            }
+        } else {
+            Err(json!({ "status": 401, "message": "please specify location param" }))
+        }
     }
 
     #[post("/")]
-    async fn post_location(&self, weather: WeatherDto) -> String {
+    async fn post_location(&self, weather: WeatherDto) -> Result<String, Value> {
         let location = weather.location;
-        self.weather_service.get_location_weather(&location).await
+        match self.weather_service.get_weather(&location).await {
+            Ok(r) => Ok(r),
+            Err(e) => Err(json!({ "status": 501, "message": e.to_string() })),
+        }
     }
 }
