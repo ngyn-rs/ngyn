@@ -3080,6 +3080,7 @@ name = "weather_api"
 version = "0.2.0"
 dependencies = [
  "dotenv",
+ "http-body-util",
  "ngyn 0.4.2",
  "ngyn-shuttle",
  "serde",

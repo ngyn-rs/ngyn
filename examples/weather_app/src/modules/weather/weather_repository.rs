@@ -18,10 +18,10 @@ impl WeatherRepository {
         Ok(response)
     }
 
-    pub async fn get_location_current_weather(&self, location: &str) -> String {
+    pub async fn get_current_weather(&self, location: &str) -> Result<String, ureq::Error> {
         println!("Getting weather for {}", location);
         let url = self.build_url("current", location);
         println!("Sending request to {}", url);
-        self.send_request(&url).await.unwrap()
+        self.send_request(&url).await
     }
 }
