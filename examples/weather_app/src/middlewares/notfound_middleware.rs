@@ -1,4 +1,5 @@
 use ngyn::prelude::*;
+use serde_json::json;
 
 #[injectable]
 pub struct NotFoundMiddleware;
@@ -8,7 +9,11 @@ impl NgynMiddleware for NotFoundMiddleware {
         if cx.is_valid_route() {
             return;
         }
-        res.set_status(404);
-        res.send("Not Found".to_string());
+        res.send(json!({
+            "error": {
+                "status": 404,
+                "message": "Route not found",
+            }
+        }));
     }
 }

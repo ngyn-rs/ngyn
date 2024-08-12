@@ -1,12 +1,17 @@
-use http_body_util::Full;
-use hyper::{header::IntoHeaderName, Method, StatusCode};
+use hyper::{header::IntoHeaderName, StatusCode};
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    core::Handler,
-    server::{NgynContext, NgynResponse, ToBytes, Transformer},
-};
+use crate::server::{NgynContext, NgynResponse, ToBytes, Transformer};
+
+#[derive(Serialize, Deserialize)]
+pub struct CommonResponse<D, E> {
+    pub data: Option<D>,
+    pub error: Option<E>,
+}
 
 /// Trait representing a full response.
+///
+/// This trait provides short methods to set the status code, headers, and body of a response.
 pub trait FullResponse {
     /// Sets the status code of the response.
     ///
@@ -81,7 +86,7 @@ impl FullResponse for NgynResponse {
     }
 
     fn send(&mut self, item: impl ToBytes) {
-        *self.body_mut() = Full::new(item.to_bytes());
+        *self.body_mut() = item.to_bytes().into();
     }
 }
 
@@ -96,6 +101,3 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
         res
     }
 }
-
-pub(crate) type Routes = Vec<(String, Method, Box<Handler>)>;
-pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
