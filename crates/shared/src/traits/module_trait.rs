@@ -7,10 +7,15 @@ use std::sync::Arc;
 /// ### Example
 ///
 /// ```rust
-/// use ngyn::prelude::*;
+/// use ngyn_shared::traits::NgynModule;
 ///
-/// #[module]
 /// pub struct AppModule;
+///
+/// impl NgynModule for AppModule {
+///    fn new() -> Self {
+///       Self {}
+///   }
+/// }
 /// ```
 pub trait NgynModule: Send + Sync {
     /// Creates a new instance of the module.
