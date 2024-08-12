@@ -18,8 +18,8 @@ pub mod prelude {
     pub use ngyn_shared::{
         core::NgynEngine,
         server::{
-            Body, FullResponse, NgynContext, NgynRequest, NgynResponse, Param, Query, Transducer,
-            Transformer,
+            Body, CommonResponse, FullResponse, NgynContext, NgynRequest, NgynResponse, Param,
+            Query, Transducer, Transformer,
         },
         traits::{NgynGate, NgynInjectable, NgynMiddleware},
     };

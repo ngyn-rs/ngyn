@@ -1,9 +1,10 @@
 [package]
 name = "ngyn_macros"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
+rust-version = "1.75"
 
 [dependencies]
 http = "1.1"

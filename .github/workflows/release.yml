@@ -1,37 +1,39 @@
-name: Gituhb release
+name: Release
 on:
   push:
-    branches: main
+    branches: [main]
 
 jobs:
-  release:
-    name: Perform release
+  crates_io_publish:
+    name: Publish (crates.io)
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo-release Cache
+        id: cargo_release_cache
+        uses: actions/cache@v3
         with:
-          fetch-depth: 0
+          path: ~/.cargo/bin/cargo-release
+          key: ${{ runner.os }}-cargo-release
 
-      - name: Cocogitto release
-        id: release
-        uses: oknozor/cocogitto-action@v3
-        with:
-          release: true
-          check-latest-tag-only: true
-          git-user: ${{ github.actor}}
-          git-user-email: ${{ github.actor_id }}+${{ github.actor}}@users.noreply.github.com
+      - run: cargo install cargo-release
+        if: steps.cargo_release_cache.outputs.cache-hit != 'true'
 
-      - name: Print version
-        run: "echo '${{ steps.release.outputs.version }}'"
+      - name: cargo login
+        run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
 
-      - name: Generate Changelog
-        run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > GITHUB_CHANGELOG.md
-
-      - name: Upload github release
-        uses: softprops/action-gh-release@v1
-        with:
-          body_path: GITHUB_CHANGELOG.md
-          tag_name: ${{ steps.release.outputs.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # allow-branch HEAD is because GitHub actions switches
+      # to the tag while building, which is a detached head
+      - name: "cargo release publish"
+        run: |-
+          cargo release \
+            publish \
+            --workspace \
+            --all-features \
+            --allow-branch HEAD \
+            --no-confirm \
+            --no-verify \
+            --execute

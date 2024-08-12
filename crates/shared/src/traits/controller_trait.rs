@@ -5,7 +5,7 @@ use crate::server::FullResponse;
 use super::NgynInjectable;
 
 /// `NgynController` defines the basic structure of a controller in Ngyn.
-/// It is designed to be thread-safe.
+/// Designed for thread safety, it is implemented by controllers that are used to handle requests.
 #[async_trait::async_trait]
 pub trait NgynController: NgynInjectable + Any + Sync + Send {
     /// Returns a vector of routes for the controller.
@@ -13,10 +13,12 @@ pub trait NgynController: NgynInjectable + Any + Sync + Send {
         vec![]
     }
 
+    /// Returns the prefix for the controller.
     fn prefix(&self) -> String {
         '/'.to_string()
     }
 
+    /// used internally to handle the routing logic of the controller.
     async fn handle(
         &mut self,
         handler: &str,
@@ -29,6 +31,11 @@ pub trait NgynController: NgynInjectable + Any + Sync + Send {
     }
 }
 
+/// In Ngyn, controllers are stored as `Arc<Box<dyn NgynController>>`.
+/// This is because controllers are shared across threads and need to be cloned easily.
+///
+/// Here's how we convert an `Arc<Box<dyn NgynController>>` to a `Box<dyn NgynController>`.
+/// This conversion allows us to mutably borrow the controller and handle routing logic.
 impl From<Arc<Box<dyn NgynController>>> for Box<dyn NgynController> {
     fn from(arc: Arc<Box<dyn NgynController>>) -> Self {
         let arc_clone = arc.clone();
@@ -43,11 +50,9 @@ impl From<Arc<Box<dyn NgynController>>> for Box<dyn NgynController> {
     }
 }
 
-impl<T: NgynController> NgynControllerHandler for T {}
-
 /// `NgynControllerHandler` is an internal trait that defines placeholders for routing logic of a controller.
 #[allow(unused)]
-pub trait NgynControllerHandler {
+pub trait NgynControllerHandler: NgynController {
     const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[];
 
     /// This is for internal use only. It handles the routing logic of the controller.
@@ -58,5 +63,9 @@ pub trait NgynControllerHandler {
         _cx: &mut crate::server::NgynContext,
         _res: &mut crate::server::NgynResponse,
     ) {
+        // do nothing
     }
 }
+
+/// implement for all types that implement `NgynController`
+impl<T: NgynController> NgynControllerHandler for T {}

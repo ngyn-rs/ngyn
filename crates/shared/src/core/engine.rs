@@ -1,20 +1,18 @@
-use hyper::Request;
+use http_body_util::Full;
+use hyper::{body::Bytes, Request, Response};
 use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
 use crate::{
-    server::{
-        context::AppState,
-        response::{Middlewares, ResponseBuilder, Routes},
-        Method, NgynContext, NgynResponse,
-    },
-    traits::{NgynController, NgynMiddleware, NgynModule},
+    server::{context::AppState, Method, Middlewares, NgynContext, NgynResponse, Routes},
+    traits::{NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
     routes: Routes,
     middlewares: Middlewares,
+    interpreters: Vec<Box<dyn NgynInterpreter>>,
     state: Option<Arc<dyn AppState>>,
 }
 
@@ -30,13 +28,40 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
-        match self.state {
-            Some(ref state) => {
-                let state = state.clone();
-                NgynResponse::build_with_state(req, &self.routes, &self.middlewares, state).await
-            }
-            None => NgynResponse::build(req, &self.routes, &self.middlewares).await,
+        let mut cx = NgynContext::from_request(req);
+        let mut res = Response::new(Full::new(Bytes::default()));
+
+        if let Some(state) = &self.state {
+            cx.set_state(state.clone());
         }
+
+        let route_handler = self
+            .routes
+            .iter()
+            .filter_map(|(path, method, route_handler)| {
+                if cx.with(path, method).is_some() {
+                    return Some(route_handler);
+                }
+                None
+            })
+            .next();
+
+        // trigger global middlewares
+        self.middlewares
+            .iter()
+            .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+
+        // execute controlled route if it is handled
+        if let Some(route_handler) = route_handler {
+            route_handler(&mut cx, &mut res);
+            cx.execute(&mut res).await;
+        }
+
+        for interpreter in &self.interpreters {
+            interpreter.interpret(&mut res).await;
+        }
+
+        res
     }
 
     /// Adds a route to the platform data.
@@ -57,6 +82,15 @@ impl PlatformData {
     /// * `middleware` - The middleware to add.
     pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
         self.middlewares.push(middleware);
+    }
+
+    /// Adds an interpreter to the platform data.
+    ///
+    /// # Arguments
+    ///
+    /// * `interpreter` - The interpreter to add.
+    pub(crate) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
+        self.interpreters.push(interpreter);
     }
 }
 
@@ -128,16 +162,40 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
+    /// Adds an interpreter to the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `interpreter` - The interpreter to add.
+    fn use_interpreter(&mut self, interpreter: impl NgynInterpreter + 'static) {
+        self.data_mut().add_interpreter(Box::new(interpreter));
+    }
+
+    /// Sets the state of the application to any value that implements [`AppState`].
+    ///
+    /// # Arguments
+    ///
+    /// * `state` - The state to set.
     fn set_state(&mut self, state: impl AppState + 'static) {
         self.data_mut().state = Some(Arc::new(state));
     }
 
+    /// Loads a component which implements [`NgynModule`] into the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `module` - The module to load.
     fn load_module(&mut self, module: impl NgynModule + 'static) {
         for controller in module.get_controllers() {
             self.load_controller(controller);
         }
     }
 
+    /// Loads a component which implements [`NgynController`] into the application.
+    ///
+    /// # Arguments
+    ///
+    /// * `controller` - The arc'd controller to load.
     fn load_controller(&mut self, controller: Arc<Box<dyn NgynController + 'static>>) {
         for (path, http_method, handler) in controller.routes() {
             self.route(
@@ -154,6 +212,7 @@ pub trait NgynEngine: NgynPlatform {
         }
     }
 
+    /// Builds the application with the specified module.
     fn build<AppModule: NgynModule + 'static>() -> Self {
         let module = AppModule::new();
         let mut server = Self::default();
