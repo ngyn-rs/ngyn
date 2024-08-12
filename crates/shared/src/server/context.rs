@@ -34,9 +34,6 @@ pub trait AppState: Any + Send + Sync {
 
 impl AppState for Arc<dyn AppState> {}
 
-pub struct EmptyState;
-impl AppState for EmptyState {}
-
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
@@ -125,7 +122,7 @@ impl NgynContext {
     ///
     /// # Arguments
     ///
-    /// * `key` - The key to retrieve the value for.
+    /// * `key` - The key (case-insensitive) to retrieve the value for.
     ///
     /// # Returns
     ///
@@ -144,20 +141,19 @@ impl NgynContext {
     /// ```
     pub fn get<V: for<'a> Deserialize<'a>>(&self, key: &str) -> Option<V> {
         let value = self.store.get(key.to_lowercase().trim());
-        match value {
-            Some(v) => {
-                let stored_cx: NgynContextValue<V> = serde_json::from_str(v).unwrap();
-                Some(stored_cx.value)
+        if let Some(value) = value {
+            if let Ok(stored_cx) = serde_json::from_str::<NgynContextValue<V>>(value) {
+                return Some(stored_cx.value);
             }
-            None => None,
         }
+        None
     }
 
     /// Sets the value associated with the given key in the context.
     ///
     /// # Arguments
     ///
-    /// * `key` - The key to set the value for.
+    /// * `key` - The key (case-insensitive) to set the value for.
     /// * `value` - The value to associate with the key.
     ///
     /// # Examples
@@ -172,17 +168,16 @@ impl NgynContext {
     /// assert_eq!(value, "John".to_string());
     /// ```
     pub fn set<V: Serialize>(&mut self, key: &str, value: V) {
-        self.store.insert(
-            key.trim().to_lowercase(),
-            serde_json::to_string(&NgynContextValue::create(value)).unwrap(),
-        );
+        if let Ok(value) = serde_json::to_string(&NgynContextValue::create(value)) {
+            self.store.insert(key.trim().to_lowercase(), value);
+        }
     }
 
     /// Removes the value associated with the given key from the context.
     ///
     /// # Arguments
     ///
-    /// * `key` - The key to remove the value for.
+    /// * `key` - The key (case-insensitive) to remove the value for.
     ///
     /// # Examples
     ///
@@ -265,7 +260,7 @@ impl NgynContext {
     ///
     /// # Arguments
     ///
-    /// * `key` - The key to check for.
+    /// * `key` - The key (case-insensitive) to check for.
     ///
     /// # Returns
     ///
@@ -284,6 +279,19 @@ impl NgynContext {
     /// ```
     pub fn has(&self, key: &str) -> bool {
         self.store.contains_key(key.to_lowercase().trim())
+    }
+}
+
+impl NgynContext {
+    /// Checks if the context has a valid route.
+    /// A valid route is when the route information and the params are set.
+    /// This is great for differentiating known routes from unknown routes.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the context has a valid route, `false` otherwise.
+    pub fn is_valid_route(&self) -> bool {
+        self.params.is_some()
     }
 }
 
@@ -358,17 +366,6 @@ impl NgynContext {
         } else {
             None
         }
-    }
-
-    /// Checks if the context has a valid route.
-    /// A valid route is when the route information and the params are set.
-    /// This is great for differentiating known routes from unknown routes.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the context has a valid route, `false` otherwise.
-    pub fn is_valid_route(&self) -> bool {
-        self.params.is_some()
     }
 
     /// Prepares the context for execution by setting the route information.
