@@ -4,11 +4,7 @@ use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
 use crate::{
-    server::{
-        context::AppState,
-        response::{Middlewares, Routes},
-        Method, NgynContext, NgynResponse,
-    },
+    server::{context::AppState, Method, Middlewares, NgynContext, NgynResponse, Routes},
     traits::{NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
 };
 
@@ -39,34 +35,30 @@ impl PlatformData {
             cx.set_state(state.clone());
         }
 
-        let mut is_handled = false;
-
-        self.routes
+        let route_handler = self
+            .routes
             .iter()
-            .for_each(|(path, method, route_handler)| {
-                if !is_handled && cx.with(path, method).is_some() {
-                    is_handled = true;
-                    // trigger global middlewares
-                    self.middlewares
-                        .iter()
-                        .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
-                    // trigger route handler
-                    route_handler(&mut cx, &mut res);
+            .filter_map(|(path, method, route_handler)| {
+                if cx.with(path, method).is_some() {
+                    return Some(route_handler);
                 }
-            });
+                None
+            })
+            .next();
+
+        // trigger global middlewares
+        self.middlewares
+            .iter()
+            .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
 
         // execute controlled route if it is handled
-        if is_handled {
+        if let Some(route_handler) = route_handler {
+            route_handler(&mut cx, &mut res);
             cx.execute(&mut res).await;
-        } else {
-            // trigger global middlewares if no route is found
-            self.middlewares
-                .iter()
-                .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
         }
 
         for interpreter in &self.interpreters {
-            res = interpreter.interpret(&mut res).await;
+            interpreter.interpret(&mut res).await;
         }
 
         res
