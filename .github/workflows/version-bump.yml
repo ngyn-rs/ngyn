@@ -1,0 +1,56 @@
+name: Bump Version on PR (Rust Workspace)
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - main
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from PR title
+        id: extract_version
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const versionMatch = prTitle.match(/v(\d+\.\d+\.\d+)/);
+            if (!versionMatch) {
+              core.setFailed('No valid semver version found in PR title');
+            } else {
+              // if pr title contains "minor" or "major" we bump accordingly
+              if (prTitle.includes('minor')) {
+                core.setOutput('version', 'minor');
+              } else if (prTitle.includes('major')) {
+                core.setOutput('version', 'major');
+              } else {
+                core.setOutput('version', versionMatch[1]);
+              }
+            }
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Bump workspace version
+        run: |
+          cargo install cargo-workspaces
+          cargo workspaces version ${{ steps.extract_version.outputs.version }} --all
+
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "Bump version to ${{ steps.extract_version.outputs.version }}"
+          add: "*/Cargo.toml"
+          push: true
+          branch: dev
+          default_author: github_actor
+          github_token: ${{ secrets.GITHUB_TOKEN }}
