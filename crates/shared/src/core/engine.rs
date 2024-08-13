@@ -38,13 +38,12 @@ impl PlatformData {
         let route_handler = self
             .routes
             .iter()
-            .filter_map(|(path, method, route_handler)| {
+            .find_map(|(path, method, route_handler)| {
                 if cx.with(path, method).is_some() {
                     return Some(route_handler);
                 }
                 None
-            })
-            .next();
+            });
 
         // trigger global middlewares
         self.middlewares
@@ -55,6 +54,11 @@ impl PlatformData {
         if let Some(route_handler) = route_handler {
             route_handler(&mut cx, &mut res);
             cx.execute(&mut res).await;
+            // if the request method is HEAD, we should not return a body
+            // even if the route handler has set a body
+            if cx.request().method() == Method::HEAD {
+                *res.body_mut() = Bytes::default().into();
+            }
         }
 
         for interpreter in &self.interpreters {
