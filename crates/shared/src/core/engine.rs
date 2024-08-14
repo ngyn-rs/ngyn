@@ -46,9 +46,9 @@ impl PlatformData {
             });
 
         // trigger global middlewares
-        self.middlewares
-            .iter()
-            .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+        for middleware in &self.middlewares {
+            middleware.handle(&mut cx, &mut res);
+        }
 
         // execute controlled route if it is handled
         if let Some(route_handler) = route_handler {
@@ -61,6 +61,7 @@ impl PlatformData {
             }
         }
 
+        // trigger interpreters
         for interpreter in &self.interpreters {
             interpreter.interpret(&mut res).await;
         }
