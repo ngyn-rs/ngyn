@@ -1,5 +1,4 @@
-use http_body_util::Full;
-use hyper::{body::Bytes, Request, Response};
+use hyper::{body::Bytes, Request};
 use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
@@ -29,7 +28,7 @@ impl PlatformData {
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
         let mut cx = NgynContext::from_request(req);
-        let mut res = Response::new(Full::new(Bytes::default()));
+        let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
             cx.set_state(state.clone());
