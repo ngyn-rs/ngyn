@@ -1,5 +1,4 @@
-use http_body_util::Full;
-use hyper::{body::Bytes, Request, Response};
+use hyper::{body::Bytes, Request};
 use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
@@ -29,7 +28,7 @@ impl PlatformData {
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
         let mut cx = NgynContext::from_request(req);
-        let mut res = Response::new(Full::new(Bytes::default()));
+        let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
             cx.set_state(state.clone());
@@ -38,25 +37,30 @@ impl PlatformData {
         let route_handler = self
             .routes
             .iter()
-            .filter_map(|(path, method, route_handler)| {
+            .find_map(|(path, method, route_handler)| {
                 if cx.with(path, method).is_some() {
                     return Some(route_handler);
                 }
                 None
-            })
-            .next();
+            });
 
         // trigger global middlewares
-        self.middlewares
-            .iter()
-            .for_each(|middlewares| middlewares.handle(&mut cx, &mut res));
+        for middleware in &self.middlewares {
+            middleware.handle(&mut cx, &mut res);
+        }
 
         // execute controlled route if it is handled
         if let Some(route_handler) = route_handler {
             route_handler(&mut cx, &mut res);
             cx.execute(&mut res).await;
+            // if the request method is HEAD, we should not return a body
+            // even if the route handler has set a body
+            if cx.request().method() == Method::HEAD {
+                *res.body_mut() = Bytes::default().into();
+            }
         }
 
+        // trigger interpreters
         for interpreter in &self.interpreters {
             interpreter.interpret(&mut res).await;
         }

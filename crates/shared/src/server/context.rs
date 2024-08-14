@@ -357,7 +357,10 @@ impl NgynContext {
     /// assert!(result.is_some());
     /// ```
     pub(crate) fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
-        if method.ne(self.request.method()) {
+        if method.ne(self.request.method())
+        // allow GET to match HEAD
+            || (method.eq(&Method::GET) && self.request.method().ne(&Method::HEAD))
+        {
             return None;
         }
         if let Some(params) = self.request.uri().to_params(path) {
