@@ -18,6 +18,7 @@ use crate::{
 ///
 /// ```rust
 /// use ngyn_shared::traits::{NgynMiddleware, NgynInjectable};
+/// use ngyn_shared::server::{NgynContext, NgynResponse};
 ///
 /// pub struct RequestReceivedLogger {}
 ///
