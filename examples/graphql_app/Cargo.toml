@@ -4,7 +4,6 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-http-body-util = "0.1"
 hyper = { version = "1.0", features = ["full"] }
 juniper = { version = "0.16", features = ["expose-test-schema"] }
 juniper_hyper = "0.9"

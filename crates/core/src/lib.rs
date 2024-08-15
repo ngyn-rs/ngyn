@@ -18,13 +18,13 @@ pub mod prelude {
     pub use ngyn_shared::{
         core::NgynEngine,
         server::{
-            Body, CommonResponse, FullResponse, NgynContext, NgynRequest, NgynResponse, Param,
-            Query, Transducer, Transformer,
+            Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
+            Transducer,
         },
         traits::{NgynGate, NgynInjectable, NgynMiddleware},
     };
 }
 
 pub mod http {
-    pub use hyper::http::*;
+    pub use http::*;
 }

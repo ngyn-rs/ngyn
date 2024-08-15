@@ -14,7 +14,7 @@ use crate::{
 /// - They can be used to short-circuit the request handling process.
 /// - They are purely synchronous and should not ideally not have side effects.
 ///
-/// # Examples
+/// ### Examples
 ///
 /// ```rust
 /// use ngyn_shared::traits::{NgynMiddleware, NgynInjectable};

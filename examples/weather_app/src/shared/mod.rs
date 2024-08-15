@@ -1,5 +1,5 @@
 use http_body_util::BodyExt;
-use ngyn::{prelude::*, shared::traits::NgynInterpreter};
+use ngyn::{http::StatusCode, prelude::*, shared::traits::NgynInterpreter};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -30,10 +30,18 @@ impl NgynInterpreter for ResponseInterpreter {
             }
         }
 
-        if let Ok(response) = serde_json::from_str::<CommonResponse<Value, ErrorData>>(&body_str) {
-            if let Some(error) = response.error {
+        if let Ok(response) = serde_json::from_str::<JsonResponse<Value, ErrorData>>(&body_str) {
+            if let Some(error) = response.error() {
                 if let Some(status) = error.status {
-                    res.set_status(status);
+                    match StatusCode::from_u16(status) {
+                        Ok(status) => {
+                            *res.status_mut() = status;
+                        }
+                        Err(_) => {
+                            println!("Seems like we set an invalid status code 🫠");
+                            *res.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+                        }
+                    }
                 }
             }
         }
