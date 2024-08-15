@@ -7,7 +7,7 @@ license = "MIT"
 rust-version = "1.75"
 
 [dependencies]
-http = "1.1"
+http = "1"
 syn = "2.0"
 quote = "1.0"
 ngyn_shared = { version = "0.4", path = "../shared" }

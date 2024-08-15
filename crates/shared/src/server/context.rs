@@ -1,7 +1,7 @@
 // a context extends hashmap to provide some extra functionality
 //
 
-use hyper::Request;
+use http::Request;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, mem::ManuallyDrop, sync::Arc};
 

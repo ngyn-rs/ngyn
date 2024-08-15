@@ -139,7 +139,7 @@ impl Transformer<'_> for Param {
 
 /// Represents a query struct.
 pub struct Query {
-    url: hyper::http::uri::Uri,
+    url: http::uri::Uri,
 }
 
 impl Query {

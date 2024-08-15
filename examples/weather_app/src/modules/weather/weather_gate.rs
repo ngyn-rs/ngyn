@@ -1,4 +1,4 @@
-use ngyn::prelude::*;
+use ngyn::{http::StatusCode, prelude::*, shared::server::Transformer};
 
 #[injectable]
 pub struct WeatherGate;
@@ -9,8 +9,9 @@ impl NgynGate for WeatherGate {
         if query.get("location").is_some() {
             return true;
         }
-        res.set_status(400);
-        res.send("Bad Request: location query parameter is required");
+        *res.status_mut() = StatusCode::BAD_REQUEST;
+        *res.body_mut() = "Bad Request: location query parameter is required".into();
+        // prevent activation of the next components
         false
     }
 }

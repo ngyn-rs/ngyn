@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use http_body_util::Full;
-use hyper::body::Bytes;
 use juniper::{
     tests::fixtures::starwars::schema::{Database, Query},
     EmptyMutation, EmptySubscription, RootNode,
@@ -27,7 +25,8 @@ impl GraphQLController {
 impl GraphQLController {
     #[get("/")]
     fn index(&self, res: &mut NgynResponse) -> &'static str {
-        res.set_header("Content-Type", "text/html");
+        res.headers_mut()
+            .append("Content-Type", "text/html".parse().unwrap());
         "You can access the GraphQL playground at <a href='/playground'>/playground</a> or the GraphiQL interface at <a href='/graphiql'>/graphiql</a>."
     }
 
@@ -41,19 +40,19 @@ impl GraphQLController {
         ));
         let req = req.map(|_b| panic!(""));
         let graphql = graphql(root_node, self.db.clone(), req).await;
-        *res = graphql.map(|body| Full::new(Bytes::from(body)));
+        *res = graphql.map(|body| body.into());
     }
 
     #[get("/graphiql")]
     async fn graphiql(&self, res: &mut NgynResponse) {
         let graphiql_res = graphiql("/graphql", None).await;
-        *res = graphiql_res.map(|body| Full::new(Bytes::from(body)));
+        *res = graphiql_res.map(|body| body.into());
     }
 
     #[get("/playground")]
     async fn playground(&self, res: &mut NgynResponse) {
         let playground_res = playground("/graphql", None).await;
-        *res = playground_res.map(|body| Full::new(Bytes::from(body)));
+        *res = playground_res.map(|body| body.into());
     }
 }
 

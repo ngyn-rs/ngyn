@@ -137,7 +137,8 @@ impl SwaggerModule {
 impl<AppModule: Default + NgynModule + Clone + 'static> SwaggerRoutesController<AppModule> {
     #[get("/")]
     async fn index(&self, res: &mut NgynResponse) -> String {
-        res.set_header("Content-Type", "text/html");
+        res.headers_mut()
+            .append("Content-Type", "text/html".parse().unwrap());
 
         let html = include_str!("templates/swagger.html");
         html.replace("% SWAGGER_SPEC_URL %", &self.config.spec_url)

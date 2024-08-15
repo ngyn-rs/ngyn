@@ -1,6 +1,9 @@
-use hyper::body::Bytes;
+use bytes::{Buf, Bytes};
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::any::{Any, TypeId};
+
+use super::JsonResponse;
 
 /// `ToBytes` can be used to convert a type into a `Bytes`
 ///
@@ -91,18 +94,49 @@ impl ToBytes for Value {
     }
 }
 
-impl<T: Serialize, E: Serialize> ToBytes for Result<T, E> {
-    fn to_bytes(self) -> Bytes {
-        match self {
-            Ok(data) => json!({ "data": data }).to_bytes(),
-            Err(error) => json!({ "error": error }).to_bytes(),
-        }
-    }
-}
-
 impl<T: Serialize> ToBytes for Vec<T> {
     fn to_bytes(self) -> Bytes {
         let json = json!(self);
         json.to_bytes()
+    }
+}
+
+impl<D: Serialize, E: Serialize> ToBytes for JsonResponse<D, E> {
+    fn to_bytes(self) -> Bytes {
+        if let Some(data) = self.data() {
+            return json!({ "data": data }).to_bytes();
+        }
+        json!({ "error": self.error() }).to_bytes()
+    }
+}
+
+/// Converts a `Result` into a `Bytes`
+///
+/// In Ngyn, a `Result` can be converted into a `Bytes` object.
+impl<T, E> ToBytes for Result<T, E>
+where
+    T: ToBytes + Any,
+    E: ToBytes + Any,
+{
+    fn to_bytes(self) -> Bytes {
+        if TypeId::of::<E>() == TypeId::of::<Value>() {
+            // This is likely a JsonResult
+            match self {
+                Ok(value) => {
+                    JsonResponse::<Value, Value>::new(Some(json!(value.to_bytes().chunk())), None)
+                        .to_bytes()
+                }
+                Err(error) => {
+                    JsonResponse::<Value, Value>::new(None, Some(json!(error.to_bytes().chunk())))
+                        .to_bytes()
+                }
+            }
+        } else {
+            // This is a regular Result
+            match self {
+                Ok(value) => value.to_bytes(),
+                Err(error) => error.to_bytes(),
+            }
+        }
     }
 }

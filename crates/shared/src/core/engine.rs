@@ -1,4 +1,6 @@
-use hyper::{body::Bytes, Request};
+use bytes::Bytes;
+use http::Request;
+use http_body_util::Full;
 use std::sync::Arc;
 
 use super::{Handler, RouteHandle};
@@ -56,7 +58,7 @@ impl PlatformData {
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
-                *res.body_mut() = Bytes::default().into();
+                *res.body_mut() = Full::new(Bytes::default());
             }
         }
 
@@ -204,7 +206,7 @@ pub trait NgynEngine: NgynPlatform {
         for (path, http_method, handler) in controller.routes() {
             self.route(
                 path.as_str(),
-                hyper::Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
+                http::Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
                 Box::new({
                     let controller = controller.clone();
                     move |cx: &mut NgynContext, _res: &mut NgynResponse| {

@@ -1,4 +1,4 @@
-use hyper::http::uri::Uri;
+use http::uri::Uri;
 
 /// Trait for converting a path to its params.
 pub(crate) trait ToParams {
