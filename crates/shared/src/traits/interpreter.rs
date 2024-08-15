@@ -8,7 +8,7 @@ use crate::server::NgynResponse;
 ///
 /// This trait provides a way to do that.
 ///
-/// # Examples
+/// ### Examples
 ///
 /// ```rust
 /// use ngyn_shared::traits::NgynInterpreter;
@@ -27,7 +27,7 @@ use crate::server::NgynResponse;
 pub trait NgynInterpreter: Send + Sync {
     /// Interprets the response.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `res` - The response to be interpreted.
     async fn interpret(&self, res: &mut NgynResponse);

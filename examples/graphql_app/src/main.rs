@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use hyper::HeaderMap;
 use juniper::{
     tests::fixtures::starwars::schema::{Database, Query},
     EmptyMutation, EmptySubscription, RootNode,
@@ -7,6 +6,7 @@ use juniper::{
 use juniper_hyper::{graphiql, graphql, playground};
 use ngyn::prelude::*;
 use ngyn_hyper::HyperApplication;
+use std::sync::Arc;
 
 #[controller(init = "setup")]
 struct GraphQLController {
@@ -24,9 +24,8 @@ impl GraphQLController {
 #[routes]
 impl GraphQLController {
     #[get("/")]
-    fn index(&self, res: &mut NgynResponse) -> &'static str {
-        res.headers_mut()
-            .append("Content-Type", "text/html".parse().unwrap());
+    fn index(&self, headers: &mut HeaderMap) -> &'static str {
+        headers.append("Content-Type", "text/html".parse().unwrap());
         "You can access the GraphQL playground at <a href='/playground'>/playground</a> or the GraphiQL interface at <a href='/graphiql'>/graphiql</a>."
     }
 

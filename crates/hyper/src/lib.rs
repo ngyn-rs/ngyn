@@ -22,11 +22,11 @@ impl NgynPlatform for HyperApplication {
 impl HyperApplication {
     /// Listens for incoming connections and serves the application.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `address` - The address to listen on.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// A `Result` indicating success or failure.
     pub async fn listen<A: tokio::net::ToSocketAddrs>(

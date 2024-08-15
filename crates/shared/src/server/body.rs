@@ -7,7 +7,7 @@ use super::JsonResponse;
 
 /// `ToBytes` can be used to convert a type into a `Bytes`
 ///
-/// # Examples
+/// ### Examples
 ///
 /// ```rust ignore
 /// use ngyn_shared::{ToBytes, Bytes};
@@ -17,7 +17,7 @@ use super::JsonResponse;
 pub trait ToBytes {
     /// Parses the body into a `Bytes` object.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::{ToBytes, Bytes};
@@ -119,7 +119,8 @@ where
     E: ToBytes + Any,
 {
     fn to_bytes(self) -> Bytes {
-        if TypeId::of::<E>() == TypeId::of::<Value>() {
+        if TypeId::of::<E>() == TypeId::of::<Value>() && TypeId::of::<T>() == TypeId::of::<Value>()
+        {
             // This is likely a JsonResult
             match self {
                 Ok(value) => {

@@ -4,15 +4,15 @@ use http::uri::Uri;
 pub(crate) trait ToParams {
     /// Extracts the available params of a provided path.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `path` - The path used for extracting the params.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Option<Vec<(String, String)>>` - The extracted params, if the path matches.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use hyper::http::uri::Uri;

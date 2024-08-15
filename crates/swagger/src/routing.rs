@@ -1,4 +1,4 @@
-use ngyn::{prelude::*, shared::traits::NgynModule};
+use ngyn::{http::HeaderMap, prelude::*, shared::traits::NgynModule};
 use serde_json::{json, Value};
 
 use crate::SwaggerController;
@@ -136,12 +136,12 @@ impl SwaggerModule {
 #[routes]
 impl<AppModule: Default + NgynModule + Clone + 'static> SwaggerRoutesController<AppModule> {
     #[get("/")]
-    async fn index(&self, res: &mut NgynResponse) -> String {
-        res.headers_mut()
-            .append("Content-Type", "text/html".parse().unwrap());
+    async fn index(&self, headers: &mut HeaderMap) -> String {
+        let template = include_str!("templates/swagger.html");
+        headers.append("Content-Type", "text/html".parse().unwrap());
 
-        let html = include_str!("templates/swagger.html");
-        html.replace("% SWAGGER_SPEC_URL %", &self.config.spec_url)
+        template
+            .replace("% SWAGGER_SPEC_URL %", &self.config.spec_url)
             .replace("% SWAGGER_DOC_TITLE %", &self.config.title)
             .replace(
                 "% SWAGGER_DOC_DESCRIPTION %",

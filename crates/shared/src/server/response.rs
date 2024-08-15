@@ -1,3 +1,4 @@
+use http::HeaderMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -74,7 +75,29 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
     }
 }
 
-pub type JsonResult<V> = Result<V, Value>;
+/// A shorthand for a json result.
+///
+/// This is useful when you want to return a json response.
+/// It is a type alias for a [`Result`] with a [`Value`] as the `ok` and `error` type.
+/// 
+/// ### Example
+/// 
+/// ```rust ignore
+/// use ngyn::prelude::*;
+/// 
+/// #[controller]
+/// struct MyController;
+/// 
+/// #[routes]
+/// impl MyController {
+///    #[get("/")]
+///   async fn get(&self, cx: &mut NgynContext) -> JsonResult {
+///     let data = json!({ "key": "value" });
+///     Ok(data)
+///   }
+/// }
+/// ```
+pub type JsonResult = Result<Value, Value>;
 
 impl<'a> Transformer<'a> for &'a NgynResponse {
     fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
@@ -85,5 +108,23 @@ impl<'a> Transformer<'a> for &'a NgynResponse {
 impl<'a> Transformer<'a> for &'a mut NgynResponse {
     fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
         res
+    }
+}
+
+/// A shorthand for transforming a `HeaderMap` reference.
+///
+/// This is useful when you need to access the headers of a response.
+impl<'a> Transformer<'a> for &'a HeaderMap {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res.headers()
+    }
+}
+
+/// A shorthand for transforming a mutable `HeaderMap` reference.
+///
+/// This is useful when you want to add or remove headers from a response.
+impl<'a> Transformer<'a> for &'a mut HeaderMap {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res.headers_mut()
     }
 }

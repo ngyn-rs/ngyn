@@ -21,11 +21,11 @@ pub struct PlatformData {
 impl PlatformData {
     /// Process and responds to a request asynchronously.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `req` - The request to respond to.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
@@ -72,7 +72,7 @@ impl PlatformData {
 
     /// Adds a route to the platform data.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
@@ -83,7 +83,7 @@ impl PlatformData {
 
     /// Adds a middleware to the platform data.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
     pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
@@ -92,7 +92,7 @@ impl PlatformData {
 
     /// Adds an interpreter to the platform data.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `interpreter` - The interpreter to add.
     pub(crate) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
@@ -109,13 +109,13 @@ impl<T: NgynPlatform> NgynEngine for T {}
 pub trait NgynEngine: NgynPlatform {
     /// Adds a route to the application.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use crate::{Method, NgynEngine};
@@ -161,7 +161,7 @@ pub trait NgynEngine: NgynPlatform {
 
     /// Adds a middleware to the application.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
     fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
@@ -170,7 +170,7 @@ pub trait NgynEngine: NgynPlatform {
 
     /// Adds an interpreter to the application.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `interpreter` - The interpreter to add.
     fn use_interpreter(&mut self, interpreter: impl NgynInterpreter + 'static) {
@@ -179,7 +179,7 @@ pub trait NgynEngine: NgynPlatform {
 
     /// Sets the state of the application to any value that implements [`AppState`].
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `state` - The state to set.
     fn set_state(&mut self, state: impl AppState + 'static) {
@@ -188,7 +188,7 @@ pub trait NgynEngine: NgynPlatform {
 
     /// Loads a component which implements [`NgynModule`] into the application.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `module` - The module to load.
     fn load_module(&mut self, module: impl NgynModule + 'static) {
@@ -199,7 +199,7 @@ pub trait NgynEngine: NgynPlatform {
 
     /// Loads a component which implements [`NgynController`] into the application.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `controller` - The arc'd controller to load.
     fn load_controller(&mut self, controller: Arc<Box<dyn NgynController + 'static>>) {
