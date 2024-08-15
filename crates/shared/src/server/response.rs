@@ -79,15 +79,15 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
 ///
 /// This is useful when you want to return a json response.
 /// It is a type alias for a [`Result`] with a [`Value`] as the `ok` and `error` type.
-/// 
+///
 /// ### Example
-/// 
+///
 /// ```rust ignore
 /// use ngyn::prelude::*;
-/// 
+///
 /// #[controller]
 /// struct MyController;
-/// 
+///
 /// #[routes]
 /// impl MyController {
 ///    #[get("/")]
