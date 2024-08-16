@@ -1,7 +1,8 @@
+use ngyn_hyper::HyperApplication;
 use ngyn_shared::{core::NgynEngine, traits::NgynModule};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
-pub struct NgynFactory<Application: NgynEngine> {
+pub struct NgynFactory<Application: NgynEngine = HyperApplication> {
     /// this is just a placeholder and would prolly not be used
     _app: Application,
 }
@@ -14,12 +15,11 @@ impl<Application: NgynEngine> NgynFactory<Application> {
     ///
     /// ```rust ignore
     /// use ngyn::prelude::*;
-    /// use ngyn_hyper::HyperApplication;
     ///
     /// #[module]
     /// pub struct YourAppModule;
     ///
-    /// let server = NgynFactory::<HyperApplication>::create::<YourAppModule>();
+    /// let server: HyperApplication = NgynFactory::create::<YourAppModule>();
     /// ```
     pub fn create<AppModule: NgynModule + 'static>() -> Application {
         Application::build::<AppModule>()
