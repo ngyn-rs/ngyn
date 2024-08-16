@@ -1486,6 +1486,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "http 1.1.0",
+ "ngyn-hyper 0.1.0",
  "ngyn_macros 0.4.3",
  "ngyn_shared 0.4.3",
 ]

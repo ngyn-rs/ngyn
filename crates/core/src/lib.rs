@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-pub mod app;
+pub mod factory;
 
 pub mod macros {
     pub use async_std::main;
@@ -13,7 +13,7 @@ pub mod shared {
 
 #[doc(hidden)]
 pub mod prelude {
-    pub use crate::app::*;
+    pub use crate::factory::*;
     pub use crate::macros::*;
     pub use ngyn_shared::{
         core::NgynEngine,
