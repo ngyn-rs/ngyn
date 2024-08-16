@@ -1,4 +1,6 @@
+use bytes::Bytes;
 use http::HeaderMap;
+use http_body_util::BodyExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -126,5 +128,26 @@ impl<'a> Transformer<'a> for &'a HeaderMap {
 impl<'a> Transformer<'a> for &'a mut HeaderMap {
     fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
         res.headers_mut()
+    }
+}
+
+pub trait PeekBytes {
+    #[allow(async_fn_in_trait)]
+    /// Peeks the bytes of a valid ngyn response body.
+    ///
+    /// You can use this to read the bytes of a response body without consuming it(Well, we make it look like we don't).
+    async fn peek_bytes(&mut self, f: impl FnMut(&Bytes));
+}
+
+impl PeekBytes for NgynResponse {
+    async fn peek_bytes(&mut self, mut f: impl FnMut(&Bytes)) {
+        let frame = self.frame().await;
+        if let Some(Ok(frame)) = frame {
+            if let Ok(bytes) = frame.into_data() {
+                f(&bytes);
+                // body has been read, so we need to set it back
+                *self.body_mut() = bytes.into();
+            }
+        }
     }
 }
