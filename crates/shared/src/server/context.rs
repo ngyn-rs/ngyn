@@ -30,6 +30,13 @@ pub trait AppState: Any + Send + Sync {
     {
         self
     }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any
+    where
+        Self: Sized,
+    {
+        self
+    }
 }
 
 impl AppState for Arc<dyn AppState> {}
@@ -112,6 +119,35 @@ impl NgynContext {
 
         match state {
             Some(value) => value.as_any().downcast_ref::<T>(),
+            None => None,
+        }
+    }
+
+    /// Retrieves the state of the context as a mutable reference to the specified type.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T` - The type of the state to retrieve.
+    ///
+    /// ### Returns
+    ///
+    /// An optional reference to the state of the specified type. Returns `None` if the state is not found or if it cannot be downcasted to the specified type.
+    ///
+    /// ### Examples
+    ///
+    /// ```rust ignore
+    /// use ngyn_shared::core::context::NgynContext;
+    ///
+    /// let mut context = NgynContext::from_request(request);
+    /// context.set_state(Box::new(MyAppState::new()));
+    ///
+    /// let state_ref = context.state::<MyAppState>();
+    /// ```
+    pub fn state_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        let state = self.state.as_mut();
+
+        match state {
+            Some(value) => value.as_any_mut().downcast_mut::<T>(),
             None => None,
         }
     }
