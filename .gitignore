@@ -5,7 +5,7 @@ dist/
 
 # will have compiled files and executables
 debug/
-target/
+build/
 coverage/
 
 # Add Cargo.lock to gitignore if creating a library
