@@ -27,7 +27,9 @@ jobs:
               core.setFailed('No valid semver version found in PR title');
             } else {
               // if pr title contains "minor" or "major" we bump accordingly
-              if (prTitle.includes('minor')) {
+              if (prTitle.includes('patch')) {
+                core.setOutput('version', 'patch');
+              } else if (prTitle.includes('minor')) {
                 core.setOutput('version', 'minor');
               } else if (prTitle.includes('major')) {
                 core.setOutput('version', 'major');
