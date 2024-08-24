@@ -46,7 +46,7 @@ jobs:
       - name: Bump workspace version
         run: |
           cargo install cargo-workspaces
-          cargo workspaces --manifest-path ./crates/Cargo.toml version ${{ steps.extract_version.outputs.version }} --all --allow-branch dev --message "chore(release): Bump version to %v" --no-git-tag --no-global-tag --no-individual-tags -y
+          cargo workspaces --manifest-path ./crates/Cargo.toml version ${{ steps.extract_version.outputs.version }} --all --allow-branch dev --message "chore(release): Bump version to %v" --no-global-tag --no-individual-tags -y
 
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9
