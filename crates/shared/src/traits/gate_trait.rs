@@ -10,7 +10,7 @@ use crate::{
 /// For instance, restricting access to a route based on the user's role, or checking if the user is authenticated.
 /// Typically, gates are used for this purpose.
 ///
-/// # Examples
+/// ### Examples
 ///
 /// ```rust
 /// use ngyn_shared::traits::{NgynGate, NgynInjectable};

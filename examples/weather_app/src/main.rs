@@ -12,7 +12,7 @@ use crate::middlewares::notfound_middleware::NotFoundMiddleware;
 #[shuttle_runtime::main]
 async fn main() -> ShuttleNgyn {
     dotenv().ok();
-    let mut app = NgynFactory::<ShuttleApplication>::create::<AppModule>();
+    let mut app: ShuttleApplication = NgynFactory::create::<AppModule>();
 
     app.use_middleware(NotFoundMiddleware::new());
     app.use_interpreter(shared::ResponseInterpreter {});

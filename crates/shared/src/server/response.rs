@@ -1,94 +1,105 @@
-use hyper::{header::IntoHeaderName, StatusCode};
+use bytes::Bytes;
+use http::HeaderMap;
+use http_body_util::BodyExt;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-use crate::server::{NgynContext, NgynResponse, ToBytes, Transformer};
+use crate::server::{NgynContext, NgynResponse, Transformer};
 
 #[derive(Serialize, Deserialize)]
-pub struct CommonResponse<D, E> {
-    pub data: Option<D>,
-    pub error: Option<E>,
-}
-
-/// Trait representing a full response.
+/// Responses are hard to manage, especially when they are not standardized.
+/// This is why Ngyn, by default, provides a json response format.
 ///
-/// This trait provides short methods to set the status code, headers, and body of a response.
-pub trait FullResponse {
-    /// Sets the status code of the response.
-    ///
-    /// # Arguments
-    ///
-    /// * `status` - The status code to set.
-    ///
-    /// # Examples
-    ///
-    /// ```rust ignore
-    /// use http_body_util::Full;
-    /// use hyper::StatusCode;
-    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
-    ///
-    /// struct MyResponse {
-    ///     status: StatusCode,
-    /// }
-    ///
-    /// let mut response = MyResponse { status: StatusCode::OK };
-    /// response.set_status(200);
-    /// assert_eq!(response.status, StatusCode::OK);
-    /// ```
-    fn set_status(&mut self, status: u16);
-
-    /// Sets a header - name, value pair - of the response.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The name of the header.
-    /// * `value` - The value of the header.
-    ///
-    /// # Examples
-    ///
-    /// ```rust ignore
-    /// let mut response = NgynResponse::default();
-    /// response.set_header("Content-Type", "application/json");
-    /// assert_eq!(response.headers.get("Content-Type"), Some(&"application/json".to_string()));
-    /// ```
-    fn set_header<K: IntoHeaderName>(&mut self, name: K, value: &str);
-
-    /// Sends the body of the response.
-    ///
-    /// # Arguments
-    ///
-    /// * `item` - The item to parse the body from.
-    ///
-    /// # Examples
-    ///
-    /// ```rust ignore
-    /// use http_body_util::Full;
-    /// use hyper::StatusCode;
-    /// use crate::{context::NgynContext, transformer::Transformer, NgynResponse, ToBytes};
-    ///
-    /// struct MyResponse {
-    ///     body: Full,
-    /// }
-    ///
-    /// let mut response = MyResponse { body: Full::new(vec![1, 2, 3]) };
-    /// response.send(vec![4, 5, 6]);
-    /// assert_eq!(response.body.as_slice(), &[4, 5, 6]);
-    /// ```
-    fn send(&mut self, item: impl ToBytes);
+/// The json response format is a JSON object with two keys: `data` and `error`.
+/// This would ideally make your responses more predictable and easier to manage.
+/// A valid response would look like:
+/// ```json
+/// {
+///    "data": {
+///       "key": "value"
+///   },
+///  "error": null
+/// }
+/// ```
+/// A valid error response would look like:
+/// ```json
+/// {
+///   "data": null,
+///  "error": {
+///    "status": 404,
+///    "message": "Not Found"
+///   }
+/// }
+/// ```
+/// The `data` key is used to store the response data, while the `error` key is used to store error data.
+/// Both keys are optional, but at least one of them should be present.
+///
+///
+/// ### How to create a json response?
+/// Ngyn provides an implementation on [`JsonResult`] to convert it to a json response.
+/// This means anytime you make use of a `JsonResult` in your controlled routes, it will be converted to a json response.
+///
+/// #### Example
+/// ```rust ignore
+/// use ngyn::prelude::*;
+///
+/// #[controller]
+/// struct MyController;
+///
+/// #[routes]
+/// impl MyController {
+///    #[get("/")]
+///   async fn get(&self, cx: &mut NgynContext) -> Result<Vec<u8>, ()> {
+///    let data = vec![1, 2, 3];
+///    Ok(data)
+///   }
+/// }
+/// ```
+pub struct JsonResponse<D: Serialize, E: Serialize> {
+    data: Option<D>,
+    error: Option<E>,
 }
 
-impl FullResponse for NgynResponse {
-    fn set_status(&mut self, status: u16) {
-        *self.status_mut() = StatusCode::from_u16(status).unwrap();
+impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
+    /// Creates a new json response.
+    pub fn new(data: Option<D>, error: Option<E>) -> Self {
+        Self { data, error }
     }
 
-    fn set_header<K: IntoHeaderName>(&mut self, name: K, value: &str) {
-        self.headers_mut().insert(name, value.parse().unwrap());
+    /// Returns the data.
+    pub fn data(&self) -> Option<&D> {
+        self.data.as_ref()
     }
 
-    fn send(&mut self, item: impl ToBytes) {
-        *self.body_mut() = item.to_bytes().into();
+    /// Returns the error data.
+    pub fn error(&self) -> Option<&E> {
+        self.error.as_ref()
     }
 }
+
+/// A shorthand for a json result.
+///
+/// This is useful when you want to return a json response.
+/// It is a type alias for a [`Result`] with a [`Value`] as the `ok` and `error` type.
+///
+/// ### Example
+///
+/// ```rust ignore
+/// use ngyn::prelude::*;
+///
+/// #[controller]
+/// struct MyController;
+///
+/// #[routes]
+/// impl MyController {
+///    #[get("/")]
+///   async fn get(&self, cx: &mut NgynContext) -> JsonResult {
+///     let data = json!({ "key": "value" });
+///     Ok(data)
+///   }
+/// }
+/// ```
+pub type JsonResult = Result<Value, Value>;
 
 impl<'a> Transformer<'a> for &'a NgynResponse {
     fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
@@ -99,5 +110,44 @@ impl<'a> Transformer<'a> for &'a NgynResponse {
 impl<'a> Transformer<'a> for &'a mut NgynResponse {
     fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
         res
+    }
+}
+
+/// A shorthand for transforming a `HeaderMap` reference.
+///
+/// This is useful when you need to access the headers of a response.
+impl<'a> Transformer<'a> for &'a HeaderMap {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res.headers()
+    }
+}
+
+/// A shorthand for transforming a mutable `HeaderMap` reference.
+///
+/// This is useful when you want to add or remove headers from a response.
+impl<'a> Transformer<'a> for &'a mut HeaderMap {
+    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
+        res.headers_mut()
+    }
+}
+
+pub trait PeekBytes {
+    #[allow(async_fn_in_trait)]
+    /// Peeks the bytes of a valid ngyn response body.
+    ///
+    /// You can use this to read the bytes of a response body without consuming it(Well, we make it look like we don't).
+    async fn peek_bytes(&mut self, f: impl FnMut(&Bytes));
+}
+
+impl PeekBytes for NgynResponse {
+    async fn peek_bytes(&mut self, mut f: impl FnMut(&Bytes)) {
+        let frame = self.frame().await;
+        if let Some(Ok(frame)) = frame {
+            if let Ok(bytes) = frame.into_data() {
+                f(&bytes);
+                // body has been read, so we need to set it back
+                *self.body_mut() = bytes.into();
+            }
+        }
     }
 }

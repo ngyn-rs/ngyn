@@ -16,24 +16,24 @@ use proc_macro::TokenStream;
 #[proc_macro_attribute]
 /// `module` marks a struct that contains controllers and imports other modules.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `controllers` - A list of controllers that the module will contain.
 /// * `imports` - A list of modules that the module will import.
 /// * `init` - The name of the init method that will be called when the module is initialized.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[module(controllers = [MyController1, MyController2])]
 /// struct MyModule;
 /// ```
 ///
-/// ##### Example with imports
+/// ### Example with imports
 /// ```rust ignore
 /// #[module(controllers = [MyController1, MyController2], imports = [MyModule1, MyModule2])]
 /// struct MyModule;
 /// ```
 ///
-/// ##### Example with init method
+/// ### Example with init method
 /// ```rust ignore
 /// #[module(controllers = [MyController], imports = [MyModule], init = "start")]
 /// struct MyModule;
@@ -49,12 +49,12 @@ pub fn module(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `injectable` attribute is used to mark a struct as injectable.
+/// `injectable` attribute is used to mark a struct as injectable.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `init` - The name of the init method that will be called when the struct is initialized.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[injectable]
 /// struct MyStruct {
@@ -67,15 +67,15 @@ pub fn injectable(args: TokenStream, input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 /// The `inject` attribute is used to mark a field as injectable.
-/// The field must be a struct that is marked with the `injectable` attribute.
+/// The field must be a struct that is marked with the [`injectable`] attribute.
 pub fn inject(args: TokenStream, input: TokenStream) -> TokenStream {
     inject_macro(args, input)
 }
 
 #[proc_macro_attribute]
-/// The `controller` attribute is used to mark a struct as a controller.
+/// `controller` attribute is used to mark a struct as a controller.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -88,8 +88,13 @@ pub fn controller(args: TokenStream, input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 /// The `routes` attribute is used to mark a struct impl as a routes container.
+/// The struct must be marked with the [`controller`] attribute.
 ///
-/// ##### Example
+/// ### Panics
+///
+/// Panics if the attribute is not used on an impl block.
+///
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -108,11 +113,11 @@ pub fn routes(_args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 /// The `route` attribute is used to mark a method of a controller impl as a route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `method` - The HTTP method that the route will handle. (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -132,12 +137,12 @@ pub fn route(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `get` attribute is used to mark a controller method as a GET route.
+/// The `get` attribute is used to mark a controller method as a `GET` route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -159,12 +164,12 @@ pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `post` attribute is used to mark a controller method as a POST route.
+/// The `post` attribute is used to mark a controller method as a `POST` route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -186,12 +191,12 @@ pub fn post(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `put` attribute is used to mark a controller method as a PUT route.
+/// The `put` attribute is used to mark a controller method as a `PUT` route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -213,12 +218,12 @@ pub fn put(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `delete` attribute is used to mark a controller method as a DELETE route.
+/// The `delete` attribute is used to mark a controller method as a `DELETE` route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -240,12 +245,12 @@ pub fn delete(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `patch` attribute is used to mark a method of a controller impl as a PATCH route.
+/// The `patch` attribute is used to mark a method of a controller impl as a `PATCH` route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -267,12 +272,12 @@ pub fn patch(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-/// The `head` attribute is used to mark a controller method as a HEAD route.
+/// The `head` attribute is used to mark a controller method as a `HEAD` route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `path` - The path that the route will handle.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[controller]
 /// struct MyController {
@@ -295,8 +300,17 @@ pub fn head(args: TokenStream, input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 /// The `check` macro is used to determine if a route should be executed.
+/// If the gate returns false, the route will not be executed.
 ///
-/// ##### Example
+/// ### Arguments
+///
+/// * `CheckGate` - The path to the gate that will be used to determine if the route should be executed.
+///
+/// ### Panics
+///
+/// Panics if the attribute is not used on a method or an impl block.
+///
+/// ### Example
 /// ```rust ignore
 /// #[check(CheckGate)]
 /// fn my_route(&self) {
@@ -315,10 +329,10 @@ pub fn check(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 /// The `http_code` macro is used to set the default HTTP status code for a route.
 ///
-/// ##### Arguments
+/// ### Arguments
 /// * `code` - The HTTP status code to set.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[http_code(200)]
 /// fn my_route(&self) {
@@ -332,7 +346,7 @@ pub fn http_code(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Dto)]
 /// The `Dto` derive macro is used to generate a DTO struct.
 ///
-/// ##### Example
+/// ### Example
 /// ```rust ignore
 /// #[derive(Dto)]
 /// struct MyDto {

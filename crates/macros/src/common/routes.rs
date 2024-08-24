@@ -203,7 +203,15 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                         });
                         let http_code = match http_code {
                             Some(http_code) => quote! {
-                                res.set_status(#http_code);
+                                match ngyn::http::StatusCode::from_u16(#http_code) {
+                                    Ok(status) => {
+                                        *res.status_mut() = status;
+                                    }
+                                    Err(_) => {
+                                        // TODO: add a log here
+                                        *res.status_mut() = ngyn::http::StatusCode::INTERNAL_SERVER_ERROR;
+                                    }
+                                }
                             },
                             None => quote! {},
                         };
@@ -241,7 +249,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             match output {
                                 syn::ReturnType::Type(_, _) => quote! {
                                     let body = self.#ident(#args).await;
-                                    res.send(body);
+                                    *res.body_mut() = body.to_bytes().into();
                                 },
                                 _ => quote! {
                                     self.#ident(#args).await;
@@ -251,7 +259,7 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                             match output {
                                 syn::ReturnType::Type(_, _) => quote! {
                                     let body = self.#ident(#args);
-                                    res.send(body);
+                                    *res.body_mut() = body.to_bytes().into();
                                 },
                                 _ => quote! {
                                     self.#ident(#args);
@@ -286,7 +294,8 @@ pub(crate) fn routes_macro(raw_input: TokenStream) -> TokenStream {
                 cx: &mut ngyn::prelude::NgynContext,
                 res: &mut ngyn::prelude::NgynResponse
             ) {
-                res.set_status(201);
+                use ngyn::shared::server::ToBytes;
+                *res.status_mut() = ngyn::http::StatusCode::CREATED;
                 match handler {
                     #(#handle_routes),*
                     _ => {}

@@ -399,9 +399,9 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "bytes"
-version = "1.6.0"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "514de17de45fdb8dc022b1a7975556c53c86f9f0aa5f534b98977b171857c2c9"
+checksum = "8318a53db07bb3f8dca91a600466bdb3f2eaadeedfdbcf02e1accbad9271ba50"
 dependencies = [
  "serde",
 ]
@@ -889,11 +889,10 @@ dependencies = [
 name = "graphql"
 version = "0.2.0"
 dependencies = [
- "http-body-util",
  "hyper 1.4.0",
  "juniper",
  "juniper_hyper",
- "ngyn 0.4.3",
+ "ngyn 0.4.4",
  "ngyn-hyper 0.1.0",
  "serde",
  "serde_json",
@@ -1482,16 +1481,14 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "async-std",
  "async-trait",
- "http-body-util",
- "hyper 1.4.0",
- "hyper-util",
- "ngyn_macros 0.4.3",
- "ngyn_shared 0.4.3",
- "tokio",
+ "http 1.1.0",
+ "ngyn-hyper 0.1.0",
+ "ngyn_macros 0.4.4",
+ "ngyn_shared 0.4.4",
 ]
 
 [[package]]
@@ -1518,7 +1515,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.4.0",
  "hyper-util",
- "ngyn_shared 0.4.3",
+ "ngyn_shared 0.4.4",
  "tokio",
 ]
 
@@ -1547,7 +1544,7 @@ dependencies = [
 name = "ngyn-swagger"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.4.3",
+ "ngyn 0.4.4",
  "ngyn-swagger-macros",
  "serde",
  "serde_json",
@@ -1570,7 +1567,7 @@ version = "0.1.0"
 dependencies = [
  "http-body-util",
  "hyper 1.4.0",
- "ngyn_shared 0.4.3",
+ "ngyn_shared 0.4.4",
  "tokio",
  "vercel_runtime",
 ]
@@ -1588,10 +1585,10 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "http 1.1.0",
- "ngyn_shared 0.4.3",
+ "ngyn_shared 0.4.4",
  "quote",
  "syn 2.0.68",
 ]
@@ -1614,12 +1611,12 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "async-trait",
+ "bytes",
+ "http 1.1.0",
  "http-body-util",
- "hyper 1.4.0",
- "hyper-util",
  "regex",
  "serde",
  "serde_json",
@@ -2925,7 +2922,7 @@ checksum = "5a84c137d37ab0142f0f2ddfe332651fdbf252e7b7dbb4e67b6c1f1b2e925101"
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.4.3",
+ "ngyn 0.4.4",
  "ngyn-swagger",
  "ngyn-vercel",
  "serde",
@@ -3080,8 +3077,7 @@ name = "weather_api"
 version = "0.2.0"
 dependencies = [
  "dotenv",
- "http-body-util",
- "ngyn 0.4.3",
+ "ngyn 0.4.4",
  "ngyn-shuttle",
  "serde",
  "serde_json",

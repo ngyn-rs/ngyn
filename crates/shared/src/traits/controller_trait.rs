@@ -1,6 +1,5 @@
+use http::StatusCode;
 use std::{any::Any, ptr::NonNull, sync::Arc};
-
-use crate::server::FullResponse;
 
 use super::NgynInjectable;
 
@@ -26,8 +25,8 @@ pub trait NgynController: NgynInjectable + Any + Sync + Send {
         res: &mut crate::server::NgynResponse,
     ) {
         self.inject(cx);
-        res.set_status(404);
-        res.send(format!("Route not found: {}", handler));
+        *res.status_mut() = StatusCode::NOT_FOUND;
+        *res.body_mut() = format!("Route not found: {}", handler).into();
     }
 }
 
@@ -51,7 +50,6 @@ impl From<Arc<Box<dyn NgynController>>> for Box<dyn NgynController> {
 }
 
 /// `NgynControllerHandler` is an internal trait that defines placeholders for routing logic of a controller.
-#[allow(unused)]
 pub trait NgynControllerHandler: NgynController {
     const ROUTES: &'static [(&'static str, &'static str, &'static str)] = &[];
 

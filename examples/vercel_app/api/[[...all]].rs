@@ -1,4 +1,4 @@
-use ngyn::app::NgynFactory;
+use ngyn::factory::NgynFactory;
 use ngyn_swagger::NgynEngineSwagger;
 use ngyn_vercel::VercelApplication;
 use vercel_app::modules::sample::sample_module::SampleModule;

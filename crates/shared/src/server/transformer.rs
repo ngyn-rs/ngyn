@@ -7,12 +7,12 @@ use std::borrow::Cow;
 pub trait Transformer<'a> {
     /// Transforms the given `NgynContext` and `NgynResponse` and returns an instance of `Self`.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
     /// * `res` - The mutable reference to the `NgynResponse`.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// struct MyTransformer;
@@ -24,6 +24,7 @@ pub trait Transformer<'a> {
     ///     }
     /// }
     /// ```
+    #[must_use]
     fn transform(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self
     where
         Self: Sized;
@@ -35,12 +36,12 @@ pub struct Transducer;
 impl<'a> Transducer {
     /// Reduces the given `NgynContext` and `NgynResponse` using the specified `Transformer` and returns an instance of `S`.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
     /// * `res` - The mutable reference to the `NgynResponse`.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     ///
@@ -58,6 +59,7 @@ impl<'a> Transducer {
     ///
     /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
     /// ```
+    #[must_use]
     pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> S {
         S::transform(cx, res)
     }
@@ -71,16 +73,16 @@ pub struct Param {
 impl Param {
     /// Retrieves the value associated with the specified `id` from the parameter data.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `id` - The identifier to search for.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Some(String)` - The value associated with the `id`, if found.
     /// * `None` - If no value is associated with the `id`.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// let param = Param {
@@ -107,16 +109,16 @@ impl Param {
 impl Transformer<'_> for Param {
     /// Transforms the given `NgynContext` and `_res` into a `Param` instance.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
     /// * `_res` - The mutable reference to the `NgynResponse`.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Param` - The transformed `Param` instance.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use crate::{context::NgynContext, NgynResponse};
@@ -129,7 +131,7 @@ impl Transformer<'_> for Param {
     fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params()
-            .unwrap()
+            .unwrap_or_else(|| panic!("Extracting params should only be done in routes.")) // Infallible, only fails if the route is invalid
             .iter()
             .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
             .collect();
@@ -139,22 +141,22 @@ impl Transformer<'_> for Param {
 
 /// Represents a query struct.
 pub struct Query {
-    url: hyper::http::uri::Uri,
+    url: http::uri::Uri,
 }
 
 impl Query {
     /// Retrieves the value associated with the specified `id` from the query parameters.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `id` - The identifier to search for.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Some(String)` - The value associated with the `id`, if found.
     /// * `None` - If no value is associated with the `id`.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use hyper::Uri;
@@ -181,16 +183,16 @@ impl Query {
 impl Transformer<'_> for Query {
     /// Transforms the given `NgynContext` and `_res` into a `Query` instance.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
     /// * `_res` - The mutable reference to the `NgynResponse`.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Query` - The transformed `Query` instance.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use crate::{context::NgynContext, NgynResponse};
@@ -219,15 +221,15 @@ pub struct Body {
 impl Body {
     /// Parses the data into the specified type using serde deserialization.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `S` - The type to deserialize the data into.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Result<S, serde_json::Error>` - The deserialized result, if successful.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use serde::Deserialize;
@@ -253,16 +255,16 @@ impl Body {
 impl Transformer<'_> for Body {
     /// Transforms the given `NgynContext` and `_res` into a `Dto` instance.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
     /// * `_res` - The mutable reference to the `NgynResponse`.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// * `Dto` - The transformed `Dto` instance.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use crate::{context::NgynContext, NgynResponse};

@@ -1,7 +1,7 @@
 // a context extends hashmap to provide some extra functionality
 //
 
-use hyper::Request;
+use http::Request;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, mem::ManuallyDrop, sync::Arc};
 
@@ -30,6 +30,13 @@ pub trait AppState: Any + Send + Sync {
     {
         self
     }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any
+    where
+        Self: Sized,
+    {
+        self
+    }
 }
 
 impl AppState for Arc<dyn AppState> {}
@@ -46,11 +53,11 @@ pub struct NgynContext {
 impl NgynContext {
     /// Retrieves the request associated with the context.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// A reference to the request associated with the context.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -67,11 +74,11 @@ impl NgynContext {
 
     /// Retrieves the params associated with the context.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// An optional reference to the params associated with the context.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -93,11 +100,11 @@ impl NgynContext {
     ///
     /// * `T` - The type of the state to retrieve.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// An optional reference to the state of the specified type. Returns `None` if the state is not found or if it cannot be downcasted to the specified type.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -115,20 +122,49 @@ impl NgynContext {
             None => None,
         }
     }
+
+    /// Retrieves the state of the context as a mutable reference to the specified type.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T` - The type of the state to retrieve.
+    ///
+    /// ### Returns
+    ///
+    /// An optional reference to the state of the specified type. Returns `None` if the state is not found or if it cannot be downcasted to the specified type.
+    ///
+    /// ### Examples
+    ///
+    /// ```rust ignore
+    /// use ngyn_shared::core::context::NgynContext;
+    ///
+    /// let mut context = NgynContext::from_request(request);
+    /// context.set_state(Box::new(MyAppState::new()));
+    ///
+    /// let state_ref = context.state::<MyAppState>();
+    /// ```
+    pub fn state_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        let state = self.state.as_mut();
+
+        match state {
+            Some(value) => value.as_any_mut().downcast_mut::<T>(),
+            None => None,
+        }
+    }
 }
 
 impl NgynContext {
     /// Retrieves the value associated with the given key from the context.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `key` - The key (case-insensitive) to retrieve the value for.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// A reference to the value associated with the key. If the key is not found, returns a reference to an empty context value.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -151,12 +187,12 @@ impl NgynContext {
 
     /// Sets the value associated with the given key in the context.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `key` - The key (case-insensitive) to set the value for.
     /// * `value` - The value to associate with the key.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -175,11 +211,11 @@ impl NgynContext {
 
     /// Removes the value associated with the given key from the context.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `key` - The key (case-insensitive) to remove the value for.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -197,7 +233,7 @@ impl NgynContext {
 
     /// Clears all values from the context.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -215,11 +251,11 @@ impl NgynContext {
 
     /// Returns the number of values in the context.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// The number of values in the context.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -236,11 +272,11 @@ impl NgynContext {
 
     /// Checks if the context is empty.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// `true` if the context is empty, `false` otherwise.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -258,15 +294,15 @@ impl NgynContext {
 
     /// Checks if the context contains a value for the given key.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `key` - The key (case-insensitive) to check for.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// `true` if the context contains a value for the key, `false` otherwise.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -287,7 +323,7 @@ impl NgynContext {
     /// A valid route is when the route information and the params are set.
     /// This is great for differentiating known routes from unknown routes.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// `true` if the context has a valid route, `false` otherwise.
     pub fn is_valid_route(&self) -> bool {
@@ -298,15 +334,15 @@ impl NgynContext {
 impl NgynContext {
     /// Creates a new `NgynContext` from the given request.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `request` - The request to create the context from.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// A new `NgynContext` instance.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -332,16 +368,16 @@ impl NgynContext {
 
     /// Sets the route information for the context.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// If the method of the request matches the given method and the path matches the route, returns a mutable reference to the context. Otherwise, returns `None`.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -357,7 +393,9 @@ impl NgynContext {
     /// assert!(result.is_some());
     /// ```
     pub(crate) fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
-        if method.ne(self.request.method()) {
+        if method.ne(self.request.method())
+            || (method.ne(&Method::GET) && self.request.method().ne(&Method::HEAD))
+        {
             return None;
         }
         if let Some(params) = self.request.uri().to_params(path) {
@@ -370,12 +408,12 @@ impl NgynContext {
 
     /// Prepares the context for execution by setting the route information.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `controller` - The controller to handle the request.
     /// * `handler` - The handler to execute.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
@@ -392,11 +430,11 @@ impl NgynContext {
 
     /// Executes the handler associated with the route in the context.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `res` - The response to write to.
     ///
-    /// # Examples
+    /// ### Examples
     ///
     /// ```rust ignore
     /// use ngyn_shared::core::context::NgynContext;
