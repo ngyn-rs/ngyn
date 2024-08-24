@@ -391,6 +391,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-ngyn"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "clap",
+ "console",
+ "exitcode",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "serde_yaml",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-tree",
+]
+
+[[package]]
 name = "cc"
 version = "1.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1334,23 +1351,6 @@ dependencies = [
  "ngyn-hyper",
  "ngyn_macros",
  "ngyn_shared",
-]
-
-[[package]]
-name = "ngyn-cli"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "clap",
- "console",
- "exitcode",
- "serde",
- "serde_derive",
- "serde_json",
- "serde_yaml",
- "tracing",
- "tracing-subscriber",
- "tracing-tree",
 ]
 
 [[package]]
