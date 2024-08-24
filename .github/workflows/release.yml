@@ -2,6 +2,7 @@ name: Release Workflow
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   crates_io_publish:
@@ -25,8 +26,6 @@ jobs:
       - name: cargo login
         run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
 
-      # allow-branch HEAD is because GitHub actions switches
-      # to the tag while building, which is a detached head
       - name: "cargo release publish"
         run: |-
           cargo release \
@@ -34,7 +33,7 @@ jobs:
             --manifest-path ./crates/Cargo.toml \
             --workspace \
             --all-features \
-            --allow-branch HEAD \
+            --allow-branch main \
             --no-confirm \
             --no-verify \
             --execute

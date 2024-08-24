@@ -5,6 +5,12 @@ on:
     types: [opened]
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to bump to"
+        required: true
+        default: "patch"
 
 jobs:
   bump_version:
@@ -23,9 +29,7 @@ jobs:
           script: |
             const prTitle = context.payload.pull_request.title;
             const versionMatch = prTitle.match(/v(\d+\.\d+\.\d+)/);
-            if (!versionMatch) {
-              core.setFailed('No valid semver version found in PR title');
-            } else {
+            if (versionMatch) {
               // if pr title contains "minor" or "major" we bump accordingly
               if (prTitle.includes('patch')) {
                 core.setOutput('version', 'patch');
@@ -46,12 +50,12 @@ jobs:
       - name: Bump workspace version
         run: |
           cargo install cargo-workspaces
-          cargo workspaces --manifest-path ./crates/Cargo.toml version ${{ steps.extract_version.outputs.version }} --all --allow-branch dev --message "chore(release): Bump version to %v" --no-global-tag --no-individual-tags -y
+          cargo workspaces --manifest-path ./crates/Cargo.toml version ${{ steps.extract_version.outputs.version || github.event.inputs.version }} --all --allow-branch dev --message "chore(release): Bump version to %v" --no-global-tag --no-individual-tags -y
 
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9
         with:
-          message: "Bump version to ${{ steps.extract_version.outputs.version }}"
+          message: "Bump version to ${{ steps.extract_version.outputs.version || github.event.inputs.version }}"
           add: "*/Cargo.toml"
           push: true
           branch: dev
