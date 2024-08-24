@@ -18,8 +18,8 @@ pub fn command() -> Command<'static> {
         )
 }
 
-pub fn run(_matches: &ArgMatches, _subcommand_matches: &ArgMatches) -> Result<ngyn_cli::CmdExit> {
-    Ok(ngyn_cli::CmdExit {
+pub fn run(_matches: &ArgMatches, _subcommand_matches: &ArgMatches) -> Result<cargo_ngyn::CmdExit> {
+    Ok(cargo_ngyn::CmdExit {
         code: exitcode::OK,
         message: None,
     })
