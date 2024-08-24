@@ -25,4 +25,65 @@ struct Database {
 
 ## Initializing Injectables
 
+Injectables are initialized when the application is created. You can provide the initialization strategy for an injectable by supplying a value to `init` argument of the `#[injectable]` attribute macro. The value must be a string literal that corresponds to the name of the initialization method.
 
+```rust
+use ngyn::prelude::*;
+
+#[injectable(init = "init_db")]
+struct Database {
+    connection: String,
+}
+
+impl Database {
+    fn init_db() -> Self {
+        Self {
+            connection: "mongodb://localhost:27017".to_string(),
+        }
+    }
+}
+```
+
+## Using Injectables
+
+Injectables can be accessed in controllers, middlewares, gates, and other components by declaring them as part of the component's fields. The injectable will be automatically initialized and provided to the component when it is created.
+
+```rust
+use ngyn::prelude::*;
+
+#[controller]
+struct MyController {
+    db: Database,
+}
+
+impl MyController {
+    fn index(&self) -> String {
+        format!("Database connection: {}", self.db.connection)
+    }
+}
+```
+
+## Extending Injectables
+
+Injectables can be further extended by controllers or other components through their `inject` method. This method is called after the injectable is initialized and can be used to modify the injectable's state or provide additional functionality.
+
+```rust
+use ngyn::prelude::*;
+
+#[injectable(init = "init_db", inject = "custom_inject")]
+struct Database {
+    connection: String,
+}
+
+impl Database {
+    fn init_db() -> Self {
+        Self {
+            connection: "mongodb://localhost:27017".to_string(),
+        }
+    }
+
+    fn custom_inject(&mut self) {
+        self.connection = "mongodb://localhost:27017".to_string();
+    }
+}
+```

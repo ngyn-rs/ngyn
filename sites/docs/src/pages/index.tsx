@@ -13,7 +13,7 @@ impl NgynGate for WeatherGate {}
 pub struct WeatherController {}
 
 #[routes]
-#[check(WeatherGate)]
+#[check(AuthGate)]
 impl WeatherController {
     #[get("/weather")]
     fn get_weather(&self) -> &str {

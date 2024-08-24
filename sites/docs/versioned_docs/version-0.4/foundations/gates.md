@@ -17,7 +17,7 @@ use ngyn::prelude::*;
 struct AuthGate;
 
 impl NgynGate for AuthGate {
-    fn can_activate(&self, cx: &mut NgynContext, _res: &mut NgynResponse) -> bool {
+    async fn can_activate(&self, cx: &mut NgynContext, _res: &mut NgynResponse) -> bool {
         // Check if the request has a valid token
         cx.request().headers().get("Authorization").is_some()
     }

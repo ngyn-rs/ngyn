@@ -176,4 +176,4 @@ impl HomeController {
 
 In the example above, we define a custom type called `MyCustomType` and implement the `ToBytes` trait for it. We then define a route that returns an instance of `MyCustomType` from the `index` method.
 
-**Note:** Ideally, unless you have a good reason to do so, you should never have to implement the `ToBytes` trait yourself. Ngyn provides a [`#[dto]` attribute macro](/docs/advanced/dtos) that can be used to automatically derive the `ToBytes` trait for your custom types.
+**Note:** Ideally, unless you have a good reason to do so, you should never have to implement the `ToBytes` trait yourself. Ngyn provides a [`Dto` derive macro](/docs/advanced/dtos) that can be used to automatically derive the `ToBytes` trait for your custom types.
