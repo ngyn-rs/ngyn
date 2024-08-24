@@ -4,6 +4,10 @@ version = "0.0.1"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
+documentation = "https://ngyn.rs/docs"
+repository = "https://github.com/ngyn-rs/ngyn"
+homepage = "https://ngyn.rs"
+rust-version = "1.75"
 
 [lib]
 path = "src/lib.rs"
