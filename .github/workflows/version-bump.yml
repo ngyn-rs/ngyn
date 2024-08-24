@@ -27,7 +27,9 @@ jobs:
               core.setFailed('No valid semver version found in PR title');
             } else {
               // if pr title contains "minor" or "major" we bump accordingly
-              if (prTitle.includes('minor')) {
+              if (prTitle.includes('patch')) {
+                core.setOutput('version', 'patch');
+              } else if (prTitle.includes('minor')) {
                 core.setOutput('version', 'minor');
               } else if (prTitle.includes('major')) {
                 core.setOutput('version', 'major');
@@ -44,7 +46,7 @@ jobs:
       - name: Bump workspace version
         run: |
           cargo install cargo-workspaces
-          cargo workspaces version ${{ steps.extract_version.outputs.version }} --all --allow-branch dev
+          cargo workspaces --manifest-path ./crates/Cargo.toml version ${{ steps.extract_version.outputs.version }} --all --allow-branch dev --message "chore(release): Bump version to %v" --no-global-tag --no-individual-tags -y
 
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9

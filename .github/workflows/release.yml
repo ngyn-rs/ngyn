@@ -1,4 +1,4 @@
-name: Release
+name: Release Workflow
 on:
   push:
     branches: [main]
@@ -31,6 +31,7 @@ jobs:
         run: |-
           cargo release \
             publish \
+            --manifest-path ./crates/Cargo.toml \
             --workspace \
             --all-features \
             --allow-branch HEAD \
