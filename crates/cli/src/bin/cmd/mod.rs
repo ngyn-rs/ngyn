@@ -3,9 +3,9 @@ pub mod validate;
 use std::process::exit;
 
 use anyhow::Result;
+use cargo_ngyn::CmdExit;
 use clap::ArgMatches;
 use console::{style, Style};
-use ngyn_cli::CmdExit;
 use tracing::debug;
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
