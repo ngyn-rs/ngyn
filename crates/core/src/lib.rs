@@ -15,6 +15,7 @@ pub mod shared {
 pub mod prelude {
     pub use crate::factory::*;
     pub use crate::macros::*;
+    pub use ngyn_hyper::HyperApplication;
     pub use ngyn_shared::{
         core::NgynEngine,
         server::{
