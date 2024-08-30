@@ -14,6 +14,12 @@ pub struct WeatherDto {
     pub humidity: f32,
 }
 
+#[derive(Param)]
+pub struct GetWeatherParams {
+    pub location: String,
+    pub city: String,
+}
+
 #[controller(prefix="/weather", middlewares=[TestMiddleware, TestMiddleware])]
 pub struct WeatherController {
     #[inject]
@@ -24,10 +30,10 @@ pub struct WeatherController {
 impl WeatherController {
     #[get("/<location>/<city>")]
     #[check(WeatherGate)]
-    async fn get_location(&self, params: Param) -> Result<String, Value> {
+    async fn get_location(&self, params: GetWeatherParams) -> Result<String, Value> {
         println!("{:?}", "Getting location weather");
-        if let Some(location) = params.get("location") {
-            match self.weather_service.get_weather(&location).await {
+        if !params.location.is_empty() {
+            match self.weather_service.get_weather(&params.location).await {
                 Ok(r) => Ok(r),
                 Err(e) => Err(json!({ "status": 501, "message": e.to_string() })),
             }
