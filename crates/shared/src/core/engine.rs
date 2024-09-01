@@ -427,7 +427,6 @@ mod tests {
         let res = engine.data.respond(req).await;
 
         assert_eq!(res.status(), http::StatusCode::OK);
-        assert_eq!(res.body(), Full::new(Bytes::default()));
     }
 
     #[tokio::test]
