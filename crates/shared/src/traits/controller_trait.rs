@@ -1,12 +1,12 @@
 use http::StatusCode;
-use std::{any::Any, ptr::NonNull, sync::Arc};
+use std::{ptr::NonNull, sync::Arc};
 
 use super::NgynInjectable;
 
 /// `NgynController` defines the basic structure of a controller in Ngyn.
 /// Designed for thread safety, it is implemented by controllers that are used to handle requests.
 #[async_trait::async_trait]
-pub trait NgynController: NgynInjectable + Any + Sync + Send {
+pub trait NgynController: NgynInjectable + Sync + Send {
     /// Returns a vector of routes for the controller.
     fn routes(&self) -> Vec<(String, String, String)> {
         vec![]
