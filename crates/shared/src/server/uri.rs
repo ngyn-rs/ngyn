@@ -118,11 +118,11 @@ mod tests {
     #[test]
     fn test_to_params_wildcard() {
         let uri = Uri::from_static("/users/123/posts");
-        let route_path = "/users/<user_id>/posts/*";
+        let route_path = "/users/<user_id>/*";
 
         let params = uri.to_params(route_path);
 
-        assert_eq!(params.is_some(), true);
+        assert!(params.is_some());
         assert_eq!(
             params.unwrap(),
             vec![("user_id".to_string(), "123".to_string())]

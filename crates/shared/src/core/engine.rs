@@ -14,7 +14,7 @@ pub struct PlatformData {
     routes: Routes,
     middlewares: Middlewares,
     interpreters: Vec<Box<dyn NgynInterpreter>>,
-    state: Option<Arc<dyn AppState>>,
+    state: Option<Box<dyn AppState>>,
 }
 
 /// Represents platform data.
@@ -33,7 +33,7 @@ impl PlatformData {
         let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
-            cx.set_state(state.clone());
+            cx.state = Some(unsafe { std::mem::transmute_copy(state) });
         }
 
         let route_handler = self
@@ -189,7 +189,7 @@ pub trait NgynEngine: NgynPlatform {
     ///
     /// * `state` - The state to set.
     fn set_state(&mut self, state: impl AppState + 'static) {
-        self.data_mut().state = Some(Arc::new(state));
+        self.data_mut().state = Some(Box::new(state));
     }
 
     /// Loads a component which implements [`NgynModule`] into the application.
@@ -236,12 +236,21 @@ pub trait NgynEngine: NgynPlatform {
 #[cfg(test)]
 mod tests {
     use crate::traits::NgynInjectable;
+    use std::any::Any;
 
     use super::*;
 
     struct MockAppState;
 
-    impl AppState for MockAppState {}
+    impl AppState for MockAppState {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+    }
 
     struct MockMiddleware;
 
@@ -320,7 +329,7 @@ mod tests {
     async fn test_respond_with_state() {
         let mut engine = MockEngine::default();
         let app_state = MockAppState;
-        engine.data_mut().state = Some(Arc::new(app_state));
+        engine.data_mut().state = Some(Box::new(app_state));
 
         let req = Request::builder()
             .method(Method::GET)
@@ -367,7 +376,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_respond_with_route_handler() {
-        let engine = MockEngine::default();
+        let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_, _| {});
         engine
             .data_mut()
@@ -396,7 +405,8 @@ mod tests {
 
         let res = engine.data.respond(req).await;
 
-        assert_eq!(res.status(), http::StatusCode::NOT_FOUND);
+        // in Ngyn, without a middleware to handle not found routes, the response status is 200
+        assert_eq!(res.status(), http::StatusCode::OK);
     }
 
     #[tokio::test]

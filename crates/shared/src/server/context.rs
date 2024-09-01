@@ -1,6 +1,3 @@
-// a context extends hashmap to provide some extra functionality
-//
-
 use http::Request;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, mem::ManuallyDrop, sync::Arc};
@@ -23,23 +20,31 @@ impl<V> NgynContextValue<V> {
 }
 
 /// Represents the state of an application in Ngyn
-pub trait AppState: Any + Send + Sync {
-    fn as_any(&self) -> &dyn Any
-    where
-        Self: Sized,
-    {
-        self
+
+pub trait AppState: Any + Send + Sync + 'static {
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+impl<T: AppState> AppState for Box<T> {
+    fn as_any(&self) -> &dyn Any {
+        self.as_ref()
     }
 
-    fn as_any_mut(&mut self) -> &mut dyn Any
-    where
-        Self: Sized,
-    {
-        self
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self.as_mut()
     }
 }
 
-impl AppState for Arc<dyn AppState> {}
+impl<T: AppState> AppState for &'static Box<T> {
+    fn as_any(&self) -> &dyn Any {
+        self.as_ref()
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
 
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
@@ -47,7 +52,7 @@ pub struct NgynContext {
     params: Option<Vec<(String, String)>>,
     route_info: Option<(String, Arc<Box<dyn NgynController>>)>,
     store: HashMap<String, String>,
-    state: Option<Arc<dyn AppState>>,
+    pub(crate) state: Option<Box<dyn AppState>>,
 }
 
 impl NgynContext {
@@ -110,14 +115,11 @@ impl NgynContext {
     /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
-    /// context.set_state(Box::new(MyAppState::new()));
     ///
-    /// let state_ref = context.state::<MyAppState>();
+    /// let state_ref = context.state::<TestAppState>();
     /// ```
     pub fn state<T: 'static>(&self) -> Option<&T> {
-        let state = self.state.as_ref();
-
-        match state {
+        match &self.state {
             Some(value) => value.as_any().downcast_ref::<T>(),
             None => None,
         }
@@ -139,14 +141,11 @@ impl NgynContext {
     /// use ngyn_shared::core::context::NgynContext;
     ///
     /// let mut context = NgynContext::from_request(request);
-    /// context.set_state(Box::new(MyAppState::new()));
     ///
-    /// let state_ref = context.state::<MyAppState>();
+    /// let state_ref = context.state::<TestAppState>();
     /// ```
     pub fn state_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        let state = self.state.as_mut();
-
-        match state {
+        match &mut self.state {
             Some(value) => value.as_any_mut().downcast_mut::<T>(),
             None => None,
         }
@@ -362,10 +361,6 @@ impl NgynContext {
         }
     }
 
-    pub(crate) fn set_state(&mut self, state: Arc<dyn AppState>) {
-        self.state = Some(state);
-    }
-
     /// Sets the route information for the context.
     ///
     /// ### Arguments
@@ -490,16 +485,26 @@ mod tests {
 
     use super::*;
 
-    struct MyAppState {}
-    impl AppState for MyAppState {}
+    struct TestAppState {
+        value: u128,
+    }
+    impl AppState for TestAppState {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
 
-    struct MyController {}
-    impl NgynInjectable for MyController {
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+    }
+
+    struct TestController {}
+    impl NgynInjectable for TestController {
         fn new() -> Self {
             Self {}
         }
     }
-    impl NgynController for MyController {}
+    impl NgynController for TestController {}
 
     #[test]
     fn test_request() {
@@ -511,22 +516,16 @@ mod tests {
     }
 
     #[test]
-    fn test_params() {
-        let request = Request::new(Vec::new());
-        let mut context = NgynContext::from_request(request);
-        context.set("name", "John".to_string());
-
-        let params_ref = context.params();
-        assert_eq!(params_ref.unwrap().len(), 1);
-    }
-
-    #[test]
     fn test_state() {
         let request = Request::new(Vec::new());
         let mut context = NgynContext::from_request(request);
-        context.set_state(Arc::new(MyAppState {}));
 
-        let state_ref = context.state::<MyAppState>();
+        let state_ref = context.state::<TestAppState>();
+        assert!(state_ref.is_none());
+
+        context.state = Some(Box::new(TestAppState { value: 1 }));
+
+        let state_ref = context.state::<TestAppState>();
         assert!(state_ref.is_some());
     }
 
@@ -534,10 +533,15 @@ mod tests {
     fn test_state_mut() {
         let request = Request::new(Vec::new());
         let mut context = NgynContext::from_request(request);
-        context.set_state(Arc::new(MyAppState {}));
+        context.state = Some(Box::new(TestAppState { value: 1 }));
 
-        let state_ref = context.state_mut::<MyAppState>();
+        let state_ref = context.state_mut::<TestAppState>();
         assert!(state_ref.is_some());
+
+        state_ref.unwrap().value = 2;
+
+        let state_ref = context.state::<TestAppState>();
+        assert_eq!(state_ref.unwrap().value, 2);
     }
 
     #[test]
@@ -629,25 +633,53 @@ mod tests {
 
     #[test]
     fn test_with() {
-        let request = Request::new(Vec::new());
+        let mut request = Request::new(Vec::new());
+        *request.method_mut() = Method::GET;
+        *request.uri_mut() = "/users".parse().unwrap();
+
         let mut context = NgynContext::from_request(request);
 
         let path = "/users";
+        let result = context.with(path, None);
+        assert!(result.is_some());
+
+        let path = "/users";
         let method = &Method::GET;
-        let result = context.with(path, method);
+        let result = context.with(path, Some(method));
         assert!(result.is_some());
 
         let path = "/users";
         let method = &Method::POST;
-        let result = context.with(path, method);
+        let result = context.with(path, Some(method));
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_params() {
+        let mut request = Request::new(Vec::new());
+        *request.uri_mut() = "/users/123".parse().unwrap();
+        *request.method_mut() = Method::GET;
+
+        let mut context = NgynContext::from_request(request);
+        context.set("name", "John".to_string());
+
+        let params_ref = context.params();
+        assert_eq!(params_ref.is_none(), true);
+
+        let route_path = "/users/<id>";
+        context.with(route_path, Some(&Method::GET));
+
+        let params_ref = context.params();
+        assert_eq!(params_ref.is_some(), true);
+        assert_eq!(params_ref.unwrap()[0].0, "id");
+        assert_eq!(params_ref.unwrap()[0].1, "123");
     }
 
     #[test]
     fn test_prepare() {
         let request = Request::new(Vec::new());
         let mut context = NgynContext::from_request(request);
-        let controller = Arc::new(Box::new(MyController::new()) as Box<dyn NgynController>);
+        let controller = Arc::new(Box::new(TestController::new()) as Box<dyn NgynController>);
 
         context.prepare(controller.clone(), "index".to_string());
 
@@ -661,11 +693,13 @@ mod tests {
         let request = Request::new(Vec::new());
         let mut context = NgynContext::from_request(request);
         let mut response = NgynResponse::default();
-        let controller = Arc::new(Box::new(MyController::new()) as Box<dyn NgynController>);
+        let controller = Arc::new(Box::new(TestController::new()) as Box<dyn NgynController>);
+
+        assert_eq!(response.status(), StatusCode::OK);
 
         context.prepare(controller.clone(), "index".to_string());
         context.execute(&mut response).await;
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 }
