@@ -392,11 +392,14 @@ impl NgynContext {
     /// let result = context.with("/users", &Method::POST);
     /// assert!(result.is_some());
     /// ```
-    pub(crate) fn with(&mut self, path: &str, method: &Method) -> Option<&mut Self> {
-        if method.ne(self.request.method())
-            || (method.ne(&Method::GET) && self.request.method().ne(&Method::HEAD))
-        {
-            return None;
+    pub(crate) fn with(&mut self, path: &str, method: Option<&Method>) -> Option<&mut Self> {
+        if let Some(method) = method {
+            if method != self.request.method()
+            // HEAD is a GET request without a body
+                || (method != Method::GET && self.request.method() != Method::HEAD)
+            {
+                return None;
+            }
         }
         if let Some(params) = self.request.uri().to_params(path) {
             self.params = Some(params);

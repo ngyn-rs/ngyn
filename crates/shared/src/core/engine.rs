@@ -40,7 +40,7 @@ impl PlatformData {
             .routes
             .iter()
             .find_map(|(path, method, route_handler)| {
-                if cx.with(path, method).is_some() {
+                if cx.with(path, method.as_ref()).is_some() {
                     return Some(route_handler);
                 }
                 None
@@ -77,7 +77,7 @@ impl PlatformData {
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
-    pub(crate) fn add_route(&mut self, path: String, method: Method, handler: Box<Handler>) {
+    pub(self) fn add_route(&mut self, path: String, method: Option<Method>, handler: Box<Handler>) {
         self.routes.push((path, method, handler));
     }
 
@@ -86,7 +86,7 @@ impl PlatformData {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
+    pub(self) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
         self.middlewares.push(middleware);
     }
 
@@ -95,7 +95,7 @@ impl PlatformData {
     /// ### Arguments
     ///
     /// * `interpreter` - The interpreter to add.
-    pub(crate) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
+    pub(self) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
         self.interpreters.push(interpreter);
     }
 }
@@ -126,7 +126,13 @@ pub trait NgynEngine: NgynPlatform {
     /// engine.route('/', Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
-        self.data_mut().add_route(path.to_string(), method, handler);
+        self.data_mut()
+            .add_route(path.to_string(), Some(method), handler);
+    }
+
+    fn any(&mut self, path: &str, handler: impl RouteHandle) {
+        self.data_mut()
+            .add_route(path.to_string(), None, handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -206,7 +212,7 @@ pub trait NgynEngine: NgynPlatform {
         for (path, http_method, handler) in controller.routes() {
             self.route(
                 path.as_str(),
-                http::Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
+                Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
                 Box::new({
                     let controller = controller.clone();
                     move |cx: &mut NgynContext, _res: &mut NgynResponse| {
