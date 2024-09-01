@@ -17,7 +17,7 @@ pub struct WeatherDto {
 #[derive(Param)]
 pub struct GetWeatherParams {
     pub location: String,
-    pub city: String,
+    // pub city: String,
 }
 
 #[controller(prefix="/weather", middlewares=[TestMiddleware, TestMiddleware])]
