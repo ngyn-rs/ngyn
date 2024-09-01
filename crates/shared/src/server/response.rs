@@ -151,3 +151,45 @@ impl PeekBytes for NgynResponse {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let response = JsonResponse::new(Some("data"), Some("error"));
+        assert_eq!(response.data(), Some(&"data"));
+        assert_eq!(response.error(), Some(&"error"));
+    }
+
+    #[test]
+    fn test_data() {
+        let response: JsonResponse<&str, &str> = JsonResponse::new(Some("data"), None);
+        assert_eq!(response.data(), Some(&"data"));
+        assert_eq!(response.error(), None);
+    }
+
+    #[test]
+    fn test_error() {
+        let response: JsonResponse<&str, &str> = JsonResponse::new(None, Some("error"));
+        assert_eq!(response.data(), None);
+        assert_eq!(response.error(), Some(&"error"));
+    }
+
+    #[tokio::test]
+    async fn test_peek_bytes() {
+        let mut response = NgynResponse::default();
+        let body = Bytes::from("Hello, world!");
+        *response.body_mut() = body.clone().into();
+
+        let mut bytes = Vec::new();
+        let peek_fn = |data: &Bytes| {
+            bytes.extend_from_slice(&data);
+        };
+
+        response.peek_bytes(peek_fn).await;
+
+        assert_eq!(bytes, body);
+    }
+}

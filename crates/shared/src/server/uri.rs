@@ -18,9 +18,9 @@ pub(crate) trait ToParams {
     /// use hyper::http::uri::Uri;
     ///
     /// let uri = Uri::from_static("/users/123");
-    /// let raw_path = "/users/<id>";
+    /// let route_path = "/users/<id>";
     ///
-    /// let params = uri.to_params(raw_path);
+    /// let params = uri.to_params(route_path);
     ///
     /// assert_eq!(params.is_some(), true);
     /// assert_eq!(params.unwrap(), vec![("id".to_string(), "123".to_string())]);
@@ -38,9 +38,9 @@ fn path_to_regex(path: &str) -> regex::Regex {
 }
 
 impl ToParams for Uri {
-    fn to_params(&self, raw_path: &str) -> Option<Vec<(String, String)>> {
+    fn to_params(&self, route_path: &str) -> Option<Vec<(String, String)>> {
         let uri_path = self.path().trim_start_matches('/').trim_end_matches('/');
-        let params_path = raw_path.trim_start_matches('/').trim_end_matches('/');
+        let params_path = route_path.trim_start_matches('/').trim_end_matches('/');
 
         let path_r = path_to_regex(params_path);
 
@@ -70,5 +70,73 @@ impl ToParams for Uri {
         });
 
         Some(named_matches_with_values)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_params() {
+        let uri = Uri::from_static("/users/123");
+        let route_path = "/users/<id>";
+
+        let params = uri.to_params(route_path);
+
+        assert_eq!(params.is_some(), true);
+        assert_eq!(params.unwrap(), vec![("id".to_string(), "123".to_string())]);
+    }
+
+    #[test]
+    fn test_to_params_no_match() {
+        let uri = Uri::from_static("/posts/456");
+        let route_path = "/users/<id>";
+
+        let params = uri.to_params(route_path);
+
+        assert_eq!(params.is_none(), true);
+    }
+
+    #[test]
+    fn test_to_params_multiple_params() {
+        let uri = Uri::from_static("/users/123/posts/456");
+        let route_path = "/users/<user_id>/posts/<post_id>";
+
+        let params = uri.to_params(route_path);
+
+        assert_eq!(params.is_some(), true);
+        assert_eq!(
+            params.unwrap(),
+            vec![
+                ("user_id".to_string(), "123".to_string()),
+                ("post_id".to_string(), "456".to_string())
+            ]
+        );
+    }
+
+    #[test]
+    fn test_to_params_wildcard() {
+        let uri = Uri::from_static("/users/123/posts");
+        let route_path = "/users/<user_id>/posts/*";
+
+        let params = uri.to_params(route_path);
+
+        assert_eq!(params.is_some(), true);
+        assert_eq!(
+            params.unwrap(),
+            vec![("user_id".to_string(), "123".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_to_params_trailing_slash() {
+        let uri = Uri::from_static("/users/123/");
+        let route_path = "/users/<id>";
+
+        let params = uri.to_params(route_path);
+
+        assert_eq!(params.is_some(), true);
+        assert_eq!(params.unwrap(), vec![("id".to_string(), "123".to_string())]);
     }
 }
