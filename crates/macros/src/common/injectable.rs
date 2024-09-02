@@ -26,7 +26,7 @@ impl syn::parse::Parse for InjectableArgs {
                 _ => {
                     return Err(syn::Error::new(
                         ident.span(),
-                        format!("unexpected attribute `{}`", ident),
+                        format!("unexpected argument `{}`", ident),
                     ));
                 }
             }
