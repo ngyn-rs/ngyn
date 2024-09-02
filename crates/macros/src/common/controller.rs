@@ -1,7 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-
-use crate::utils::parse_macro_data::parse_macro_data;
+use syn::Data;
 
 struct ControllerArgs {
     prefix: Option<syn::LitStr>,
@@ -110,7 +109,10 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         quote! {}
     };
 
-    let controller_fields = parse_macro_data(data);
+    let controller_fields = match data {
+        Data::Struct(data_struct) => data_struct.fields,
+        _ => panic!("This macro only supports structs."),
+    };
 
     let mut add_fields = Vec::new();
     let mut inject_fields = Vec::new();

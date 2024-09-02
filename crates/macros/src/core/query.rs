@@ -15,10 +15,7 @@ pub(crate) fn query_macro(input: TokenStream) -> TokenStream {
         _ => panic!("This macro only supports structs."),
     };
 
-    let field_names: Vec<_> = fields
-        .iter()
-        .map(|field| field.ident.as_ref().unwrap().clone())
-        .collect();
+    let field_names: Vec<_> = fields.iter().map(|field| field.ident.as_ref()).collect();
 
     let expanded = quote! {
         impl #generics ngyn::shared::server::Transformer<'_> for #ident #generics {
