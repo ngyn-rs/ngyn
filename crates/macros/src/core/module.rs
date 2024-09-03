@@ -1,8 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
-
-use crate::utils::parse_macro_data::parse_macro_data;
+use syn::{parse_macro_input, Data, DeriveInput};
 
 struct ModuleArgs {
     imports: Vec<syn::Path>,
@@ -33,7 +31,7 @@ impl syn::parse::Parse for ModuleArgs {
                     _ => {
                         return Err(syn::Error::new(
                             ident.span(),
-                            format!("unexpected attribute `{}`", ident),
+                            format!("unexpected argument `{}`", ident),
                         ))
                     }
                 }
@@ -64,10 +62,14 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
         data,
     } = parse_macro_input!(input as DeriveInput);
     let args = parse_macro_input!(args as ModuleArgs);
-    let module_fields = parse_macro_data(data);
+
+    let fields = match data {
+        Data::Struct(data_struct) => data_struct.fields,
+        _ => panic!("This macro only supports structs."),
+    };
 
     let mut add_fields = Vec::new();
-    let fields: Vec<_> = module_fields
+    let fields: Vec<_> = fields
         .iter()
         .map(
             |syn::Field {

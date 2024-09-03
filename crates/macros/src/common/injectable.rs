@@ -1,7 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-
-use crate::utils::parse_macro_data::parse_macro_data;
+use syn::Data;
 
 struct InjectableArgs {
     init: Option<syn::LitStr>,
@@ -27,7 +26,7 @@ impl syn::parse::Parse for InjectableArgs {
                 _ => {
                     return Err(syn::Error::new(
                         ident.span(),
-                        format!("unexpected attribute `{}`", ident),
+                        format!("unexpected argument `{}`", ident),
                     ));
                 }
             }
@@ -46,7 +45,11 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
         generics,
     } = syn::parse_macro_input!(input as syn::DeriveInput);
     let InjectableArgs { init, inject } = syn::parse_macro_input!(args as InjectableArgs);
-    let injectable_fields = parse_macro_data(data);
+
+    let injectable_fields = match data {
+        Data::Struct(data_struct) => data_struct.fields,
+        _ => panic!("This macro only supports structs."),
+    };
 
     let generics_params = if generics.params.iter().count() > 0 {
         let generics_params = generics.params.iter().map(|param| {
