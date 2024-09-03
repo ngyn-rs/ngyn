@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput};
+use syn::parse_macro_input;
 
 struct ModuleArgs {
     imports: Vec<syn::Path>,
@@ -54,19 +54,17 @@ impl syn::parse::Parse for ModuleArgs {
 }
 
 pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let DeriveInput {
-        ident,
+    let args = parse_macro_input!(args as ModuleArgs);
+    let syn::ItemStruct {
         attrs,
         vis,
+        ident,
         generics,
-        data,
-    } = parse_macro_input!(input as DeriveInput);
-    let args = parse_macro_input!(args as ModuleArgs);
-
-    let fields = match data {
-        Data::Struct(data_struct) => data_struct.fields,
-        _ => panic!("This macro only supports structs."),
-    };
+        fields,
+        struct_token,
+        ..
+    } = syn::parse_macro_input!(input as syn::ItemStruct);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let mut add_fields = Vec::new();
     let fields: Vec<_> = fields
@@ -130,11 +128,11 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
 
     let expanded = quote! {
         #(#attrs)*
-        #vis struct #ident #generics {
+        #vis #struct_token #ident #generics {
             #(#fields),*
         }
 
-        impl #generics ngyn::shared::traits::NgynModule for #ident #generics {
+        impl #impl_generics ngyn::shared::traits::NgynModule for #ident #ty_generics #where_clause {
             fn new() -> Self {
                 #init_module
             }
