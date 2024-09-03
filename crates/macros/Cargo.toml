@@ -15,6 +15,9 @@ syn = "2.0"
 quote = "1.0"
 ngyn_shared = { version = "0.4", path = "../shared" }
 
+[dev-dependencies]
+macrotest = "1"
+
 [lib]
 path = "src/lib.rs"
 proc-macro = true
