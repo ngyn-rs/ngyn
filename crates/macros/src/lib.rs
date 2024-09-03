@@ -387,3 +387,17 @@ pub fn query_derive_macro(input: TokenStream) -> TokenStream {
 pub fn param_derive_macro(input: TokenStream) -> TokenStream {
     param_macro(input)
 }
+
+#[proc_macro_derive(AppState)]
+/// The `AppState` derive macro is used to derive a struct that can be used as a state in a server.
+///
+/// ### Example
+/// ```rust ignore
+/// #[derive(AppState)]
+/// struct MyState {
+///    // fields
+/// }
+/// ```
+pub fn app_state_derive_macro(input: TokenStream) -> TokenStream {
+    common::state::derive_app_state_macro(input)
+}
