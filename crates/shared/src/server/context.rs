@@ -36,13 +36,17 @@ impl<T: AppState> AppState for Box<T> {
     }
 }
 
-impl<T: AppState> AppState for &'static Box<T> {
-    fn as_any(&self) -> &dyn Any {
-        self.as_ref()
-    }
+impl From<Arc<Box<dyn AppState>>> for Box<dyn AppState> {
+    fn from(value: Arc<Box<dyn AppState>>) -> Self {
+        let arc_clone = value.clone();
+        let controller_ref: &dyn AppState = &**arc_clone;
 
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
+        let controller_ptr: *const dyn AppState = controller_ref as *const dyn AppState;
+
+        let nn_ptr = std::ptr::NonNull::new(controller_ptr as *mut dyn AppState).unwrap();
+        let raw_ptr = nn_ptr.as_ptr();
+
+        unsafe { Box::from_raw(raw_ptr) }
     }
 }
 
@@ -542,6 +546,25 @@ mod tests {
 
         let state_ref = context.state::<TestAppState>();
         assert_eq!(state_ref.unwrap().value, 2);
+    }
+
+    #[test]
+    fn test_box_state_impl() {
+        let mut state = Box::new(TestAppState { value: 42 });
+
+        // Test as_any
+        let any_ref = state.as_any();
+        let downcast_result = any_ref.downcast_ref::<TestAppState>();
+        assert!(downcast_result.is_some());
+        let result = downcast_result.unwrap();
+        assert_eq!(result.value, 42);
+
+        // Test as_any_mut
+        let any_mut_ref = state.as_any_mut();
+        let downcast_mut_result = any_mut_ref.downcast_mut::<TestAppState>();
+        assert!(downcast_mut_result.is_some());
+        downcast_mut_result.unwrap().value = 99;
+        assert_eq!(state.value, 99);
     }
 
     #[test]

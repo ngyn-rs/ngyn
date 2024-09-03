@@ -14,7 +14,7 @@ pub struct PlatformData {
     routes: Routes,
     middlewares: Middlewares,
     interpreters: Vec<Box<dyn NgynInterpreter>>,
-    state: Option<Box<dyn AppState>>,
+    state: Option<Arc<Box<dyn AppState>>>,
 }
 
 /// Represents platform data.
@@ -33,7 +33,7 @@ impl PlatformData {
         let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
-            cx.state = Some(unsafe { std::mem::transmute_copy(state) });
+            cx.state = Some(state.clone().into());
         }
 
         let route_handler = self
@@ -189,7 +189,7 @@ pub trait NgynEngine: NgynPlatform {
     ///
     /// * `state` - The state to set.
     fn set_state(&mut self, state: impl AppState + 'static) {
-        self.data_mut().state = Some(Box::new(state));
+        self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
 
     /// Loads a component which implements [`NgynModule`] into the application.
@@ -329,7 +329,7 @@ mod tests {
     async fn test_respond_with_state() {
         let mut engine = MockEngine::default();
         let app_state = MockAppState;
-        engine.data_mut().state = Some(Box::new(app_state));
+        engine.data_mut().state = Some(Arc::new(Box::new(app_state)));
 
         let req = Request::builder()
             .method(Method::GET)
