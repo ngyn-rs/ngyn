@@ -20,7 +20,7 @@ where
 }
 
 /// Creates a `Handler` trait object from a function that takes in a mutable reference to `NgynContext` and returns a type that implements `ToBytes`.
-/// 
+///
 /// This function is useful for creating a `Handler` trait object from a function that returns any valid type that implements `ToBytes`.
 ///
 /// ### Example
