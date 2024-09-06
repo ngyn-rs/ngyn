@@ -2,7 +2,6 @@ mod modules;
 
 use modules::sample::sample_module::SampleModule;
 use ngyn::prelude::*;
-use ngyn_hyper::HyperApplication;
 
 #[tokio::main]
 async fn main() {
@@ -10,9 +9,7 @@ async fn main() {
 
     app.get(
         "/author",
-        |_cx: &mut NgynContext, res: &mut NgynResponse| {
-            res.send("Ngyn is created by @elcharitas.");
-        },
+        handler(|_cx: &mut NgynContext| "Ngyn is created by @elcharitas."),
     );
 
     println!("Starting server at http://127.0.0.1:8080");
