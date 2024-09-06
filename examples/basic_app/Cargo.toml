@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 async-std = { version = "1.6.0", features = ["attributes"] }
-ngyn = { version = "0.4.4" }
+ngyn = { version = "0.4.4", path = "../../crates/core" }
 ngyn-hyper = { version = "0.1.0" }
 tokio = { version = "1", features = ["full"] }
