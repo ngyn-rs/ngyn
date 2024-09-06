@@ -131,6 +131,26 @@ impl<'a> Transformer<'a> for &'a mut HeaderMap {
     }
 }
 
+pub trait ReadBytes {
+    #[allow(async_fn_in_trait)]
+    /// Reads the bytes of a valid ngyn response body.
+    ///
+    /// You can use this to read the bytes of a response body.
+    async fn read_bytes(&mut self) -> Result<Bytes, Box<dyn std::error::Error>>;
+}
+
+impl ReadBytes for NgynResponse {
+    async fn read_bytes(&mut self) -> Result<Bytes, Box<dyn std::error::Error>> {
+        let frame = self.frame().await;
+        if let Some(Ok(frame)) = frame {
+            if let Ok(bytes) = frame.into_data() {
+                return Ok(bytes);
+            }
+        }
+        Err("Failed to read bytes".into())
+    }
+}
+
 pub trait PeekBytes {
     #[allow(async_fn_in_trait)]
     /// Peeks the bytes of a valid ngyn response body.
