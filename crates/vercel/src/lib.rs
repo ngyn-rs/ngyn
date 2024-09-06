@@ -1,6 +1,6 @@
 use ngyn_shared::{
     core::{NgynPlatform, PlatformData},
-    server::response::{PeekBytes, ReadBytes},
+    server::response::ReadBytes,
 };
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 
