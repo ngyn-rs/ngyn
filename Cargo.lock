@@ -1580,7 +1580,6 @@ dependencies = [
 name = "ngyn-vercel"
 version = "0.1.0"
 dependencies = [
- "hyper 1.4.0",
  "ngyn_shared 0.4.4",
  "tokio",
  "vercel_runtime",

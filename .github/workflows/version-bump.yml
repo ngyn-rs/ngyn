@@ -49,7 +49,7 @@ jobs:
 
       - name: Bump workspace version
         run: |
-          cargo install cargo-workspaces
+          cargo install cargo-workspaces cargo-expand
           cargo workspaces --manifest-path ./crates/Cargo.toml version ${{ steps.extract_version.outputs.version || github.event.inputs.version }} --all --allow-branch dev --message "chore(release): Bump version to %v" --no-global-tag --no-individual-tags -y
 
       - name: Commit and push changes
