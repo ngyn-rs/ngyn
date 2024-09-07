@@ -59,6 +59,8 @@ jobs:
 
       - name: Install msrv toolchain
         uses: dtolnay/rust-toolchain@1.75.0
+        with:
+          components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v1
 
