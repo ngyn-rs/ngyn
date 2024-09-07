@@ -1374,7 +1374,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "async-std",
  "async-trait",
@@ -1386,7 +1386,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn-hyper"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "http-body-util",
  "hyper 1.4.1",
@@ -1397,7 +1397,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn-shuttle"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ngyn-hyper",
  "shuttle-runtime",
@@ -1426,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn-vercel"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ngyn_shared",
  "tokio",
@@ -1435,7 +1435,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "http 1.1.0",
  "macrotest",
@@ -1446,7 +1446,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "async-trait",
  "bytes",
