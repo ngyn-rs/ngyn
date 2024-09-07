@@ -13,9 +13,9 @@ homepage = "https://ngyn.rs"
 path = "src/lib.rs"
 
 [dependencies]
-async-std = { version = "1.6", features = ["attributes"] }
-async-trait = "0.1"
-http = "1"
+async-std = { workspace = true }
+async-trait = { workspace = true }
+http = { workspace = true }
 ngyn_macros = { version = "0.4", path = "../macros" }
 ngyn_shared = { version = "0.4", path = "../shared" }
 ngyn-hyper = { version = "0.1", path = "../hyper" }

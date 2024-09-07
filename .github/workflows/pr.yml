@@ -15,12 +15,8 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - name: Install msrv toolchain
+        uses: dtolnay/rust-toolchain@1.75.0
 
       - uses: Swatinem/rust-cache@v1
 
@@ -34,20 +30,18 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest] #, windows-latest]
-        rust: [stable]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
+      - name: Install msrv toolchain
+        uses: dtolnay/rust-toolchain@1.75.0
 
       - uses: Swatinem/rust-cache@v1
+      
+      - name: Install cargo-expand
+        run: cargo install cargo-expand
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
@@ -63,12 +57,9 @@ jobs:
         with:
           submodules: true
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install msrv toolchain
+        uses: dtolnay/rust-toolchain@1.75.0
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
           components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v1

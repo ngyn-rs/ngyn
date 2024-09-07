@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.75.0
 
       - name: cargo-release Cache
         id: cargo_release_cache
@@ -20,7 +20,7 @@ jobs:
           path: ~/.cargo/bin/cargo-release
           key: ${{ runner.os }}-cargo-release
 
-      - run: cargo install cargo-release
+      - run: cargo install cargo-release cargo-expand
         if: steps.cargo_release_cache.outputs.cache-hit != 'true'
 
       - name: cargo login
