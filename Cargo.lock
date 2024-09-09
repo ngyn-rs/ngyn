@@ -371,7 +371,7 @@ version = "0.1.0"
 dependencies = [
  "async-std",
  "ngyn",
- "ngyn-hyper 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn-hyper 0.1.0",
  "tokio",
 ]
 
@@ -925,7 +925,7 @@ dependencies = [
  "juniper",
  "juniper_hyper",
  "ngyn",
- "ngyn-hyper 0.1.0",
+ "ngyn-hyper 0.1.1",
  "serde",
  "serde_json",
  "tokio",
@@ -1513,25 +1513,14 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "async-std",
  "async-trait",
  "http 1.1.0",
- "ngyn-hyper 0.1.0",
+ "ngyn-hyper 0.1.1",
  "ngyn_macros",
- "ngyn_shared 0.4.4",
-]
-
-[[package]]
-name = "ngyn-hyper"
-version = "0.1.0"
-dependencies = [
- "http-body-util",
- "hyper 1.4.0",
- "hyper-util",
- "ngyn_shared 0.4.4",
- "tokio",
+ "ngyn_shared 0.4.5",
 ]
 
 [[package]]
@@ -1548,10 +1537,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngyn-shuttle"
-version = "0.1.0"
+name = "ngyn-hyper"
+version = "0.1.1"
 dependencies = [
- "ngyn-hyper 0.1.0",
+ "http-body-util",
+ "hyper 1.4.0",
+ "hyper-util",
+ "ngyn_shared 0.4.5",
+ "tokio",
+]
+
+[[package]]
+name = "ngyn-shuttle"
+version = "0.1.1"
+dependencies = [
+ "ngyn-hyper 0.1.1",
  "shuttle-runtime",
 ]
 
@@ -1569,7 +1569,7 @@ dependencies = [
 name = "ngyn-swagger-macros"
 version = "0.1.0"
 dependencies = [
- "ngyn-hyper 0.1.0",
+ "ngyn-hyper 0.1.1",
  "quote",
  "serde",
  "serde_json",
@@ -1578,20 +1578,20 @@ dependencies = [
 
 [[package]]
 name = "ngyn-vercel"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
- "ngyn_shared 0.4.4",
+ "ngyn_shared 0.4.5",
  "tokio",
  "vercel_runtime",
 ]
 
 [[package]]
 name = "ngyn_macros"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "http 1.1.0",
  "macrotest",
- "ngyn_shared 0.4.4",
+ "ngyn_shared 0.4.5",
  "quote",
  "syn 2.0.77",
 ]
@@ -1614,7 +1614,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "async-trait",
  "bytes",
