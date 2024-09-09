@@ -1,8 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
-
-use crate::utils::parse_macro_data::parse_macro_data;
+use syn::parse_macro_input;
 
 struct ModuleArgs {
     imports: Vec<syn::Path>,
@@ -33,7 +31,7 @@ impl syn::parse::Parse for ModuleArgs {
                     _ => {
                         return Err(syn::Error::new(
                             ident.span(),
-                            format!("unexpected attribute `{}`", ident),
+                            format!("unexpected argument `{}`", ident),
                         ))
                     }
                 }
@@ -56,18 +54,20 @@ impl syn::parse::Parse for ModuleArgs {
 }
 
 pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let DeriveInput {
-        ident,
+    let args = parse_macro_input!(args as ModuleArgs);
+    let syn::ItemStruct {
         attrs,
         vis,
+        ident,
         generics,
-        data,
-    } = parse_macro_input!(input as DeriveInput);
-    let args = parse_macro_input!(args as ModuleArgs);
-    let module_fields = parse_macro_data(data);
+        fields,
+        struct_token,
+        ..
+    } = syn::parse_macro_input!(input as syn::ItemStruct);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let mut add_fields = Vec::new();
-    let fields: Vec<_> = module_fields
+    let fields: Vec<_> = fields
         .iter()
         .map(
             |syn::Field {
@@ -128,11 +128,11 @@ pub(crate) fn module_macro(args: TokenStream, input: TokenStream) -> TokenStream
 
     let expanded = quote! {
         #(#attrs)*
-        #vis struct #ident #generics {
+        #vis #struct_token #ident #generics {
             #(#fields),*
         }
 
-        impl #generics ngyn::shared::traits::NgynModule for #ident #generics {
+        impl #impl_generics ngyn::shared::traits::NgynModule for #ident #ty_generics #where_clause {
             fn new() -> Self {
                 #init_module
             }

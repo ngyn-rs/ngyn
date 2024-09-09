@@ -8,6 +8,8 @@ use crate::common::check::check_fn_macro;
 use crate::common::{controller::*, injectable::*, route::*, routes::*};
 use crate::core::dto::dto_macro;
 use crate::core::module::*;
+use crate::core::param::param_macro;
+use crate::core::query::query_macro;
 use common::check::check_impl_macro;
 use common::http_code::http_code_macro;
 use common::inject::inject_macro;
@@ -353,6 +355,49 @@ pub fn http_code(args: TokenStream, input: TokenStream) -> TokenStream {
 ///     // fields
 /// }
 /// ```
-pub fn derive_dto(input: TokenStream) -> TokenStream {
+pub fn dto_derive_dto(input: TokenStream) -> TokenStream {
     dto_macro(input)
+}
+
+#[proc_macro_derive(Query)]
+/// The `Query` derive macro is used to derive a struct that can be used to parse query parameters.
+///
+/// ### Example
+/// ```rust ignore
+/// #[derive(Query)]
+/// struct MyQuery {
+///    page: u32,
+///   limit: u32,
+/// }
+/// ```
+pub fn query_derive_macro(input: TokenStream) -> TokenStream {
+    query_macro(input)
+}
+
+#[proc_macro_derive(Param)]
+/// The `Param` derive macro is used to derive a struct that can be used to parse route parameters.
+///
+/// ### Example
+/// ```rust ignore
+/// #[derive(Param)]
+/// struct MyParam {
+///   id: u32,
+/// }
+/// ```
+pub fn param_derive_macro(input: TokenStream) -> TokenStream {
+    param_macro(input)
+}
+
+#[proc_macro_derive(AppState)]
+/// The `AppState` derive macro is used to derive a struct that can be used as a state in a server.
+///
+/// ### Example
+/// ```rust ignore
+/// #[derive(AppState)]
+/// struct MyState {
+///    // fields
+/// }
+/// ```
+pub fn app_state_derive_macro(input: TokenStream) -> TokenStream {
+    common::state::derive_app_state_macro(input)
 }

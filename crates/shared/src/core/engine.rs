@@ -14,7 +14,7 @@ pub struct PlatformData {
     routes: Routes,
     middlewares: Middlewares,
     interpreters: Vec<Box<dyn NgynInterpreter>>,
-    state: Option<Arc<dyn AppState>>,
+    state: Option<Arc<Box<dyn AppState>>>,
 }
 
 /// Represents platform data.
@@ -33,14 +33,14 @@ impl PlatformData {
         let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
-            cx.set_state(state.clone());
+            cx.state = Some(state.clone().into());
         }
 
         let route_handler = self
             .routes
             .iter()
             .find_map(|(path, method, route_handler)| {
-                if cx.with(path, method).is_some() {
+                if cx.with(path, method.as_ref()).is_some() {
                     return Some(route_handler);
                 }
                 None
@@ -77,7 +77,7 @@ impl PlatformData {
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
-    pub(crate) fn add_route(&mut self, path: String, method: Method, handler: Box<Handler>) {
+    pub(self) fn add_route(&mut self, path: String, method: Option<Method>, handler: Box<Handler>) {
         self.routes.push((path, method, handler));
     }
 
@@ -86,7 +86,7 @@ impl PlatformData {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    pub(crate) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
+    pub(self) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
         self.middlewares.push(middleware);
     }
 
@@ -95,7 +95,7 @@ impl PlatformData {
     /// ### Arguments
     ///
     /// * `interpreter` - The interpreter to add.
-    pub(crate) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
+    pub(self) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
         self.interpreters.push(interpreter);
     }
 }
@@ -126,7 +126,13 @@ pub trait NgynEngine: NgynPlatform {
     /// engine.route('/', Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
-        self.data_mut().add_route(path.to_string(), method, handler);
+        self.data_mut()
+            .add_route(path.to_string(), Some(method), handler);
+    }
+
+    fn any(&mut self, path: &str, handler: impl RouteHandle) {
+        self.data_mut()
+            .add_route(path.to_string(), None, handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -183,7 +189,7 @@ pub trait NgynEngine: NgynPlatform {
     ///
     /// * `state` - The state to set.
     fn set_state(&mut self, state: impl AppState + 'static) {
-        self.data_mut().state = Some(Arc::new(state));
+        self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
 
     /// Loads a component which implements [`NgynModule`] into the application.
@@ -206,7 +212,7 @@ pub trait NgynEngine: NgynPlatform {
         for (path, http_method, handler) in controller.routes() {
             self.route(
                 path.as_str(),
-                http::Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
+                Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
                 Box::new({
                     let controller = controller.clone();
                     move |cx: &mut NgynContext, _res: &mut NgynResponse| {
@@ -224,5 +230,371 @@ pub trait NgynEngine: NgynPlatform {
         let mut server = Self::default();
         server.load_module(module);
         server
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::traits::NgynInjectable;
+    use std::any::Any;
+
+    use super::*;
+
+    struct MockAppState;
+
+    impl AppState for MockAppState {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+    }
+
+    struct MockMiddleware;
+
+    impl NgynInjectable for MockMiddleware {
+        fn new() -> Self
+        where
+            Self: Sized,
+        {
+            Self {}
+        }
+    }
+
+    impl NgynMiddleware for MockMiddleware {
+        fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
+    }
+
+    struct MockInterpreter;
+
+    #[async_trait::async_trait]
+    impl NgynInterpreter for MockInterpreter {
+        async fn interpret(&self, _res: &mut NgynResponse) {}
+    }
+
+    struct MockController;
+
+    impl NgynInjectable for MockController {
+        fn new() -> Self
+        where
+            Self: Sized,
+        {
+            Self {}
+        }
+    }
+
+    impl NgynController for MockController {
+        fn routes(&self) -> Vec<(String, String, String)> {
+            vec![(
+                "/test".to_string(),
+                Method::GET.to_string(),
+                "handler".to_string(),
+            )]
+        }
+    }
+
+    struct MockModule;
+
+    impl NgynModule for MockModule {
+        fn new() -> Self {
+            Self {}
+        }
+
+        fn get_controllers(&self) -> Vec<Arc<Box<dyn NgynController>>> {
+            vec![Arc::new(Box::new(MockController) as Box<dyn NgynController>)]
+        }
+    }
+
+    struct MockEngine {
+        data: PlatformData,
+    }
+
+    impl NgynPlatform for MockEngine {
+        fn data_mut(&mut self) -> &mut PlatformData {
+            &mut self.data
+        }
+    }
+
+    impl Default for MockEngine {
+        fn default() -> Self {
+            Self {
+                data: PlatformData::default(),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_respond_with_state() {
+        let mut engine = MockEngine::default();
+        let app_state = MockAppState;
+        engine.data_mut().state = Some(Arc::new(Box::new(app_state)));
+
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_respond_without_state() {
+        let engine = MockEngine::default();
+
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_respond_with_middleware() {
+        let mut engine = MockEngine::default();
+        let middleware = MockMiddleware;
+        engine.data_mut().add_middleware(Box::new(middleware));
+
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_respond_with_route_handler() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine
+            .data_mut()
+            .add_route("/test".to_string(), Some(Method::GET), handler);
+
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_respond_with_route_handler_not_found() {
+        let engine = MockEngine::default();
+
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        // in Ngyn, without a middleware to handle not found routes, the response status is 200
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_respond_with_interpreter() {
+        let mut engine = MockEngine::default();
+        let interpreter = MockInterpreter;
+        engine.data_mut().add_interpreter(Box::new(interpreter));
+
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_respond_with_head_method() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine
+            .data_mut()
+            .add_route("/test".to_string(), Some(Method::GET), handler);
+
+        let req = Request::builder()
+            .method(Method::HEAD)
+            .uri("/test")
+            .body(Vec::new())
+            .unwrap();
+
+        let res = engine.data.respond(req).await;
+
+        assert_eq!(res.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_add_route() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine
+            .data_mut()
+            .add_route("/test".to_string(), Some(Method::GET), handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_add_middleware() {
+        let mut engine = MockEngine::default();
+        let middleware = MockMiddleware;
+        engine.data_mut().add_middleware(Box::new(middleware));
+
+        assert_eq!(engine.data.middlewares.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_add_interpreter() {
+        let mut engine = MockEngine::default();
+        let interpreter = MockInterpreter;
+        engine.data_mut().add_interpreter(Box::new(interpreter));
+
+        assert_eq!(engine.data.interpreters.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_route() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.route("/test", Method::GET, handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_any() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.any("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_get() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.get("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_post() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.post("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_put() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.put("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_delete() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.delete("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_patch() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.patch("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_head() {
+        let mut engine = MockEngine::default();
+        let handler: Box<Handler> = Box::new(|_, _| {});
+        engine.head("/test", handler);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_use_middleware() {
+        let mut engine = MockEngine::default();
+        let middleware = MockMiddleware;
+        engine.use_middleware(middleware);
+
+        assert_eq!(engine.data.middlewares.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_use_interpreter() {
+        let mut engine = MockEngine::default();
+        let interpreter = MockInterpreter;
+        engine.use_interpreter(interpreter);
+
+        assert_eq!(engine.data.interpreters.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_set_state() {
+        let mut engine = MockEngine::default();
+        let app_state = MockAppState;
+        engine.set_state(app_state);
+
+        assert!(engine.data.state.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_load_module() {
+        let mut engine = MockEngine::default();
+        let module = MockModule::new();
+        engine.load_module(module);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_load_controller() {
+        let mut engine = MockEngine::default();
+        let controller = Arc::new(Box::new(MockController) as Box<dyn NgynController>);
+        engine.load_controller(controller);
+
+        assert_eq!(engine.data.routes.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_build() {
+        let engine: MockEngine = MockEngine::build::<MockModule>();
+
+        assert_eq!(engine.data.routes.len(), 1);
     }
 }

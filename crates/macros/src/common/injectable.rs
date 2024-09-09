@@ -1,8 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::parse_macro_data::parse_macro_data;
-
 struct InjectableArgs {
     init: Option<syn::LitStr>,
     inject: Option<syn::LitStr>,
@@ -27,7 +25,7 @@ impl syn::parse::Parse for InjectableArgs {
                 _ => {
                     return Err(syn::Error::new(
                         ident.span(),
-                        format!("unexpected attribute `{}`", ident),
+                        format!("unexpected argument `{}`", ident),
                     ));
                 }
             }
@@ -38,35 +36,21 @@ impl syn::parse::Parse for InjectableArgs {
 }
 
 pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let syn::DeriveInput {
-        ident,
-        data,
+    let InjectableArgs { init, inject } = syn::parse_macro_input!(args as InjectableArgs);
+    let syn::ItemStruct {
         attrs,
         vis,
+        ident,
         generics,
-    } = syn::parse_macro_input!(input as syn::DeriveInput);
-    let InjectableArgs { init, inject } = syn::parse_macro_input!(args as InjectableArgs);
-    let injectable_fields = parse_macro_data(data);
-
-    let generics_params = if generics.params.iter().count() > 0 {
-        let generics_params = generics.params.iter().map(|param| {
-            if let syn::GenericParam::Type(ty) = param {
-                let ident = &ty.ident;
-                quote! { #ident }
-            } else {
-                quote! { #param }
-            }
-        });
-        quote! {
-            <#(#generics_params),*>
-        }
-    } else {
-        quote! {}
-    };
+        fields,
+        struct_token,
+        ..
+    } = syn::parse_macro_input!(input as syn::ItemStruct);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let mut add_fields = Vec::new();
     let mut inject_fields = Vec::new();
-    let fields: Vec<_> = injectable_fields
+    let fields: Vec<_> = fields
         .iter()
         .map(
             |syn::Field {
@@ -119,11 +103,11 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
 
     let expanded = quote! {
         #(#attrs)*
-        #vis struct #ident #generics {
+        #vis #struct_token #ident #generics {
             #(#fields),*
         }
 
-        impl #generics ngyn::prelude::NgynInjectable for #ident #generics_params {
+        impl #impl_generics ngyn::prelude::NgynInjectable for #ident #ty_generics #where_clause {
             fn new() -> Self {
                 #init_injectable
             }
@@ -134,7 +118,7 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
             }
         }
 
-        impl #generics Default for #ident #generics_params {
+        impl #impl_generics Default for #ident #ty_generics #where_clause {
             fn default() -> Self {
                 Self::new()
             }

@@ -1,6 +1,6 @@
 [package]
 name = "ngyn-hyper"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Hyper Platform for ngyn web framework"
 license = "MIT"
@@ -10,8 +10,8 @@ homepage = "https://ngyn.rs"
 rust-version = "1.75"
 
 [dependencies]
-http-body-util = "0.1"
+http-body-util = { workspace = true }
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
-ngyn_shared = { version = "^0.4.0", path = "../shared" }
+ngyn_shared = { version = "0.4", path = "../shared" }
 tokio = { version = "1", features = ["full"] }

@@ -15,8 +15,9 @@ pub mod shared {
 pub mod prelude {
     pub use crate::factory::*;
     pub use crate::macros::*;
+    pub use ngyn_hyper::HyperApplication;
     pub use ngyn_shared::{
-        core::NgynEngine,
+        core::{handler, NgynEngine},
         server::{
             Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
             Transducer,

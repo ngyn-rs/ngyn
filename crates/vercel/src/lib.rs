@@ -1,5 +1,7 @@
-use http_body_util::BodyExt;
-use ngyn_shared::core::{NgynPlatform, PlatformData};
+use ngyn_shared::{
+    core::{NgynPlatform, PlatformData},
+    server::response::ReadBytes,
+};
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
 
 #[derive(Default)]
@@ -16,21 +18,13 @@ impl NgynPlatform for VercelApplication {
 impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
         let request = request.map(|b| b.to_vec());
-        let response = self.data.respond(request).await;
+        let mut res = self.data.respond(request).await;
 
-        let (parts, mut body) = response.into_parts();
-        let body = {
-            let mut buf = Vec::new();
-            let frame = body.frame().await;
+        let body = res.read_bytes().await.unwrap(); // infallible, only fails if the response is invalid
 
-            if let Some(Ok(chunk)) = frame {
-                let d = chunk.data_ref().unwrap();
-                buf.extend_from_slice(d.to_vec().as_slice());
-            }
-            Body::from(buf)
-        };
+        let (parts, ..) = res.into_parts();
 
-        let response = VercelResponse::from_parts(parts, body);
+        let response = VercelResponse::from_parts(parts, Body::from(body.to_vec()));
         Ok(response)
     }
 }

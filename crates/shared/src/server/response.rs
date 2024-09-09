@@ -131,6 +131,26 @@ impl<'a> Transformer<'a> for &'a mut HeaderMap {
     }
 }
 
+pub trait ReadBytes {
+    #[allow(async_fn_in_trait)]
+    /// Reads the bytes of a valid ngyn response body.
+    ///
+    /// You can use this to read the bytes of a response body.
+    async fn read_bytes(&mut self) -> Result<Bytes, Box<dyn std::error::Error>>;
+}
+
+impl ReadBytes for NgynResponse {
+    async fn read_bytes(&mut self) -> Result<Bytes, Box<dyn std::error::Error>> {
+        let frame = self.frame().await;
+        if let Some(Ok(frame)) = frame {
+            if let Ok(bytes) = frame.into_data() {
+                return Ok(bytes);
+            }
+        }
+        Err("Failed to read bytes".into())
+    }
+}
+
 pub trait PeekBytes {
     #[allow(async_fn_in_trait)]
     /// Peeks the bytes of a valid ngyn response body.
@@ -149,5 +169,47 @@ impl PeekBytes for NgynResponse {
                 *self.body_mut() = bytes.into();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let response = JsonResponse::new(Some("data"), Some("error"));
+        assert_eq!(response.data(), Some(&"data"));
+        assert_eq!(response.error(), Some(&"error"));
+    }
+
+    #[test]
+    fn test_data() {
+        let response: JsonResponse<&str, &str> = JsonResponse::new(Some("data"), None);
+        assert_eq!(response.data(), Some(&"data"));
+        assert_eq!(response.error(), None);
+    }
+
+    #[test]
+    fn test_error() {
+        let response: JsonResponse<&str, &str> = JsonResponse::new(None, Some("error"));
+        assert_eq!(response.data(), None);
+        assert_eq!(response.error(), Some(&"error"));
+    }
+
+    #[tokio::test]
+    async fn test_peek_bytes() {
+        let mut response = NgynResponse::default();
+        let body = Bytes::from("Hello, world!");
+        *response.body_mut() = body.clone().into();
+
+        let mut bytes = Vec::new();
+        let peek_fn = |data: &Bytes| {
+            bytes.extend_from_slice(&data);
+        };
+
+        response.peek_bytes(peek_fn).await;
+
+        assert_eq!(bytes, body);
     }
 }

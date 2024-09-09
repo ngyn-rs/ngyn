@@ -1,8 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-use crate::utils::parse_macro_data::parse_macro_data;
-
 struct ControllerArgs {
     prefix: Option<syn::LitStr>,
     middlewares: Vec<syn::Path>,
@@ -61,7 +59,7 @@ impl syn::parse::Parse for ControllerArgs {
                 _ => {
                     return Err(syn::Error::new(
                         ident.span(),
-                        format!("unexpected attribute `{}`", ident),
+                        format!("unexpected argument `{}`", ident),
                     ));
                 }
             }
@@ -80,13 +78,17 @@ impl syn::parse::Parse for ControllerArgs {
 }
 
 pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenStream {
-    let syn::DeriveInput {
+    let syn::ItemStruct {
         attrs,
-        ident,
-        data,
         vis,
+        ident,
         generics,
-    } = syn::parse_macro_input!(input as syn::DeriveInput);
+        fields,
+        struct_token,
+        ..
+    } = syn::parse_macro_input!(input as syn::ItemStruct);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     let ControllerArgs {
         middlewares,
         prefix,
@@ -94,27 +96,9 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         inject,
     } = syn::parse_macro_input!(args as ControllerArgs);
 
-    let generics_params = if generics.params.iter().count() > 0 {
-        let generics_params = generics.params.iter().map(|param| {
-            if let syn::GenericParam::Type(ty) = param {
-                let ident = &ty.ident;
-                quote! { #ident }
-            } else {
-                quote! { #param }
-            }
-        });
-        quote! {
-            <#(#generics_params),*>
-        }
-    } else {
-        quote! {}
-    };
-
-    let controller_fields = parse_macro_data(data);
-
     let mut add_fields = Vec::new();
     let mut inject_fields = Vec::new();
-    let fields: Vec<_> = controller_fields
+    let fields: Vec<_> = fields
         .iter()
         .map(
             |syn::Field {
@@ -199,11 +183,11 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
 
     let expanded = quote! {
         #(#attrs)*
-        #vis struct #ident #generics {
+        #vis #struct_token #ident #generics {
             #(#fields),*
         }
 
-        impl #generics ngyn::shared::traits::NgynInjectable for #ident #generics_params {
+        impl #impl_generics ngyn::shared::traits::NgynInjectable for #ident #ty_generics #where_clause {
             fn new() -> Self {
                 #init_controller
             }
@@ -215,7 +199,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
         }
 
         #[ngyn::prelude::async_trait]
-        impl #generics ngyn::shared::traits::NgynController for #ident #generics_params {
+        impl #impl_generics ngyn::shared::traits::NgynController for #ident #ty_generics #where_clause {
             fn routes(&self) -> Vec<(String, String, String)> {
                 use ngyn::shared::traits::NgynControllerHandler;
                 Self::ROUTES.iter().map(|(path, method, handler)| {

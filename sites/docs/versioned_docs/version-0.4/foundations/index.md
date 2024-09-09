@@ -1,8 +1,10 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
-# Overview
+# Foundations
+
+## Overview
 
 Ngyn is a web framework for Rust that is designed to be fast, secure, and easy to use. It is built on top of the [Hyper](https://hyper.rs) library, which is a fast and low-level HTTP library for Rust. Ngyn provides a high-level API for building web applications, making it easy to write web servers in Rust.
 
@@ -33,7 +35,7 @@ use ngyn::prelude::*;
 async fn main() {
     let mut app = HyperApplication::default();
 
-    app.get("*", |req, res| {
+    app.get("*", |cx: &mut NgynContext, res: &mut NgynResponse| {
         res.send("Hello, World!");
     });
 
