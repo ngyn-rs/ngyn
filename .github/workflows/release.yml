@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      rustc_version:
+        description: "Rustc version"
+        required: true
+        default: "1.75.0"
 
 jobs:
   crates_io_publish:
@@ -11,7 +16,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ github.event.inputs.rustc_version }}
 
       - name: cargo-release Cache
         id: cargo_release_cache
