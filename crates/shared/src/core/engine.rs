@@ -33,7 +33,7 @@ impl PlatformData {
         let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
-            cx.state = Some(state.clone().into());
+            cx.state = Some(state.into());
         }
 
         let route_handler = self

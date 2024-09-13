@@ -36,8 +36,8 @@ impl<T: AppState> AppState for Box<T> {
     }
 }
 
-impl From<Arc<Box<dyn AppState>>> for Box<dyn AppState> {
-    fn from(value: Arc<Box<dyn AppState>>) -> Self {
+impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
+    fn from(value: &Arc<Box<dyn AppState>>) -> Self {
         let arc_clone = value.clone();
         let controller_ref: &dyn AppState = &**arc_clone;
 
