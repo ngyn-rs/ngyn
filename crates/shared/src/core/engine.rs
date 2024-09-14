@@ -3,7 +3,7 @@ use http::Request;
 use http_body_util::Full;
 use std::sync::Arc;
 
-use super::{Handler, RouteHandle};
+use super::RouteHandler;
 use crate::{
     server::{context::AppState, Method, Middlewares, NgynContext, NgynResponse, Routes},
     traits::{NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
@@ -33,7 +33,7 @@ impl PlatformData {
         let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
-            cx.state = Some(state.clone().into());
+            cx.state = Some(state.into());
         }
 
         let route_handler = self
@@ -53,7 +53,12 @@ impl PlatformData {
 
         // execute controlled route if it is handled
         if let Some(route_handler) = route_handler {
-            route_handler(&mut cx, &mut res);
+            match route_handler.as_ref() {
+                RouteHandler::Sync(handler) => handler(&mut cx, &mut res),
+                RouteHandler::Async(async_handler) => {
+                    async_handler(&mut cx, &mut res).await;
+                }
+            }
             cx.execute(&mut res).await;
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
@@ -77,7 +82,12 @@ impl PlatformData {
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
-    pub(self) fn add_route(&mut self, path: String, method: Option<Method>, handler: Box<Handler>) {
+    pub(self) fn add_route(
+        &mut self,
+        path: String,
+        method: Option<Method>,
+        handler: Box<RouteHandler>,
+    ) {
         self.routes.push((path, method, handler));
     }
 
@@ -125,43 +135,43 @@ pub trait NgynEngine: NgynPlatform {
     /// let mut engine = MyEngine::default();
     /// engine.route('/', Method::GET, Box::new(|_, _| {}));
     /// ```
-    fn route(&mut self, path: &str, method: Method, handler: Box<Handler>) {
+    fn route(&mut self, path: &str, method: Method, handler: impl Into<RouteHandler>) {
         self.data_mut()
-            .add_route(path.to_string(), Some(method), handler);
+            .add_route(path.to_string(), Some(method), Box::new(handler.into()));
     }
 
-    fn any(&mut self, path: &str, handler: impl RouteHandle) {
+    fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.data_mut()
-            .add_route(path.to_string(), None, handler.into());
+            .add_route(path.to_string(), None, Box::new(handler.into()));
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
-    fn get(&mut self, path: &str, handler: impl RouteHandle) {
+    fn get(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::GET, handler.into())
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Post`.
-    fn post(&mut self, path: &str, handler: impl RouteHandle) {
+    fn post(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::POST, handler.into())
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Put`.
-    fn put(&mut self, path: &str, handler: impl RouteHandle) {
+    fn put(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::PUT, handler.into())
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Delete`.
-    fn delete(&mut self, path: &str, handler: impl RouteHandle) {
+    fn delete(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::DELETE, handler.into())
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Patch`.
-    fn patch(&mut self, path: &str, handler: impl RouteHandle) {
+    fn patch(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::PATCH, handler.into())
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Head`.
-    fn head(&mut self, path: &str, handler: impl RouteHandle) {
+    fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
 
@@ -210,15 +220,13 @@ pub trait NgynEngine: NgynPlatform {
     /// * `controller` - The arc'd controller to load.
     fn load_controller(&mut self, controller: Arc<Box<dyn NgynController + 'static>>) {
         for (path, http_method, handler) in controller.routes() {
+            let controller = controller.clone();
             self.route(
                 path.as_str(),
                 Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
-                Box::new({
+                Box::new(move |cx: &mut NgynContext, _res: &mut NgynResponse| {
                     let controller = controller.clone();
-                    move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                        let controller = controller.clone();
-                        cx.prepare(controller, handler.clone());
-                    }
+                    cx.prepare(controller, handler.clone());
                 }),
             );
         }
@@ -235,7 +243,7 @@ pub trait NgynEngine: NgynPlatform {
 
 #[cfg(test)]
 mod tests {
-    use crate::traits::NgynInjectable;
+    use crate::{core::Handler, traits::NgynInjectable};
     use std::any::Any;
 
     use super::*;
@@ -378,9 +386,11 @@ mod tests {
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_, _| {});
-        engine
-            .data_mut()
-            .add_route("/test".to_string(), Some(Method::GET), handler);
+        engine.data_mut().add_route(
+            "/test".to_string(),
+            Some(Method::GET),
+            Box::new(RouteHandler::Sync(handler)),
+        );
 
         let req = Request::builder()
             .method(Method::GET)
@@ -430,9 +440,11 @@ mod tests {
     async fn test_respond_with_head_method() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_, _| {});
-        engine
-            .data_mut()
-            .add_route("/test".to_string(), Some(Method::GET), handler);
+        engine.data_mut().add_route(
+            "/test".to_string(),
+            Some(Method::GET),
+            Box::new(RouteHandler::Sync(handler)),
+        );
 
         let req = Request::builder()
             .method(Method::HEAD)
@@ -449,9 +461,11 @@ mod tests {
     async fn test_add_route() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_, _| {});
-        engine
-            .data_mut()
-            .add_route("/test".to_string(), Some(Method::GET), handler);
+        engine.data_mut().add_route(
+            "/test".to_string(),
+            Some(Method::GET),
+            Box::new(RouteHandler::Sync(handler)),
+        );
 
         assert_eq!(engine.data.routes.len(), 1);
     }

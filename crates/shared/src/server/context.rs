@@ -36,14 +36,14 @@ impl<T: AppState> AppState for Box<T> {
     }
 }
 
-impl From<Arc<Box<dyn AppState>>> for Box<dyn AppState> {
-    fn from(value: Arc<Box<dyn AppState>>) -> Self {
+impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
+    fn from(value: &Arc<Box<dyn AppState>>) -> Self {
         let arc_clone = value.clone();
-        let controller_ref: &dyn AppState = &**arc_clone;
+        let state_ref: &dyn AppState = &**arc_clone;
 
-        let controller_ptr: *const dyn AppState = controller_ref as *const dyn AppState;
+        let state_ptr: *const dyn AppState = state_ref as *const dyn AppState;
 
-        let nn_ptr = std::ptr::NonNull::new(controller_ptr as *mut dyn AppState).unwrap();
+        let nn_ptr = std::ptr::NonNull::new(state_ptr as *mut dyn AppState).unwrap();
         let raw_ptr = nn_ptr.as_ptr();
 
         unsafe { Box::from_raw(raw_ptr) }

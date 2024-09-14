@@ -15,5 +15,5 @@ pub use transformer::{Body, Param, Query, Transducer, Transformer};
 pub type NgynRequest = http::Request<Vec<u8>>;
 pub type NgynResponse = http::Response<Full<Bytes>>;
 
-pub(crate) type Routes = Vec<(String, Option<Method>, Box<crate::core::Handler>)>;
+pub(crate) type Routes = Vec<(String, Option<Method>, Box<crate::core::RouteHandler>)>;
 pub(crate) type Middlewares = Vec<Box<dyn crate::traits::NgynMiddleware>>;
