@@ -209,7 +209,16 @@ mod tests {
         };
 
         response.peek_bytes(peek_fn).await;
+        assert_eq!(bytes, body);
+    }
 
+    #[tokio::test]
+    async fn test_read_bytes() {
+        let mut response = NgynResponse::default();
+        let body = Bytes::from("Hello, world!");
+        *response.body_mut() = body.clone().into();
+
+        let bytes = response.read_bytes().await.unwrap();
         assert_eq!(bytes, body);
     }
 }
