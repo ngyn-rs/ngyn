@@ -48,7 +48,7 @@ function HomepageHeader() {
                 <div className="mt-6 sm:mt-10 flex justify-center space-x-4 text-sm">
                     <a
                         className="btn btn-primary text-center py-3 w-full md:w-fit"
-                        href="/docs/intro"
+                        href="/docs"
                     >
                         Get started
                     </a>
