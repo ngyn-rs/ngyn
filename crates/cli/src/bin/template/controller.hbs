@@ -1,0 +1,20 @@
+use ngyn::prelude::*;
+
+{{#services}}
+use super::{{name}}::{{type}};
+{{/services}}
+
+#[controller]
+pub struct {{module_name}} {
+    {{#services}}
+    {{name}}: {{type}},
+    {{/services}}
+}
+
+#[routes]
+impl {{module_name}} {
+    #[get("/")]
+    fn index(&self) -> String {
+        "Hello, world!".to_string()
+    }
+}
