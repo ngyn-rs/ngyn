@@ -1,45 +1,29 @@
 use anyhow::Result;
-use clap::{crate_version, ArgAction};
-use clap::{Arg, ArgMatches, Command};
+use clap::{crate_version, Arg, ArgAction};
+use clap::{ArgMatches, Command};
 use tracing::info;
 
-pub fn command() -> Command<'static> {
+pub fn command() -> Command {
     Command::new("ngyn ")
         .version(crate_version!())
-        .about("A starter project for Rust")
-        .arg(
-            Arg::new("dry_run")
-                .short('d')
-                .long("dry-run")
-                .value_name("EXAMPLE_KEY")
-                .help("Dry run with examples given in EXAMPLE_KEY"),
-        )
-        .arg(
-            Arg::new("reporter")
-                .short('r')
-                .long("reporter")
-                .value_name("REPORTER")
-                .value_parser(["console"])
-                .help("Reporter to use (default: 'console')"),
-        )
-        .arg(
-            Arg::new("no_banner")
-                .long("no-banner")
-                .help("Don't show the banner")
-                .action(ArgAction::SetTrue),
-        )
+        .about("A powerful and flexible web application framework for Rust.")
         .arg(
             Arg::new("verbose")
                 .long("verbose")
                 .help("Show details about interactions")
                 .action(ArgAction::SetTrue),
         )
+        .after_help("For more information on a specific command, run 'ngyn help [SUBCOMMAND]' or 'ngyn [SUBCOMMAND] --help'.\n\nDocumentation: https://ngyn.rs/docs\nReport bugs: https://github.com/ngyn-rs/ngyn/issues")
 }
 
-pub fn run(matches: &ArgMatches) -> Result<cargo_ngyn::CmdExit> {
+pub fn run(cmd: &mut Command, matches: &ArgMatches) -> Result<cargo_ngyn::CmdExit> {
     info!("default cmd {:?}", matches.get_one::<String>("reporter"));
-    println!("going to run {}", cargo_ngyn::CMD);
-    cargo_ngyn::run();
+    let version = crate_version!();
+
+    println!("ngyn {}", version);
+
+    cmd.print_long_help().unwrap();
+
     Ok(cargo_ngyn::CmdExit {
         code: exitcode::OK,
         message: None,
