@@ -2,6 +2,7 @@
 // use anyhow::Result as AnyResult;
 use std::collections::HashMap;
 
+use ramhorns::Content;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,6 +16,20 @@ pub struct CmdExit {
 }
 
 pub const CMD: &str = r#"hello"#;
+
+#[derive(Content)]
+pub struct Mods {
+    pub name: String,
+    pub suffix: String,
+}
+
+#[derive(Content)]
+pub struct Schematic {
+    pub name: String,
+    pub mods: Vec<Mods>,
+    pub services: Vec<Mods>,
+    pub initial: String,
+}
 
 #[cfg(test)]
 mod tests {

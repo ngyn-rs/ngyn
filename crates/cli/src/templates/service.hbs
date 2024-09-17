@@ -1,0 +1,12 @@
+use ngyn::prelude::*;
+
+{{#services}}
+use super::{{name}}::{{type}};
+{{/services}}
+
+#[injectable]
+pub struct {{name}} {
+    {{#services}}
+    pub {{name}}: {{type}},
+    {{/services}}
+}
