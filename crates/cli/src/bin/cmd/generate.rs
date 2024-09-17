@@ -145,7 +145,7 @@ struct Mods {
 
 #[derive(Content)]
 struct Schematic {
-    module_name: String,
+    name: String,
     mods: Vec<Mods>,
     services: Vec<Mods>,
     initial: String,
@@ -164,7 +164,7 @@ fn generate_generic(name: &str, suffix: &str) -> Result<bool> {
     let cwd = std::env::current_dir().unwrap();
     let mod_content = std::fs::read_to_string(&mod_path)?;
     let schematic = Schematic {
-        module_name: name.to_string(),
+        name: name.to_string(),
         mods: Vec::new(),
         services: Vec::new(),
         initial: mod_content,
@@ -202,7 +202,7 @@ fn generate_schematic(
 
     let mod_content = std::fs::read_to_string(&mod_path)?;
     let schematic = Schematic {
-        module_name: name.to_string(),
+        name: name.to_string(),
         mods,
         services,
         initial: mod_content,
