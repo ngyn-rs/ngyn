@@ -15,8 +15,6 @@ pub struct CmdExit {
     pub message: Option<String>,
 }
 
-pub const CMD: &str = r#"hello"#;
-
 #[derive(Content)]
 pub struct Mods {
     pub name: String,
@@ -29,14 +27,4 @@ pub struct Schematic {
     pub mods: Vec<Mods>,
     pub services: Vec<Mods>,
     pub initial: String,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_foo() {
-        assert_eq!(CMD.len(), 5);
-    }
 }

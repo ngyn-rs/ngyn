@@ -3,7 +3,7 @@
 mod data;
 use anyhow::{anyhow, Result};
 use convert_case::Casing;
-pub use data::{CmdExit, CMD};
+pub use data::CmdExit;
 use data::{Mods, Schematic};
 use tracing::info;
 
@@ -15,7 +15,7 @@ fn read_template_file(file_name: &str) -> Result<String> {
     match file_name {
         "service" => Ok(include_str!("templates/service.hbs").to_string()),
         "gate" => Ok(include_str!("templates/gate.hbs").to_string()),
-        // "middleware" => Ok(include_str!("templates/middleware.hbs").to_string()),
+        "middleware" => Ok(include_str!("templates/middleware.hbs").to_string()),
         "controller" => Ok(include_str!("templates/controller.hbs").to_string()),
         "module" => Ok(include_str!("templates/module.hbs").to_string()),
         "route" => Ok(include_str!("templates/route.hbs").to_string()),
@@ -64,29 +64,34 @@ fn render_templates(
 pub fn generate_generic(name: &str, suffix: &str) -> Result<bool> {
     let cwd = std::env::current_dir()?.to_str().unwrap().to_string();
     let file_name = generate_file_name(name, suffix);
-    let schematic_root = format!("{}/src/{}", cwd, suffix);
+    let schematic_root = format!("{}/src/{}s", cwd, suffix);
 
     // ensure the module directory exists
     // if it doesn't, create it
     if !std::path::Path::new(&schematic_root).exists() {
+        info!("Creating new {}s module", suffix);
+
         std::fs::create_dir_all(&schematic_root)?;
-        let mod_path = format!("{}/mod.rs", schematic_root);
-        let mods = vec![Mods {
-            name: name.to_string(),
-            suffix: suffix.to_string(),
-        }];
-        let schmatic = Schematic {
-            name: name.to_string(),
-            mods,
-            services: Vec::new(),
-            initial: std::fs::read_to_string(&mod_path)?,
-        };
-        render_mods(&mod_path, &schmatic)?;
+        let mod_path = format!("{}/src/main.rs", cwd);
+        let main_content = format!(
+            "mod {suffix}s;\n{main_content}",
+            main_content = std::fs::read_to_string(&mod_path)?
+        );
+
+        // write mods to the main.rs file
+        info!("Updating main.rs with new module");
+        std::fs::write(&mod_path, main_content)?;
     }
 
     // path to the module
     let schematic_path = format!("{}/{}.rs", schematic_root, file_name);
     let mod_path = format!("{}/mod.rs", schematic_root);
+
+    // ensure the mod file exists
+    // if it doesn't, create it
+    if !std::path::Path::new(&mod_path).exists() {
+        std::fs::write(&mod_path, "")?;
+    }
 
     let schematic = Schematic {
         name: name.to_string(),
@@ -106,6 +111,7 @@ pub fn generate_schematic(name: &str, suffix: &str, services: Vec<Mods>) -> Resu
     // ensure the module directory exists
     // if it doesn't, create it
     if !std::path::Path::new(&schematic_root).exists() {
+        info!("Creating new {} module", name);
         std::fs::create_dir_all(&schematic_root)?;
         let mod_path = format!("{}/../mod.rs", schematic_root);
         let mods = vec![Mods {
@@ -118,6 +124,8 @@ pub fn generate_schematic(name: &str, suffix: &str, services: Vec<Mods>) -> Resu
             services: Vec::new(),
             initial: std::fs::read_to_string(&mod_path)?,
         };
+
+        info!("Updating mod.rs with new module");
         render_mods(&mod_path, &schmatic)?;
     }
 

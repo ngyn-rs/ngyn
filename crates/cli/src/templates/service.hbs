@@ -1,12 +1,12 @@
 use ngyn::prelude::*;
 
 {{#services}}
-use super::{{name}}::{{type}};
+use super::{{name}}::{{suffix}};
 {{/services}}
 
 #[injectable]
 pub struct {{name}} {
     {{#services}}
-    pub {{name}}: {{type}},
+    pub {{name}}: {{suffix}},
     {{/services}}
 }

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cargo_ngyn::{generate_file_name, generate_generic, generate_schematic};
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use ramhorns::Content;
 use tracing::info;
 
 /// `ngyn generate` command
@@ -15,13 +16,15 @@ pub fn command() -> Command {
                 .short('n')
                 .long("name")
                 .value_name("NAME")
-                .help("Name of the artifact to generate"), // .required(true),
+                .help("Name of the schematic or artifact to generate")
+                .required(true),
         )
         .arg(
             Arg::new("dry_run")
                 .short('d')
                 .long("dry-run")
                 .value_name("DRY_RUN")
+                .action(ArgAction::SetTrue)
                 .help("Print out the generated files without writing them to disk"),
         )
         .arg(
@@ -81,44 +84,56 @@ pub fn run(_matches: &ArgMatches, subcommand_matches: &ArgMatches) -> Result<car
         subcommand_matches.get_one::<String>("name")
     );
 
-    let schematic_name = if let Some(cmd) = subcommand_matches.get_one::<String>("name") {
-        cmd
-    } else {
-        "sample"
-    };
+    let schematic_name = subcommand_matches.get_one::<String>("name").unwrap();
     let mut services = Vec::new();
 
     if let Some(service) = subcommand_matches.get_one::<bool>("service") {
-        info!("generate service {:?}", service);
-        services.push(generate_file_name(schematic_name, "service"));
-        generate_schematic(schematic_name, "service", Vec::new())?;
+        if service.is_truthy() {
+            info!("generate service {:?}", schematic_name);
+            services.push(generate_file_name(schematic_name, "service"));
+            generate_schematic(schematic_name, "service", Vec::new())?;
+        }
     }
 
     if let Some(gate) = subcommand_matches.get_one::<bool>("gate") {
-        info!("generate gate {:?}", gate);
-        services.push(generate_file_name(schematic_name, "gate"));
-        generate_schematic(schematic_name, "gate", Vec::new())?;
+        if gate.is_truthy() {
+            info!("generate gate {:?}", schematic_name);
+            services.push(generate_file_name(schematic_name, "gate"));
+            generate_schematic(schematic_name, "gate", Vec::new())?;
+        }
     }
 
     if let Some(middleware) = subcommand_matches.get_one::<bool>("middleware") {
-        info!("generate middleware {:?}", middleware);
-        services.push(generate_file_name(schematic_name, "middleware"));
-        generate_generic(schematic_name, "middleware")?;
+        if middleware.is_truthy() {
+            info!("generate middleware {:?}", schematic_name);
+            services.push(generate_file_name(schematic_name, "middleware"));
+            generate_generic(schematic_name, "middleware")?;
+            println!("Generated middleware {schematic_name}");
+        }
     }
 
     if let Some(controller) = subcommand_matches.get_one::<bool>("controller") {
-        info!("generate controller {:?}", controller);
-        generate_schematic(schematic_name, "controller", Vec::new())?;
+        if controller.is_truthy() {
+            info!("generate controller {:?}", schematic_name);
+            generate_schematic(schematic_name, "controller", Vec::new())?;
+            println!("Generated controller {schematic_name}");
+        }
     }
 
-    if let Some(route) = subcommand_matches.get_one::<String>("route") {
-        info!("generate route {:?}", route);
-        generate_generic(schematic_name, "route")?;
+    if let Some(route) = subcommand_matches.get_one::<bool>("route") {
+        if route.is_truthy() {
+            info!("generate route {:?}", schematic_name);
+            generate_generic(schematic_name, "route")?;
+            println!("Generated route {schematic_name}")
+        }
     }
 
     if let Some(module) = subcommand_matches.get_one::<bool>("module") {
-        info!("generate module {:?}", module);
-        generate_schematic(schematic_name, "module", Vec::new())?;
+        if module.is_truthy() {
+            info!("generate module {:?}", schematic_name);
+            generate_schematic(schematic_name, "module", Vec::new())?;
+            println!("Generated module {schematic_name}");
+        }
     }
 
     Ok(cargo_ngyn::CmdExit {

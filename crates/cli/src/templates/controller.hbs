@@ -1,13 +1,13 @@
 use ngyn::prelude::*;
 
 {{#services}}
-use super::{{name}}::{{type}};
+use super::{{name}}::{{suffix}};
 {{/services}}
 
 #[controller]
 pub struct {{name}} {
     {{#services}}
-    {{name}}: {{type}},
+    {{name}}: {{suffix}},
     {{/services}}
 }
 
