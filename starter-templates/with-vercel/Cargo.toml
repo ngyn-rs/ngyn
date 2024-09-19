@@ -1,0 +1,10 @@
+[package]
+name = "with-vercel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ngyn = { git = "https://github.com/ngyn-rs/ngyn", branch = "dev" }
+ngyn-vercel = { git = "https://github.com/ngyn-rs/ngyn", branch = "dev" }
+tokio = { version = "1", features = ["full"] }
+vercel_runtime = { version = "1.1.0" }

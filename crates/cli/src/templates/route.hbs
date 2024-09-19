@@ -1,10 +1,12 @@
-// use ngyn::prelude::*;
+use ngyn::prelude::*;
 
 /// `{{name}}` route
 ///
 /// # Description
 /// This is the `{{name}}` route
 ///
-pub fn {{name}}() -> String {
+/// # Arguments
+/// * `_cx` - The context of the current request
+pub fn {{name}}<'a>(_cx: &'a mut NgynContext) -> String {
     "Process {{name}}".to_string()
 }

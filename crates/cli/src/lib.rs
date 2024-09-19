@@ -72,15 +72,15 @@ pub fn generate_generic(name: &str, suffix: &str) -> Result<bool> {
         info!("Creating new {}s module", suffix);
 
         std::fs::create_dir_all(&schematic_root)?;
-        let mod_path = format!("{}/src/main.rs", cwd);
+        let main_path = format!("{}/src/main.rs", cwd);
         let main_content = format!(
             "mod {suffix}s;\n{main_content}",
-            main_content = std::fs::read_to_string(&mod_path)?
+            main_content = std::fs::read_to_string(&main_path)?
         );
 
         // write mods to the main.rs file
         info!("Updating main.rs with new module");
-        std::fs::write(&mod_path, main_content)?;
+        std::fs::write(&main_path, main_content)?;
     }
 
     // path to the module
@@ -94,8 +94,11 @@ pub fn generate_generic(name: &str, suffix: &str) -> Result<bool> {
     }
 
     let schematic = Schematic {
-        name: name.to_string(),
-        mods: Vec::new(),
+        name: file_name.to_string(),
+        mods: vec![Mods {
+            name: file_name.to_string(),
+            suffix: suffix.to_string(),
+        }],
         services: Vec::new(),
         initial: std::fs::read_to_string(&mod_path)?,
     };
