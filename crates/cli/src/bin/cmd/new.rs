@@ -13,8 +13,7 @@ pub fn command() -> Command {
                 .short('n')
                 .long("name")
                 .value_name("NAME")
-                .help("Name of the project to create")
-                .required(true),
+                .help("Name of the project to create"),
         )
         .arg(
             Arg::new("dry_run")
@@ -46,14 +45,14 @@ pub fn run(matches: &ArgMatches, subcommand_matches: &ArgMatches) -> Result<carg
         let name = dialoguer::Input::<String>::new()
             .with_prompt("Name of the project to create")
             .interact()?;
-        let template = dialoguer::Select::new()
-            .with_prompt("Use a template to create the project")
-            .default(0)
-            .interact()?;
         let force = dialoguer::Confirm::new()
             .with_prompt("Force the creation of the project")
             .default(false)
             .interact()?;
+        let template = dialoguer::Select::new()
+        .with_prompt("Use a template to create the project")
+        .default(0)
+        .interact()?;
     }
 
     Ok(cargo_ngyn::CmdExit {
