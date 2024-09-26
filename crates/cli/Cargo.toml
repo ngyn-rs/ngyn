@@ -42,6 +42,7 @@ pkg-fmt = "txz"
 
 clap = { version = "4.5", features = ["cargo"], optional = true }
 convert_case = "0.6"
+dialoguer = "0.10"
 serde = "1.0"
 anyhow = "1"
 console = "^0.15.0"

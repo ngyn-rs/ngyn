@@ -39,7 +39,23 @@ pub fn command() -> Command {
         )
 }
 
-pub fn run(_matches: &ArgMatches, _subcommand_matches: &ArgMatches) -> Result<cargo_ngyn::CmdExit> {
+pub fn run(matches: &ArgMatches, subcommand_matches: &ArgMatches) -> Result<cargo_ngyn::CmdExit> {
+    if let Some(name) = subcommand_matches.get_one::<String>("name") {
+        println!("Creating new project: {}", name);
+    } else {
+        let name = dialoguer::Input::<String>::new()
+            .with_prompt("Name of the project to create")
+            .interact()?;
+        let template = dialoguer::Select::new()
+            .with_prompt("Use a template to create the project")
+            .default(0)
+            .interact()?;
+        let force = dialoguer::Confirm::new()
+            .with_prompt("Force the creation of the project")
+            .default(false)
+            .interact()?;
+    }
+
     Ok(cargo_ngyn::CmdExit {
         code: exitcode::OK,
         message: None,

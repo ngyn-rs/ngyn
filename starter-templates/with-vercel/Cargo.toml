@@ -3,6 +3,10 @@ name = "with-vercel"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "all"
+path = "api/[[...all]].rs"
+
 [dependencies]
 ngyn = { git = "https://github.com/ngyn-rs/ngyn", branch = "dev" }
 ngyn-vercel = { git = "https://github.com/ngyn-rs/ngyn", branch = "dev" }
