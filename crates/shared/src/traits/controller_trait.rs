@@ -31,10 +31,57 @@ pub trait NgynController: NgynInjectable + Sync + Send {
 }
 
 /// In Ngyn, controllers are stored as `Arc<Box<dyn NgynController>>`.
-/// This is because controllers are shared across threads and need to be cloned easily.
+/// And we do this because controllers are shared across threads and an arc guarantees
+/// that the controller is not dropped until all references to it are dropped.
 ///
-/// Here's how we convert an `Arc<Box<dyn NgynController>>` to a `Box<dyn NgynController>`.
-/// This conversion allows us to mutably borrow the controller and handle routing logic.
+/// When working with controllers, you'd quickly notice that Ngyn allows you to define routes that require mutable access to the controller.
+/// For instance, take this sample controller:
+/// ```rust ignore
+/// #[controller]
+/// struct TestController;
+///
+/// #[routes]
+/// impl TestController {
+///    #[get("/")]
+///    async fn index(&mut self) -> String {
+///      "Hello, World!".to_string()
+///    }
+/// }
+/// ```
+///
+/// In the above example, the `index` method requires mutable access to the controller. This pattern, though not encouraged (check app states), is allowed in Ngyn.
+/// You could for instance create a localized state in the controller that is only accessible to the controller and its routes.
+/// The way Ngyn allows this without performance overhead is through a specialized `Arc -> Box` conversion that only works so well becasue of how Ngyn is designed.
+///
+/// HOW DOES IT WORK?
+///
+/// ```text
+/// +-----------------+        +-----------------+        +-----------------+
+/// | Arc<Box<Ctrl>>  |        | Arc<Box<Ctrl>>  |        | Arc<Box<Ctrl>>  |
+/// +-----------------+        +-----------------+        +-----------------+
+///        |                          |                          |
+/// +-----------------+        +-----------------+        +-----------------+
+/// | &Box<Ctrl>      |        | &Box<Ctrl>      |        | &Box<Ctrl>      |
+/// +-----------------+        +-----------------+        +-----------------+
+///        |                          |                          |
+/// +-----------------+        +-----------------+        +-----------------+
+/// | &mut Ctrl       |        | &mut Ctrl       |        | &mut Ctrl       |
+/// +-----------------+        +-----------------+        +-----------------+
+///        |                          |                          |
+/// +-----------------+        +-----------------+        +-----------------+
+/// | *mut Ctrl       |        | *mut Ctrl       |        | *mut Ctrl       |
+/// +-----------------+        +-----------------+        +-----------------+
+///        |                          |                          |
+/// +-----------------+        +-----------------+        +-----------------+
+/// | Box<Ctrl>       |        | Box<Ctrl>       |        | Box<Ctrl>       |
+/// +-----------------+        +-----------------+        +-----------------+
+/// 
+/// ```
+///
+///
+/// When a controller is created, we box it and then wrap it in an Arc. This way, the controller is converted to a trait object and can be shared across threads.
+/// The trait object is what allows us to call the controller's methods from the server. But when we need mutable access to the controller, we convert it back to a Box.
+/// Rather than making use of a mutex, what we do is get the raw pointer of the initial controller, ensure it's not null, and then convert it back to a Box.
 ///
 /// # Panics
 /// Panics if the controller has been dropped. This should never happen unless the controller is dropped manually.
