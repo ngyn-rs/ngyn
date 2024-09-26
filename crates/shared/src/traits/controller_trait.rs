@@ -35,14 +35,17 @@ pub trait NgynController: NgynInjectable + Sync + Send {
 ///
 /// Here's how we convert an `Arc<Box<dyn NgynController>>` to a `Box<dyn NgynController>`.
 /// This conversion allows us to mutably borrow the controller and handle routing logic.
+///
+/// # Panics
+/// Panics if the controller has been dropped. This should never happen unless the controller is dropped manually.
 impl From<Arc<Box<dyn NgynController>>> for Box<dyn NgynController> {
-    fn from(arc: Arc<Box<dyn NgynController>>) -> Self {
-        let arc_clone = arc.clone();
-        let controller_ref: &dyn NgynController = &**arc_clone;
-
+    fn from(controller_arc: Arc<Box<dyn NgynController>>) -> Self {
+        let controller_ref: &dyn NgynController = &**controller_arc;
         let controller_ptr: *const dyn NgynController = controller_ref as *const dyn NgynController;
 
-        let nn_ptr = NonNull::new(controller_ptr as *mut dyn NgynController).unwrap();
+        // SAFETY: controller_ptr is not null, it is safe to convert it to a NonNull pointer, this way we can safely convert it back to a Box
+        let nn_ptr = NonNull::new(controller_ptr as *mut dyn NgynController)
+            .expect("Controller has been dropped, ensure it is being cloned correctly.");
         let raw_ptr = nn_ptr.as_ptr();
 
         unsafe { Box::from_raw(raw_ptr) }
