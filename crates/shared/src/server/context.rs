@@ -37,9 +37,10 @@ impl<T: AppState> AppState for Box<T> {
 }
 
 /// # Panics
-/// Panics if the controller has been dropped. This should never happen unless the controller is dropped manually.
+/// Panics if the state has been dropped. This should never happen unless the state is dropped manually.
 impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
     fn from(value: &Arc<Box<dyn AppState>>) -> Self {
+        // creating a clone is essential since this ref will be dropped after this function returns
         let arc_clone = value.clone();
         let state_ref: &dyn AppState = &**arc_clone;
 
