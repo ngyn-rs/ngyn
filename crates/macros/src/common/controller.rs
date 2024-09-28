@@ -131,7 +131,7 @@ pub(crate) fn controller_macro(args: TokenStream, input: TokenStream) -> TokenSt
             quote! {
                 let mut middleware = #m::default();
                 middleware.inject(cx);
-                middleware.handle(cx, res);
+                middleware.handle(cx, res).await;
             }
         })
         .collect();

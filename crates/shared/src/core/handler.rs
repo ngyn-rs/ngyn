@@ -1,9 +1,6 @@
 use std::{future::Future, pin::Pin};
 
-use crate::{
-    server::{NgynContext, NgynResponse, ToBytes},
-    traits::NgynMiddleware,
-};
+use crate::server::{NgynContext, NgynResponse, ToBytes};
 
 /// Represents a handler function that takes in a mutable reference to `NgynContext` and `NgynResponse`.
 pub type Handler = dyn Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static;
@@ -74,23 +71,5 @@ pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'sta
             let body = fut.await.to_bytes();
             *res.body_mut() = body.into();
         })
-    })
-}
-
-pub fn middleware<M: NgynMiddleware + 'static>(middleware: M) -> Box<Handler> {
-    Box::new(move |ctx: &mut NgynContext, res: &mut NgynResponse| {
-        middleware.handle(ctx, res);
-    })
-}
-
-pub fn with_middlewares<M: NgynMiddleware + 'static>(
-    middleware: Vec<M>,
-    handler: Box<Handler>,
-) -> impl Into<RouteHandler> {
-    Box::new(move |ctx: &mut NgynContext, res: &mut NgynResponse| {
-        for m in &middleware {
-            m.handle(ctx, res);
-        }
-        handler(ctx, res);
     })
 }
