@@ -31,7 +31,7 @@ use crate::{
 /// }
 ///
 /// impl NgynMiddleware for RequestReceivedLogger {
-///   fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
+///   async fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
 ///    println!("Request received: {:?}", cx.request());
 ///  }
 /// }
