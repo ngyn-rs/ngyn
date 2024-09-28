@@ -1,3 +1,5 @@
+use std::{future::Future, pin::Pin};
+
 use crate::{
     server::{NgynContext, NgynResponse},
     traits::NgynInjectable,
@@ -29,12 +31,37 @@ use crate::{
 /// }
 ///
 /// impl NgynMiddleware for RequestReceivedLogger {
-///   fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
+///   async fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
 ///    println!("Request received: {:?}", cx.request());
 ///  }
 /// }
 /// ```
 pub trait NgynMiddleware: NgynInjectable + Sync {
     /// Handles the request.
-    fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse);
+    #[allow(async_fn_in_trait)]
+    fn handle(
+        &self,
+        cx: &mut NgynContext,
+        res: &mut NgynResponse,
+    ) -> impl std::future::Future<Output = ()> + Send;
+}
+
+pub(crate) trait Middleware: NgynInjectable + Sync {
+    fn run<'a>(
+        &'a self,
+        _cx: &'a mut NgynContext,
+        _res: &'a mut NgynResponse,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+        Box::pin(async move {})
+    }
+}
+
+impl<T: NgynMiddleware> Middleware for T {
+    fn run<'a>(
+        &'a self,
+        cx: &'a mut NgynContext,
+        res: &'a mut NgynResponse,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+        Box::pin(self.handle(cx, res))
+    }
 }

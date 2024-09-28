@@ -5,7 +5,7 @@ use serde_json::json;
 pub struct NotFoundMiddleware;
 
 impl NgynMiddleware for NotFoundMiddleware {
-    fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
+    async fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
         if cx.is_valid_route() {
             return;
         }

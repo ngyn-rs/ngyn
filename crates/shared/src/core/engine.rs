@@ -6,7 +6,7 @@ use std::sync::Arc;
 use super::RouteHandler;
 use crate::{
     server::{context::AppState, Method, Middlewares, NgynContext, NgynResponse, Routes},
-    traits::{NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
+    traits::{Middleware, NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
@@ -48,7 +48,7 @@ impl PlatformData {
 
         // trigger global middlewares
         for middleware in &self.middlewares {
-            middleware.handle(&mut cx, &mut res);
+            middleware.run(&mut cx, &mut res).await;
         }
 
         // execute controlled route if it is handled
@@ -96,7 +96,7 @@ impl PlatformData {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    pub(self) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
+    pub(self) fn add_middleware(&mut self, middleware: Box<dyn Middleware>) {
         self.middlewares.push(middleware);
     }
 
@@ -272,7 +272,7 @@ mod tests {
     }
 
     impl NgynMiddleware for MockMiddleware {
-        fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
+        async fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
     }
 
     struct MockInterpreter;
