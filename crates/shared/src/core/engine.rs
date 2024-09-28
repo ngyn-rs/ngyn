@@ -5,14 +5,14 @@ use std::sync::Arc;
 
 use super::RouteHandler;
 use crate::{
-    server::{context::AppState, Method, Middlewares, NgynContext, NgynResponse, Routes},
+    server::{context::AppState, Method, NgynContext, NgynResponse},
     traits::{Middleware, NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
-    routes: Routes,
-    middlewares: Middlewares,
+    routes: Vec<(String, Option<Method>, Box<crate::core::RouteHandler>)>,
+    middlewares: Vec<Box<dyn crate::traits::Middleware>>,
     interpreters: Vec<Box<dyn NgynInterpreter>>,
     state: Option<Arc<Box<dyn AppState>>>,
 }
