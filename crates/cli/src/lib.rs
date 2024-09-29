@@ -28,7 +28,7 @@ fn render_mods(mod_path: &str, schematic: &Schematic) -> Result<()> {
     let mod_template = read_template_file("mod")?;
     let mod_tpl = ramhorns::Template::new(mod_template)?;
 
-    mod_tpl.render_to_file(&mod_path, &schematic)?;
+    mod_tpl.render_to_file(mod_path, &schematic)?;
     Ok(())
 }
 
@@ -46,7 +46,7 @@ fn render_templates(
     let tpl = ramhorns::Template::new(template)?;
     let mod_tpl = ramhorns::Template::new(mod_template)?;
 
-    mod_tpl.render_to_file(&mod_path, &schematic)?;
+    mod_tpl.render_to_file(mod_path, &schematic)?;
 
     tpl.render_to_file(
         schematic_path,
