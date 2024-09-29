@@ -3,16 +3,16 @@ use http::Request;
 use http_body_util::Full;
 use std::sync::Arc;
 
-use super::RouteHandler;
+use super::handler::RouteHandler;
 use crate::{
-    server::{context::AppState, Method, Middlewares, NgynContext, NgynResponse, Routes},
-    traits::{NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
+    server::{context::AppState, Method, NgynContext, NgynResponse},
+    traits::{Middleware, NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
-    routes: Routes,
-    middlewares: Middlewares,
+    routes: Vec<(String, Option<Method>, Box<RouteHandler>)>,
+    middlewares: Vec<Box<dyn crate::traits::Middleware>>,
     interpreters: Vec<Box<dyn NgynInterpreter>>,
     state: Option<Arc<Box<dyn AppState>>>,
 }
@@ -48,7 +48,7 @@ impl PlatformData {
 
         // trigger global middlewares
         for middleware in &self.middlewares {
-            middleware.handle(&mut cx, &mut res);
+            middleware.run(&mut cx, &mut res).await;
         }
 
         // execute controlled route if it is handled
@@ -96,7 +96,7 @@ impl PlatformData {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    pub(self) fn add_middleware(&mut self, middleware: Box<dyn NgynMiddleware>) {
+    pub(self) fn add_middleware(&mut self, middleware: Box<dyn Middleware>) {
         self.middlewares.push(middleware);
     }
 
@@ -243,7 +243,7 @@ pub trait NgynEngine: NgynPlatform {
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::Handler, traits::NgynInjectable};
+    use crate::{core::handler::Handler, traits::NgynInjectable};
     use std::any::Any;
 
     use super::*;
@@ -272,7 +272,7 @@ mod tests {
     }
 
     impl NgynMiddleware for MockMiddleware {
-        fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
+        async fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
     }
 
     struct MockInterpreter;

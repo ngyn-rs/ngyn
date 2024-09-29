@@ -36,14 +36,19 @@ impl<T: AppState> AppState for Box<T> {
     }
 }
 
+/// # Panics
+/// Panics if the state has been dropped. This should never happen unless the state is dropped manually.
 impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
     fn from(value: &Arc<Box<dyn AppState>>) -> Self {
+        // creating a clone is essential since this ref will be dropped after this function returns
         let arc_clone = value.clone();
         let state_ref: &dyn AppState = &**arc_clone;
 
         let state_ptr: *const dyn AppState = state_ref as *const dyn AppState;
 
-        let nn_ptr = std::ptr::NonNull::new(state_ptr as *mut dyn AppState).unwrap();
+        // SAFETY: state_ptr is not null, it is safe to convert it to a NonNull pointer, this way we can safely convert it back to a Box
+        let nn_ptr = std::ptr::NonNull::new(state_ptr as *mut dyn AppState)
+            .expect("State has been dropped, ensure it is being cloned correctly."); // This should never happen, if it does, it's a bug
         let raw_ptr = nn_ptr.as_ptr();
 
         unsafe { Box::from_raw(raw_ptr) }
@@ -448,12 +453,14 @@ impl NgynContext {
     /// context.execute(&mut response).await;
     /// ```
     pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
+        // safely consume the route information, it will be set again if needed
         let (handler, controller) = match self.route_info.take() {
             Some((handler, ctrl)) => (handler, ctrl),
             None => return,
         };
-        let mut controller =
-            ManuallyDrop::<Box<dyn NgynController>>::new(controller.clone().into());
+        // allow the controller to live even after the request is handled, until the server is stopped or crashes or in weird cases, the controller is dropped.
+        // If the controller is dropped, the server will panic.
+        let mut controller = ManuallyDrop::<Box<dyn NgynController>>::new(controller.into()); // panics if the controller has been dropped
         controller.handle(&handler, self, res).await;
     }
 }
