@@ -1,5 +1,5 @@
 use ngyn_shared::{
-    core::{NgynPlatform, PlatformData},
+    core::engine::{NgynPlatform, PlatformData},
     server::response::ReadBytes,
 };
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
