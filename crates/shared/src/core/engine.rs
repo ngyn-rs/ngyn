@@ -3,7 +3,7 @@ use http::Request;
 use http_body_util::Full;
 use std::sync::Arc;
 
-use super::RouteHandler;
+use super::handler::RouteHandler;
 use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse},
     traits::{Middleware, NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
@@ -11,7 +11,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct PlatformData {
-    routes: Vec<(String, Option<Method>, Box<crate::core::RouteHandler>)>,
+    routes: Vec<(String, Option<Method>, Box<RouteHandler>)>,
     middlewares: Vec<Box<dyn crate::traits::Middleware>>,
     interpreters: Vec<Box<dyn NgynInterpreter>>,
     state: Option<Arc<Box<dyn AppState>>>,
@@ -243,7 +243,7 @@ pub trait NgynEngine: NgynPlatform {
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::Handler, traits::NgynInjectable};
+    use crate::{core::handler::Handler, traits::NgynInjectable};
     use std::any::Any;
 
     use super::*;

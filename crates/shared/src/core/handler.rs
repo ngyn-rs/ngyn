@@ -29,7 +29,7 @@ impl<F: Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static> From<F>
 
 impl From<AsyncHandler> for RouteHandler {
     fn from(f: AsyncHandler) -> Self {
-        RouteHandler::Async(Box::new(f))
+        RouteHandler::Async(f)
     }
 }
 
