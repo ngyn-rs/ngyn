@@ -17,8 +17,8 @@ fn main() {
     let res = matches.subcommand().map_or_else(
         || cmd::default::run(&mut app, &matches),
         |tup| match tup {
-            ("generate", subcommand_matches) => cmd::generate::run(&matches, &subcommand_matches),
-            ("new", subcommand_matches) => cmd::new::run(&matches, &subcommand_matches),
+            ("generate", subcommand_matches) => cmd::generate::run(&matches, subcommand_matches),
+            ("new", subcommand_matches) => cmd::new::run(&matches, subcommand_matches),
             _ => unreachable!(),
         },
     );
