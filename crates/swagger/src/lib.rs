@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use ngyn::shared::{
-    core::NgynEngine,
+    core::engine::NgynEngine,
     server::NgynResponse,
     traits::{NgynController, NgynModule},
 };

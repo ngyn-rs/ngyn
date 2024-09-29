@@ -1,29 +1,17 @@
 pub mod default;
-pub mod validate;
+pub mod generate;
+pub mod new;
 use std::process::exit;
 
 use anyhow::Result;
 use cargo_ngyn::CmdExit;
 use clap::ArgMatches;
-use console::{style, Style};
+use console::Style;
 use tracing::debug;
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Registry};
-
-pub const BANNER: &str = r#"
-    B A N N E R
-"#;
-pub fn banner(v: &str, matches: &ArgMatches) {
-    if !matches.get_flag("no_banner") {
-        println!(
-            "{}\n                    {}",
-            style(BANNER).magenta(),
-            style(v).dim()
-        );
-    }
-}
 
 pub fn tracing(matches: &ArgMatches) {
     let level = if matches.get_flag("verbose") {

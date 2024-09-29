@@ -4,20 +4,21 @@
 mod cmd;
 
 fn main() {
-    let app = cmd::default::command().subcommand(cmd::validate::command());
+    let mut app = cmd::default::command()
+        .subcommand(cmd::generate::command())
+        .subcommand(cmd::new::command());
 
-    let v = app.render_version();
-    let matches = app.get_matches();
+    // let v = app.render_version();
+    let matches = app.clone().get_matches();
 
     // use info! or trace! etc. to log
-    // to instrument use `#[tracing::instrument(level = "trace", skip(session), err)]`
     cmd::tracing(&matches);
-    cmd::banner(&v, &matches);
 
     let res = matches.subcommand().map_or_else(
-        || cmd::default::run(&matches),
+        || cmd::default::run(&mut app, &matches),
         |tup| match tup {
-            ("validate", subcommand_matches) => cmd::validate::run(&matches, subcommand_matches),
+            ("generate", subcommand_matches) => cmd::generate::run(&matches, subcommand_matches),
+            ("new", subcommand_matches) => cmd::new::run(&matches, subcommand_matches),
             _ => unreachable!(),
         },
     );

@@ -1,5 +1,5 @@
 use ngyn_hyper::HyperApplication;
-use ngyn_shared::{core::NgynEngine, traits::NgynModule};
+use ngyn_shared::{core::engine::NgynEngine, traits::NgynModule};
 
 /// The `NgynFactory` struct is used to create instances of `NgynEngine`.
 pub struct NgynFactory<Application: NgynEngine = HyperApplication> {

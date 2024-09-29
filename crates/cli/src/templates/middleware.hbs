@@ -1,0 +1,19 @@
+use ngyn::prelude::*;
+
+{{#services}}
+use super::{{name}}::{{suffix}};
+{{/services}}
+
+#[injectable]
+pub struct {{name}} {
+    {{#services}}
+    #[inject]
+    pub {{name}}: {{suffix}},
+    {{/services}}
+}
+
+impl NgynMiddleware for {{name}} {
+    fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) ) {
+        println!("{{name}} works!");
+    }
+}
