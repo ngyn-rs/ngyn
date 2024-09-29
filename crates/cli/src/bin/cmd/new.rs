@@ -66,7 +66,7 @@ pub fn run(_matches: &ArgMatches, subcommand_matches: &ArgMatches) -> Result<car
             .interact()?;
 
         let cwd = std::env::current_dir()?;
-        let project_dir = cwd.join(&name);
+        let project_dir = cwd.join(name);
 
         let force = if project_dir.exists() {
             dialoguer::Confirm::new()

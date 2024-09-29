@@ -7,6 +7,6 @@ use ngyn::prelude::*;
 ///
 /// # Arguments
 /// * `_cx` - The context of the current request
-pub fn echo_route<'a>(_cx: &'a mut NgynContext) -> String {
+pub fn echo_route(_cx: &mut NgynContext) -> String {
     "Process echo_route".to_string()
 }
