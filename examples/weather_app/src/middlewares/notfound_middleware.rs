@@ -6,16 +6,14 @@ pub struct NotFoundMiddleware;
 
 impl NgynMiddleware for NotFoundMiddleware {
     async fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
-        if cx.is_valid_route() {
-            return;
+        if cx.params().is_none() {
+            let body = json!({
+                "error": {
+                    "status": 404, // this will be interpreted by the ResponseInterpreter, and set as the status code
+                    "message": "Route not found",
+                }
+            });
+            *res.body_mut() = body.to_bytes().into();
         }
-        *res.body_mut() = json!({
-            "error": {
-                "status": 404, // this will be interpreted by the ResponseInterpreter, and set as the status code
-                "message": "Route not found",
-            }
-        })
-        .to_bytes()
-        .into();
     }
 }
