@@ -327,19 +327,6 @@ impl NgynContext {
 }
 
 impl NgynContext {
-    /// Checks if the context has a valid route.
-    /// A valid route is when the route information and the params are set.
-    /// This is great for differentiating known routes from unknown routes.
-    ///
-    /// ### Returns
-    ///
-    /// `true` if the context has a valid route, `false` otherwise.
-    pub fn is_valid_route(&self) -> bool {
-        self.params.is_some()
-    }
-}
-
-impl NgynContext {
     /// Creates a new `NgynContext` from the given request.
     ///
     /// ### Arguments
@@ -645,20 +632,6 @@ mod tests {
 
         assert!(context.has("name"));
         assert!(!context.has("age"));
-    }
-
-    #[test]
-    fn test_is_valid_route() {
-        let request = Request::new(Vec::new());
-        let mut context = NgynContext::from_request(request);
-        context.set("name", "John".to_string());
-
-        assert!(!context.is_valid_route());
-
-        let params = vec![("param1".to_string(), "value1".to_string())];
-        context.params = Some(params);
-
-        assert!(context.is_valid_route());
     }
 
     #[test]
