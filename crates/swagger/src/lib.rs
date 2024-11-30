@@ -1,13 +1,11 @@
-use std::sync::Arc;
-
 use ngyn::shared::{
-    core::engine::NgynEngine,
-    server::NgynResponse,
-    traits::{NgynController, NgynModule},
+    core::{
+        engine::{NgynEngine, PlatformData},
+        handler::handler,
+    },
+    server::{NgynContext, NgynResponse},
 };
-use serde_json::Value;
-
-pub mod routing;
+use serde_json::{json, Value};
 
 pub use ngyn_swagger_macros::{swagger_route, SwaggerComponent};
 
@@ -94,24 +92,98 @@ pub struct SwaggerMeta {
     pub response: serde_json::Value,
 }
 
-pub trait SwaggerController: NgynController {
-    fn swagger_meta(&self) -> SwaggerMeta {
-        SwaggerMeta {
-            components: Vec::new(),
-            operations: Vec::new(),
-            response: Value::Null,
+pub struct SwaggerConfig {
+    pub spec_url: String,
+    pub title: String,
+    pub version: String,
+    pub server_url: String,
+    pub description: Option<String>,
+    pub terms_of_service: Option<String>,
+    pub contact: Option<String>,
+    pub license: String,
+    pub license_url: Option<String>,
+}
+
+impl Default for SwaggerConfig {
+    fn default() -> Self {
+        SwaggerConfig {
+            spec_url: "/docs/openapi.json".to_string(),
+            title: "API Documentation".to_string(),
+            version: "1.0.0".to_string(),
+            server_url: '/'.to_string(),
+            description: None,
+            terms_of_service: Some("".to_string()),
+            contact: None,
+            license: "MIT".to_string(),
+            license_url: None,
         }
     }
 }
 
+pub fn build_specs_with_config(config: &SwaggerConfig, _platform: &mut PlatformData) -> Value {
+    json!({
+        "openapi": "3.0.0",
+        "info": {
+            "title": config.title,
+            "version": config.version,
+            "description": config.description,
+            "termsOfService": config.terms_of_service,
+            "contact": {
+                "name": config.contact,
+            },
+            "license": {
+                "name": config.license,
+                "url": config.license_url,
+            },
+        },
+        "servers": [{
+            "url": config.server_url,
+        }],
+        // "paths": paths_spec,
+        // "components": {
+        //     "schemas": components,
+        // },
+        // "tags": tags,
+    })
+}
+
 pub trait NgynEngineSwagger: NgynEngine {
-    fn use_swagger<AppModule: Default + NgynModule + Clone + 'static>(
-        &mut self,
-        config: routing::SwaggerConfig<AppModule>,
-    ) {
-        let controller = routing::SwaggerModule::with_config(config);
-        self.load_controller(Arc::new(Box::new(controller)));
+    fn use_swagger(&mut self, config: SwaggerConfig) {
+        let template = include_str!("templates/swagger.html");
+        let docs_body = template
+            .replace("% SWAGGER_SPEC_URL %", &config.spec_url)
+            .replace("% SWAGGER_DOC_TITLE %", &config.title)
+            .replace(
+                "% SWAGGER_DOC_DESCRIPTION %",
+                &config.description.clone().unwrap_or("".to_string()),
+            );
+
+        let spec = build_specs_with_config(&config, self.data_mut());
+        let spec_json = serde_json::to_string(&spec).unwrap_or("{}".to_string());
+
+        self.get(&config.spec_url, handler(move |_c| spec_json.clone()));
+        self.get(
+            "/docs",
+            move |_c: &mut NgynContext, res: &mut NgynResponse| {
+                res.headers_mut()
+                    .append("Content-Type", "text/html".parse().unwrap());
+
+                *res.body_mut() = docs_body.clone().into();
+            },
+        );
     }
 }
 
 impl<T: NgynEngine> NgynEngineSwagger for T {}
+
+// fn merge(a: &mut Value, b: Value) {
+//     match (a, b) {
+//         (a @ &mut Value::Object(_), Value::Object(b)) => {
+//             let a = a.as_object_mut().unwrap();
+//             for (k, v) in b {
+//                 merge(a.entry(k).or_insert(Value::Null), v);
+//             }
+//         }
+//         (a, b) => *a = b,
+//     }
+// }

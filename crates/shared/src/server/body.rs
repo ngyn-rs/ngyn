@@ -40,6 +40,12 @@ impl ToBytes for String {
     }
 }
 
+impl ToBytes for &String {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
 impl ToBytes for Bytes {
     fn to_bytes(self) -> Bytes {
         self

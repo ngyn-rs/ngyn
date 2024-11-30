@@ -6,7 +6,7 @@ use std::sync::Arc;
 use super::handler::RouteHandler;
 use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse},
-    traits::{Middleware, NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
+    traits::{Middleware, NgynInterpreter, NgynMiddleware},
 };
 
 #[derive(Default)]
@@ -201,44 +201,6 @@ pub trait NgynEngine: NgynPlatform {
     fn set_state(&mut self, state: impl AppState + 'static) {
         self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
-
-    /// Loads a component which implements [`NgynModule`] into the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `module` - The module to load.
-    fn load_module(&mut self, module: impl NgynModule + 'static) {
-        for controller in module.get_controllers() {
-            self.load_controller(controller);
-        }
-    }
-
-    /// Loads a component which implements [`NgynController`] into the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `controller` - The arc'd controller to load.
-    fn load_controller(&mut self, controller: Arc<Box<dyn NgynController + 'static>>) {
-        for (path, http_method, handler) in controller.routes() {
-            let controller = controller.clone();
-            self.route(
-                path.as_str(),
-                Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
-                Box::new(move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                    let controller = controller.clone();
-                    cx.prepare(controller, handler.clone());
-                }),
-            );
-        }
-    }
-
-    /// Builds the application with the specified module.
-    fn build<AppModule: NgynModule + 'static>() -> Self {
-        let module = AppModule::new();
-        let mut server = Self::default();
-        server.load_module(module);
-        server
-    }
 }
 
 #[cfg(test)]
@@ -280,39 +242,6 @@ mod tests {
     #[async_trait::async_trait]
     impl NgynInterpreter for MockInterpreter {
         async fn interpret(&self, _res: &mut NgynResponse) {}
-    }
-
-    struct MockController;
-
-    impl NgynInjectable for MockController {
-        fn new() -> Self
-        where
-            Self: Sized,
-        {
-            Self {}
-        }
-    }
-
-    impl NgynController for MockController {
-        fn routes(&self) -> Vec<(String, String, String)> {
-            vec![(
-                "/test".to_string(),
-                Method::GET.to_string(),
-                "handler".to_string(),
-            )]
-        }
-    }
-
-    struct MockModule;
-
-    impl NgynModule for MockModule {
-        fn new() -> Self {
-            Self {}
-        }
-
-        fn get_controllers(&self) -> Vec<Arc<Box<dyn NgynController>>> {
-            vec![Arc::new(Box::new(MockController) as Box<dyn NgynController>)]
-        }
     }
 
     struct MockEngine {
@@ -585,30 +514,5 @@ mod tests {
         engine.set_state(app_state);
 
         assert!(engine.data.state.is_some());
-    }
-
-    #[tokio::test]
-    async fn test_load_module() {
-        let mut engine = MockEngine::default();
-        let module = MockModule::new();
-        engine.load_module(module);
-
-        assert_eq!(engine.data.routes.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_load_controller() {
-        let mut engine = MockEngine::default();
-        let controller = Arc::new(Box::new(MockController) as Box<dyn NgynController>);
-        engine.load_controller(controller);
-
-        assert_eq!(engine.data.routes.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_build() {
-        let engine: MockEngine = MockEngine::build::<MockModule>();
-
-        assert_eq!(engine.data.routes.len(), 1);
     }
 }

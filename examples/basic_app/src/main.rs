@@ -1,11 +1,8 @@
-mod modules;
-
-use modules::sample::sample_module::SampleModule;
 use ngyn::prelude::*;
 
 #[tokio::main]
 async fn main() {
-    let mut app = NgynFactory::<HyperApplication>::create::<SampleModule>();
+    let mut app = HyperApplication::default();
 
     app.get(
         "/author",

@@ -20,7 +20,10 @@ impl VercelApplication {
         let request = request.map(|b| b.to_vec());
         let mut response = self.data.respond(request).await;
 
-        let body = response.read_bytes().await?;
+        let body = response
+            .read_bytes()
+            .await
+            .expect("Response hasn't been set");
 
         let (parts, ..) = response.into_parts();
 

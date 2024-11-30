@@ -29,10 +29,8 @@ impl syn::parse::Parse for HandlerArgs {
 
 pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let HandlerArgs { gates, .. } = syn::parse::<HandlerArgs>(args).unwrap();
-    let ItemFn { sig, .. } = match syn::parse::<ItemFn>(raw_input) {
-        Ok(input) => input,
-        Err(_err) => panic!("Only impl blocks are supported"),
-    };
+    let ItemFn { sig, .. } =
+        syn::parse::<ItemFn>(raw_input).expect("Only impl blocks are supported");
     let Signature {
         ident,
         inputs,
