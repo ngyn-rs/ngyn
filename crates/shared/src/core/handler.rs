@@ -16,6 +16,13 @@ pub(crate) type AsyncHandler = Box<
         + Sync,
 >;
 
+type AsyncHandlerFn = dyn for<'a, 'b> Fn(
+        &'a mut NgynContext,
+        &'b mut NgynResponse,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>>
+    + Send
+    + Sync;
+
 pub enum RouteHandler {
     Sync(Box<Handler>),
     Async(AsyncHandler),
@@ -60,7 +67,7 @@ pub fn handler<S: ToBytes + 'static>(
 /// ```rust ignore
 /// use ngyn::server::{async_handler, NgynContext, ToBytes};
 ///
-/// app.get("/hello", async_handler(async |ctx: &mut NgynContext| {
+/// app.get("/hello", async_handler(|ctx: &mut NgynContext| async {
 ///    "Hello, World!"
 /// }));
 /// ```

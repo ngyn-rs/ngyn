@@ -17,11 +17,8 @@ impl syn::parse::Parse for HandlerArgs {
                 input.parse::<syn::Token![,]>()?;
             }
         }
-        if gates.is_empty() {
-            return Err(syn::Error::new(input.span(), "expected at least one gate"));
-        }
         Ok(HandlerArgs {
-            gates: vec![],
+            gates,
             middlewares: vec![],
         })
     }
@@ -29,16 +26,23 @@ impl syn::parse::Parse for HandlerArgs {
 
 pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let HandlerArgs { gates, .. } = syn::parse::<HandlerArgs>(args).unwrap();
-    let ItemFn { sig, .. } =
-        syn::parse::<ItemFn>(raw_input).expect("Only impl blocks are supported");
+    let ItemFn {
+        sig, block, vis, ..
+    } = syn::parse::<ItemFn>(raw_input).expect("Only functions blocks are supported");
     let Signature {
         ident,
         inputs,
         asyncness,
         output,
+        fn_token,
+        constness,
+        unsafety,
+        abi,
+        generics,
+        paren_token,
+        variadic,
         ..
     } = sig.clone();
-    let ident_str = ident.to_string();
 
     let args = inputs.iter().fold(None, |args, input| {
         if let syn::FnArg::Typed(pat) = input {
@@ -92,26 +96,33 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let handle_body = if asyncness.is_some() {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
-                let body = self.#ident(#args).await;
-                *res.body_mut() = body.to_bytes().into();
+                Box::pin(async {
+                    *res.body_mut() = async #block.await.to_bytes().into();
+                })
             },
             _ => quote! {
-                self.#ident(#args).await;
+                Box::pin(async {
+                    #block;
+                })
             },
         }
     } else {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
-                let body = self.#ident(#args);
-                *res.body_mut() = body.to_bytes().into();
+                *res.body_mut() = #block.to_bytes().into();
             },
             _ => quote! {
-                self.#ident(#args);
+                #block;
             },
         }
     };
+    let output = if asyncness.is_some() {
+        quote! { -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'b>> }
+    } else {
+        quote! {}
+    };
     quote! {
-        #ident_str => {
+        #vis #constness #unsafety #fn_token #ident <'a, 'b>(cx: &'a mut ngyn::prelude::NgynContext, res: &'b mut ngyn::prelude::NgynResponse) #output {
             #gate_handlers
             #handle_body
         }
