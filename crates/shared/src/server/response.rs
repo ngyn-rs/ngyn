@@ -147,7 +147,7 @@ impl ReadBytes for NgynResponse {
                 return Ok(bytes);
             }
         }
-        Err("Failed to read bytes".into())
+        Err("No response bytes has been set".into())
     }
 }
 

@@ -7,9 +7,6 @@ edition = "2021"
 name = "all"
 path = "api/[[...all]].rs"
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
 ngyn = { version = "0.4", path = "../../crates/core" }
 ngyn-vercel = { version = "0.1", path = "../../crates/vercel" }
