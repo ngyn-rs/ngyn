@@ -59,7 +59,6 @@ impl PlatformData {
                     async_handler(&mut cx, &mut res).await;
                 }
             }
-            cx.execute(&mut res).await;
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {

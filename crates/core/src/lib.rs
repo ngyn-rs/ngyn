@@ -18,7 +18,7 @@ pub mod prelude {
         core::{engine::NgynEngine, handler::*},
         server::{
             Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
-            Transducer,
+            ToBytes, Transducer,
         },
         traits::{NgynGate, NgynInjectable, NgynMiddleware},
     };

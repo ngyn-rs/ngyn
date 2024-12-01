@@ -1,4 +1,3 @@
-use hyper::Request;
 use juniper::{
     tests::fixtures::starwars::schema::{Database, Query},
     EmptyMutation, EmptySubscription, RootNode,
@@ -9,20 +8,14 @@ use ngyn_hyper::HyperApplication;
 use std::sync::Arc;
 
 #[handler]
-async fn handle_graphql() {
+async fn handle_graphql(req: NgynRequest) -> String {
     let db = Arc::new(Database::new());
     let root_node = Arc::new(RootNode::new(
         Query,
         EmptyMutation::<Database>::new(),
         EmptySubscription::<Database>::new(),
     ));
-    let b = response;
-    let graphql_res = graphql(
-        root_node.clone(),
-        db.clone(),
-        Request::default().map(|_b: String| panic!("")),
-    )
-    .await;
+    let graphql_res = graphql(root_node.clone(), db.clone(), req.map(|_b| panic!(""))).await;
     graphql_res.body().as_str().to_owned()
 }
 
@@ -48,7 +41,7 @@ async fn main() {
         }),
     );
 
-    app.any("/graphql", RouteHandler::Async(Box::new(handle_graphql)));
+    app.any("/graphql", async_wrap(handle_graphql));
 
     println!("Listening on http://127.0.0.1:8080");
     let _ = app.listen("127.0.0.1:8080").await;

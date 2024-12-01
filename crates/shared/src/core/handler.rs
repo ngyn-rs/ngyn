@@ -7,16 +7,7 @@ use crate::server::{NgynContext, NgynResponse, ToBytes};
 /// Represents a handler function that takes in a mutable reference to `NgynContext` and `NgynResponse`.
 pub(crate) type Handler = dyn Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static;
 
-pub(crate) type AsyncHandler = Box<
-    dyn for<'a, 'b> Fn(
-            &'a mut NgynContext,
-            &'b mut NgynResponse,
-        ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>>
-        + Send
-        + Sync,
->;
-
-type AsyncHandlerFn = dyn for<'a, 'b> Fn(
+pub(crate) type AsyncHandler = dyn for<'a, 'b> Fn(
         &'a mut NgynContext,
         &'b mut NgynResponse,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>>
@@ -25,7 +16,7 @@ type AsyncHandlerFn = dyn for<'a, 'b> Fn(
 
 pub enum RouteHandler {
     Sync(Box<Handler>),
-    Async(AsyncHandler),
+    Async(Box<AsyncHandler>),
 }
 
 impl<F: Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static> From<F> for RouteHandler {
@@ -34,8 +25,8 @@ impl<F: Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static> From<F>
     }
 }
 
-impl From<AsyncHandler> for RouteHandler {
-    fn from(f: AsyncHandler) -> Self {
+impl From<Box<AsyncHandler>> for RouteHandler {
+    fn from(f: Box<AsyncHandler>) -> Self {
         RouteHandler::Async(f)
     }
 }
@@ -73,7 +64,7 @@ pub fn handler<S: ToBytes + 'static>(
 /// ```
 pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'static>(
     f: impl Fn(&mut NgynContext) -> Fut + Send + Sync + 'static,
-) -> AsyncHandler {
+) -> Box<AsyncHandler> {
     Box::new(move |ctx: &mut NgynContext, res: &mut NgynResponse| {
         let fut = f(ctx);
         Box::pin(async move {
@@ -81,6 +72,18 @@ pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'sta
             *res.body_mut() = body.into();
         })
     })
+}
+
+pub fn async_wrap(
+    f: impl for<'a, 'b> Fn(
+            &'a mut NgynContext,
+            &'b mut NgynResponse,
+        ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>>
+        + Send
+        + Sync
+        + 'static,
+) -> Box<AsyncHandler> {
+    Box::new(f)
 }
 
 /// Create a not-implemented handler that returns a `501 Not Implemented` status code.
