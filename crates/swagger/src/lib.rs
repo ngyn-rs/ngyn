@@ -164,12 +164,7 @@ pub trait NgynEngineSwagger: NgynEngine {
         self.get(&config.spec_url, handler(move |_c| spec_json.clone()));
         self.get(
             "/docs",
-            move |_c: &mut NgynContext, res: &mut NgynResponse| {
-                res.headers_mut()
-                    .append("Content-Type", "text/html".parse().unwrap());
-
-                *res.body_mut() = docs_body.clone().into();
-            },
+            handler(move |_c: &mut NgynContext| docs_body.clone()),
         );
     }
 }
