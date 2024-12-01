@@ -15,7 +15,7 @@ async fn handle_graphql(req: NgynRequest) -> String {
         EmptyMutation::<Database>::new(),
         EmptySubscription::<Database>::new(),
     ));
-    let graphql_res = graphql(root_node.clone(), db.clone(), req.map(|_b| panic!(""))).await;
+    let graphql_res = graphql(root_node, db, req.map(|_b| panic!(""))).await;
     graphql_res.body().as_str().to_owned()
 }
 

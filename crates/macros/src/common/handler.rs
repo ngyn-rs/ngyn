@@ -136,21 +136,19 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     });
     let block = quote! {
         {
-            #middlewares
-            #gate_handlers
             #block
         }
     };
     let handle_body = if asyncness.is_some() {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
-                let body = (|#inputs| { Box::pin(async #block) })(#args);
+                let body = (|#inputs| { Box::pin(async move #block) })(#args);
                 Box::pin(async move {
                     *res.body_mut() = body.await.to_bytes().into();
                 })
             },
             _ => quote! {
-                (|#inputs| { Box::pin(async #block) })(#args)
+                (|#inputs| { Box::pin(async move #block) })(#args)
             },
         }
     } else {
@@ -171,6 +169,8 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     };
     quote! {
         #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_ctx_lifetime mut ngyn::prelude::NgynContext, res: &'_response_lifetime mut ngyn::prelude::NgynResponse) #output {
+            #middlewares
+            #gate_handlers
             #handle_body
         }
     }
