@@ -70,7 +70,7 @@ pub struct GetWeatherParams {
     // pub city: String,
 }
 
-#[handler(middlewares=[TestMiddleware])]
+#[handler(middlewares=[TestMiddleware], gates=[WeatherGate])]
 pub async fn get_location(
     params: GetWeatherParams,
     weather_service: WeatherService,
@@ -86,7 +86,7 @@ pub async fn get_location(
     }
 }
 
-#[handler]
+#[handler(gates=[WeatherGate])]
 pub async fn post_location(
     weather: WeatherDto,
     weather_service: WeatherService,

@@ -3,7 +3,7 @@ use ngyn::prelude::*;
 pub struct TestMiddleware;
 
 impl NgynMiddleware for TestMiddleware {
-    async fn handle<'a, 'b>(_cx: &'a mut NgynContext, _response: &'b mut NgynResponse) {
+    async fn handle<'a>(_cx: &'a mut NgynContext) {
         println!("middleware works");
     }
 }

@@ -132,7 +132,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
             #gate_handlers
         })
     } else {
-        Some(quote! { async {}; })
+        Some(quote! {})
     };
     let handle_body = if asyncness.is_some() {
         match output {

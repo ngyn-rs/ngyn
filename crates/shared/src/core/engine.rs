@@ -30,7 +30,6 @@ impl PlatformData {
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
         let mut cx = NgynContext::from_request(req);
-        let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
             cx.state = Some(state.into());
@@ -54,24 +53,24 @@ impl PlatformData {
         // execute controlled route if it is handled
         if let Some(route_handler) = route_handler {
             match route_handler.as_ref() {
-                RouteHandler::Sync(handler) => handler(&mut cx, &mut res),
+                RouteHandler::Sync(handler) => handler(&mut cx),
                 RouteHandler::Async(async_handler) => {
-                    async_handler(&mut cx, &mut res).await;
+                    async_handler(&mut cx).await;
                 }
             }
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
-                *res.body_mut() = Full::new(Bytes::default());
+                *cx.response().body_mut() = Full::new(Bytes::default());
             }
         }
 
         // trigger interpreters
         for interpreter in &self.interpreters {
-            interpreter.interpret(&mut res).await;
+            interpreter.interpret(&mut cx.response()).await;
         }
 
-        res
+        cx.response().clone()
     }
 
     /// Adds a route to the platform data.
@@ -313,7 +312,7 @@ mod tests {
     #[tokio::test]
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.data_mut().add_route(
             "/test".to_string(),
             Some(Method::GET),
@@ -367,7 +366,7 @@ mod tests {
     #[tokio::test]
     async fn test_respond_with_head_method() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.data_mut().add_route(
             "/test".to_string(),
             Some(Method::GET),
@@ -388,7 +387,7 @@ mod tests {
     #[tokio::test]
     async fn test_add_route() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.data_mut().add_route(
             "/test".to_string(),
             Some(Method::GET),
@@ -419,7 +418,7 @@ mod tests {
     #[tokio::test]
     async fn test_route() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.route("/test", Method::GET, handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -428,7 +427,7 @@ mod tests {
     #[tokio::test]
     async fn test_any() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.any("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -437,7 +436,7 @@ mod tests {
     #[tokio::test]
     async fn test_get() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.get("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -446,7 +445,7 @@ mod tests {
     #[tokio::test]
     async fn test_post() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.post("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -455,7 +454,7 @@ mod tests {
     #[tokio::test]
     async fn test_put() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.put("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -464,7 +463,7 @@ mod tests {
     #[tokio::test]
     async fn test_delete() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.delete("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -473,7 +472,7 @@ mod tests {
     #[tokio::test]
     async fn test_patch() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.patch("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -482,7 +481,7 @@ mod tests {
     #[tokio::test]
     async fn test_head() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.head("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
