@@ -17,7 +17,7 @@ async fn main() -> ShuttleNgyn {
     app.get("/<location>/<city>", async_wrap(get_location));
     app.post("/", async_wrap(post_location));
 
-    app.use_middleware(NotFoundMiddleware::new());
+    app.use_middleware(NotFoundMiddleware {});
     app.use_interpreter(shared::ResponseInterpreter {});
 
     Ok(app.into())

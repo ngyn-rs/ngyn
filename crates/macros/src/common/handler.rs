@@ -113,9 +113,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let gate_handlers = gates.iter().fold(quote! {}, |gates, path| {
         quote! {
             #gates
-            let mut gate = #path::default();
-            gate.inject(cx);
-            if !gate.can_activate(cx, res).await {
+            if !#path::can_activate(cx, res).await {
                 return;
             }
         }
@@ -128,14 +126,10 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     });
     let exe_block = if !middlewares.is_empty() {
         Some(quote! {
-            {
-                use ngyn::prelude::NgynMiddleware;
-                use ngyn::prelude::NgynGate;
-                async move {
-                    #middlewares_stream
-                    #gate_handlers
-                }
-            };
+            use ngyn::prelude::NgynMiddleware;
+            use ngyn::prelude::NgynGate;
+            #middlewares_stream
+            #gate_handlers
         })
     } else {
         Some(quote! { async {}; })
@@ -144,17 +138,15 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
                 let body = (|#inputs| async move #block)(#args);
-                let exe_block = #exe_block
                 Box::pin(async move {
-                    exe_block.await;
+                    #exe_block;
                     *res.body_mut() = body.await.to_bytes().into();
                 })
             },
             _ => quote! {
                 let body = (|#inputs| async move #block)(#args);
-                let exe_block = #exe_block
                 Box::pin(async move {
-                    exe_block.await;
+                    #exe_block
                     body.await;
                 })
             },

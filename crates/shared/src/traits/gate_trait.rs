@@ -1,7 +1,4 @@
-use crate::{
-    server::{NgynContext, NgynResponse},
-    traits::NgynInjectable,
-};
+use crate::server::{NgynContext, NgynResponse};
 
 /// Trait for implementing a gate.
 ///
@@ -25,7 +22,7 @@ use crate::{
 /// }
 ///
 /// impl NgynGate for AuthGate {
-///    async fn can_activate(&self, cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
+///    async fn can_activate(cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
 ///      // Check if the user is authenticated
 ///      // If the user is authenticated, return true
 ///      // Otherwise, return false
@@ -33,7 +30,7 @@ use crate::{
 ///     }
 /// }
 /// ```
-pub trait NgynGate: NgynInjectable {
+pub trait NgynGate: Send + Sync {
     /// Determines if the gate can activate for the given request.
     ///
     /// ### Arguments
@@ -45,7 +42,7 @@ pub trait NgynGate: NgynInjectable {
     ///
     /// Returns `true` if the route can activate, `false` otherwise.
     #[allow(async_fn_in_trait, unused_variables)]
-    async fn can_activate(&self, cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
+    async fn can_activate(cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
         true // default implementation
     }
 }

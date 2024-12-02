@@ -179,7 +179,7 @@ pub trait NgynEngine: NgynPlatform {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
+    fn use_middleware<'a>(&mut self, middleware: impl NgynMiddleware + 'static) {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
