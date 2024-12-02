@@ -1,6 +1,6 @@
 use ngyn::{http::StatusCode, prelude::*, shared::server::Transformer};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use validator::Validate;
 
 use crate::middlewares::test_middleware::TestMiddleware;
@@ -88,10 +88,9 @@ pub async fn get_location(
 
 #[handler(gates=[WeatherGate])]
 pub async fn post_location(
-    weather: WeatherDto,
+    WeatherDto { location, .. }: WeatherDto,
     weather_service: WeatherService,
 ) -> Result<String, Value> {
-    let location = weather.location;
     match weather_service.get_weather(&location).await {
         Ok(r) => Ok(r),
         Err(e) => Err(json!({ "status": 501, "message": e.to_string() })),

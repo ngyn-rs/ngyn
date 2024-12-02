@@ -136,11 +136,12 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
 
     let handle_body = if asyncness.is_some() {
         match output {
-            syn::ReturnType::Type(_, _) => quote! {
+            syn::ReturnType::Type(_, ty) => quote! {
                 let fn_body = (|#inputs| async move #block);
                 Box::pin(async move {
                     #exe_block;
-                    *cx.response().body_mut() = fn_body(#args).await.to_bytes().into();
+                    let output: #ty = fn_body(#args).await;
+                    *cx.response().body_mut() = output.to_bytes().into();
                 })
             },
             _ => quote! {
@@ -153,8 +154,9 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         }
     } else {
         match output {
-            syn::ReturnType::Type(_, _) => quote! {
-                *cx.response().body_mut() = (|#inputs| #block)(#args).to_bytes().into();
+            syn::ReturnType::Type(_, ty) => quote! {
+                let output: #ty = (|#inputs| #block)(#args);
+                *cx.response().body_mut() = output.to_bytes().into();
             },
             _ => quote! {
                 (|#inputs| #block)(#args)
