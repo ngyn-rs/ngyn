@@ -48,7 +48,7 @@ impl PlatformData {
 
         // trigger global middlewares
         for middleware in &self.middlewares {
-            middleware.run(&mut cx, &mut res).await;
+            middleware.run(&mut cx).await;
         }
 
         // execute controlled route if it is handled
@@ -233,7 +233,7 @@ mod tests {
     }
 
     impl NgynMiddleware for MockMiddleware {
-        async fn handle<'a, 'b>(_cx: &'a mut NgynContext, _res: &'b mut NgynResponse) {}
+        async fn handle<'a>(_cx: &'a mut NgynContext) {}
     }
 
     struct MockInterpreter;

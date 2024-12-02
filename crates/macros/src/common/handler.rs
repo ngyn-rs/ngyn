@@ -72,7 +72,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     }
 
     let mut generics_stream = generics.to_token_stream();
-    generics_stream.extend(quote! { '_ctx_lifetime, '_response_lifetime });
+    generics_stream.extend(quote! { '_ctx_lifetime });
 
     let args = inputs.iter().fold(None, |args, input| {
         if let syn::FnArg::Typed(pat) = input {
@@ -95,7 +95,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
                 }
             };
             let arg_def = quote! {
-                #and_token #mutability ngyn::prelude::Transducer::reduce::<#and_token #mutability #path>(cx, res)
+                #and_token #mutability ngyn::prelude::Transducer::reduce::<#and_token #mutability #path>(cx)
             };
             if args.is_none() {
                 Some(quote! {
@@ -113,7 +113,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let gate_handlers = gates.iter().fold(quote! {}, |gates, path| {
         quote! {
             #gates
-            if !#path::can_activate(cx, res).await {
+            if !#path::can_activate(cx).await {
                 return;
             }
         }
@@ -121,7 +121,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let middlewares_stream = middlewares.iter().fold(quote! {}, |middlewares, path| {
         quote! {
             #middlewares
-            #path::handle(cx, res).await;
+            #path::handle(cx).await;
         }
     });
     let exe_block = if !middlewares.is_empty() {
@@ -140,7 +140,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
                 let body = (|#inputs| async move #block)(#args);
                 Box::pin(async move {
                     #exe_block;
-                    *res.body_mut() = body.await.to_bytes().into();
+                    *cx.response().body_mut() = body.await.to_bytes().into();
                 })
             },
             _ => quote! {
@@ -154,7 +154,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     } else {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
-                *res.body_mut() = (|#inputs| #block)(#args).to_bytes().into();
+                *cx.response().body_mut() = (|#inputs| #block)(#args).to_bytes().into();
             },
             _ => quote! {
                 (|#inputs| #block)(#args)
@@ -164,13 +164,13 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let output = if asyncness.is_some() {
         let r_arrow = RArrow::default();
         Some(
-            quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_response_lifetime>> },
+            quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_ctx_lifetime>> },
         )
     } else {
         None
     };
     quote! {
-        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_ctx_lifetime mut ngyn::prelude::NgynContext, res: &'_response_lifetime mut ngyn::prelude::NgynResponse) #output {
+        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_ctx_lifetime mut ngyn::prelude::NgynContext) #output {
             #handle_body
         }
     }

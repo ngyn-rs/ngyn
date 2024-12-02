@@ -8,13 +8,13 @@ use crate::middlewares::test_middleware::TestMiddleware;
 pub struct WeatherGate;
 
 impl NgynGate for WeatherGate {
-    async fn can_activate(cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
-        let query = Query::transform(cx, res);
+    async fn can_activate(cx: &mut NgynContext) -> bool {
+        let query = Query::transform(cx);
         if query.get("location").is_some() {
             return true;
         }
-        *res.status_mut() = StatusCode::BAD_REQUEST;
-        *res.body_mut() = "Bad Request: location query parameter is required".into();
+        *cx.response().status_mut() = StatusCode::BAD_REQUEST;
+        *cx.response().body_mut() = "Bad Request: location query parameter is required".into();
         // prevent activation of the next components
         false
     }

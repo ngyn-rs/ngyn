@@ -55,6 +55,7 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
+    response: NgynResponse,
     params: Option<Vec<(String, String)>>,
     store: HashMap<String, String>,
     pub(crate) state: Option<Box<dyn AppState>>,
@@ -80,6 +81,10 @@ impl NgynContext {
     /// ```
     pub fn request(&self) -> &Request<Vec<u8>> {
         &self.request
+    }
+
+    pub fn response(&mut self) -> &mut NgynResponse {
+        &mut self.response
     }
 
     /// Retrieves the params associated with the context.
@@ -346,6 +351,7 @@ impl NgynContext {
     pub(crate) fn from_request(request: Request<Vec<u8>>) -> Self {
         NgynContext {
             request,
+            response: NgynResponse::default(),
             store: HashMap::new(),
             params: None,
             state: None,
@@ -397,25 +403,25 @@ impl NgynContext {
 }
 
 impl<'a> Transformer<'a> for &'a NgynContext {
-    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         cx
     }
 }
 
 impl<'a> Transformer<'a> for &'a mut NgynContext {
-    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         cx
     }
 }
 
 impl<'a> Transformer<'a> for &'a NgynRequest {
-    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         cx.request()
     }
 }
 
 impl Transformer<'_> for NgynRequest {
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         cx.request().clone()
     }
 }

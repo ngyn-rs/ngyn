@@ -12,7 +12,7 @@ pub struct {{name}} {
 }
 
 impl NgynGate for {{name}} {
-    async fn can_activate(&self, cx: &mut NgynContext, res: &mut NgynResponse) -> bool {
+    async fn can_activate(&self, cx: &mut NgynContext) -> bool {
         true
     }
 }

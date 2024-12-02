@@ -102,14 +102,14 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
 pub type JsonResult = Result<Value, Value>;
 
 impl<'a> Transformer<'a> for &'a NgynResponse {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response()
     }
 }
 
 impl<'a> Transformer<'a> for &'a mut NgynResponse {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response()
     }
 }
 
@@ -117,8 +117,8 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
 ///
 /// This is useful when you need to access the headers of a response.
 impl<'a> Transformer<'a> for &'a HeaderMap {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res.headers()
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response().headers()
     }
 }
 
@@ -126,8 +126,8 @@ impl<'a> Transformer<'a> for &'a HeaderMap {
 ///
 /// This is useful when you want to add or remove headers from a response.
 impl<'a> Transformer<'a> for &'a mut HeaderMap {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res.headers_mut()
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response().headers_mut()
     }
 }
 

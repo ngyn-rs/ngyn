@@ -119,7 +119,7 @@ pub(crate) fn injectable_macro(args: TokenStream, input: TokenStream) -> TokenSt
         }
 
         impl #impl_generics ngyn::shared::server::Transformer<'_> for #ident #ty_generics #where_clause {
-            fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
+            fn transform(cx: &mut NgynContext) -> Self {
                 let mut item = Self::default();
                 item.inject(cx);
                 item

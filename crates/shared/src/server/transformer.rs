@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::server::{NgynContext, NgynResponse};
+use crate::server::NgynContext;
 use std::borrow::Cow;
 
 /// Represents a transformer trait.
@@ -18,14 +18,14 @@ pub trait Transformer<'a> {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
+    ///     fn transform(cx: &mut NgynContext) -> Self {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
     /// }
     /// ```
     #[must_use]
-    fn transform(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self
+    fn transform(cx: &'a mut NgynContext) -> Self
     where
         Self: Sized;
 }
@@ -48,7 +48,7 @@ impl<'a> Transducer {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
+    ///     fn transform(cx: &mut NgynContext) -> Option<Self> {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
@@ -60,8 +60,8 @@ impl<'a> Transducer {
     /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
     /// ```
     #[must_use]
-    pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> S {
-        S::transform(cx, res)
+    pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext) -> S {
+        S::transform(cx)
     }
 }
 
@@ -128,7 +128,7 @@ impl Transformer<'_> for Param {
     ///
     /// let param: Param = Param::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params()
             .unwrap_or_else(|| panic!("Extracting params should only be done in routes.")) // Infallible, only fails if the route is invalid
@@ -206,7 +206,7 @@ impl Transformer<'_> for Query {
     ///
     /// let query: Query = Query::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         Query {
             url: cx.request().uri().clone(),
         }
@@ -274,7 +274,7 @@ impl Transformer<'_> for Body {
     ///
     /// let dto: Dto = Dto::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         let data = String::from_utf8_lossy(cx.request().body()).to_string();
         Body { data }
     }

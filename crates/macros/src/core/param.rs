@@ -14,8 +14,8 @@ pub(crate) fn param_macro(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #impl_generics ngyn::shared::server::Transformer<'_> for #ident #ty_generics #where_clause {
-            fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Self {
-                let param = ngyn::shared::server::Param::transform(cx, res);
+            fn transform(cx: &mut ngyn::prelude::NgynContext) -> Self {
+                let param = ngyn::shared::server::Param::transform(cx);
                 #ident {
                     #(
                         #field_names: param.get(stringify!(#field_names)).unwrap_or_default(),
