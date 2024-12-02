@@ -29,6 +29,8 @@ impl NgynInterpreter for ResponseInterpreter {
         if let Ok(response) = serde_json::from_str::<Res>(&body_str) {
             if let Some(error) = response.error() {
                 if let Some(status) = error.status {
+                    res.headers_mut()
+                        .append("Content-Type", "application/json".parse().unwrap());
                     match StatusCode::from_u16(status) {
                         Ok(status) => {
                             *res.status_mut() = status;
