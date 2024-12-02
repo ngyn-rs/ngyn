@@ -110,6 +110,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
             args
         }
     });
+
     let gate_handlers = gates.iter().fold(quote! {}, |gates, path| {
         quote! {
             #gates
@@ -118,22 +119,21 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
             }
         }
     });
+
     let middlewares_stream = middlewares.iter().fold(quote! {}, |middlewares, path| {
         quote! {
             #middlewares
             #path::handle(cx).await;
         }
     });
-    let exe_block = if !middlewares.is_empty() {
-        Some(quote! {
-            use ngyn::prelude::NgynMiddleware;
-            use ngyn::prelude::NgynGate;
-            #middlewares_stream
-            #gate_handlers
-        })
-    } else {
-        Some(quote! {})
+
+    let exe_block = quote! {
+        use ngyn::prelude::NgynMiddleware;
+        use ngyn::prelude::NgynGate;
+        #middlewares_stream
+        #gate_handlers
     };
+
     let handle_body = if asyncness.is_some() {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
