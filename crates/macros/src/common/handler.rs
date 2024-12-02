@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{ItemFn, Signature};
+use syn::{token::RArrow, ItemFn, Signature};
 
 pub(super) struct HandlerArgs {
     gates: Vec<syn::Path>,
@@ -113,33 +113,32 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let gate_handlers = gates.iter().fold(quote! {}, |gates, path| {
         quote! {
             #gates
-            {
-                use ngyn::prelude::NgynGate;
-                let mut gate = #path::default();
-                gate.inject(cx);
-                if !gate.can_activate(cx, res).await {
-                    return;
-                }
-            };
+            let mut gate = #path::default();
+            gate.inject(cx);
+            if !gate.can_activate(cx, res).await {
+                return;
+            }
         }
     });
     let middlewares_stream = middlewares.iter().fold(quote! {}, |middlewares, path| {
         quote! {
             #middlewares
-            #path::default().handle(cx, res),
+            #path::handle(cx, res).await;
         }
     });
     let exe_block = if !middlewares.is_empty() {
         Some(quote! {
             {
                 use ngyn::prelude::NgynMiddleware;
-                (|middleware| async move { middleware; })(#middlewares_stream)
+                use ngyn::prelude::NgynGate;
+                async move {
+                    #middlewares_stream
+                    #gate_handlers
+                }
             };
         })
     } else {
-        Some(quote! {
-            async { };
-        })
+        Some(quote! { async {}; })
     };
     let handle_body = if asyncness.is_some() {
         match output {
@@ -147,11 +146,17 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
                 let body = (|#inputs| async move #block)(#args);
                 let exe_block = #exe_block
                 Box::pin(async move {
+                    exe_block.await;
                     *res.body_mut() = body.await.to_bytes().into();
                 })
             },
             _ => quote! {
-                (|#inputs| async move #block)(#args)
+                let body = (|#inputs| async move #block)(#args);
+                let exe_block = #exe_block
+                Box::pin(async move {
+                    exe_block.await;
+                    body.await;
+                })
             },
         }
     } else {
@@ -165,8 +170,9 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         }
     };
     let output = if asyncness.is_some() {
+        let r_arrow = RArrow::default();
         Some(
-            quote! { -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_response_lifetime>> },
+            quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_response_lifetime>> },
         )
     } else {
         None

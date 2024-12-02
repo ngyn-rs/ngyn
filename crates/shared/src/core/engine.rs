@@ -233,7 +233,7 @@ mod tests {
     }
 
     impl NgynMiddleware for MockMiddleware {
-        async fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
+        async fn handle<'a>(_cx: &'a mut NgynContext, _res: &'a mut NgynResponse) {}
     }
 
     struct MockInterpreter;
