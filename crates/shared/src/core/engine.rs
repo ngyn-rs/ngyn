@@ -179,7 +179,7 @@ pub trait NgynEngine: NgynPlatform {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    fn use_middleware<'a>(&mut self, middleware: impl NgynMiddleware + 'static) {
+    fn use_middleware<'a, 'b>(&mut self, middleware: impl NgynMiddleware + 'static) {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
@@ -233,7 +233,7 @@ mod tests {
     }
 
     impl NgynMiddleware for MockMiddleware {
-        async fn handle<'a>(_cx: &'a mut NgynContext, _res: &'a mut NgynResponse) {}
+        async fn handle<'a, 'b>(_cx: &'a mut NgynContext, _res: &'b mut NgynResponse) {}
     }
 
     struct MockInterpreter;

@@ -36,30 +36,30 @@ use crate::server::{NgynContext, NgynResponse};
 pub trait NgynMiddleware: Send + Sync {
     /// Handles the request.
     #[allow(async_fn_in_trait)]
-    fn handle<'a>(
+    fn handle<'a, 'b>(
         cx: &'a mut NgynContext,
-        res: &'a mut NgynResponse,
-    ) -> impl std::future::Future<Output = ()> + Send + 'a
+        res: &'b mut NgynResponse,
+    ) -> impl std::future::Future<Output = ()> + Send + 'b
     where
         Self: Sized;
 }
 
 pub(crate) trait Middleware: Send + Sync {
-    fn run<'a>(
+    fn run<'a, 'b>(
         &'a self,
         _cx: &'a mut NgynContext,
-        _res: &'a mut NgynResponse,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+        _res: &'b mut NgynResponse,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>> {
         Box::pin(async move {})
     }
 }
 
 impl<T: NgynMiddleware + Send> Middleware for T {
-    fn run<'a>(
+    fn run<'a, 'b>(
         &'a self,
         cx: &'a mut NgynContext,
-        res: &'a mut NgynResponse,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+        res: &'b mut NgynResponse,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>> {
         Box::pin(T::handle(cx, res))
     }
 }
