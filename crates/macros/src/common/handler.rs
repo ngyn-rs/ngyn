@@ -72,7 +72,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     }
 
     let mut generics_stream = generics.to_token_stream();
-    generics_stream.extend(quote! { '_ctx_lifetime });
+    generics_stream.extend(quote! { '_cx_lifetime });
 
     let args = inputs.iter().fold(None, |args, input| {
         if let syn::FnArg::Typed(pat) = input {
@@ -137,17 +137,17 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let handle_body = if asyncness.is_some() {
         match output {
             syn::ReturnType::Type(_, _) => quote! {
-                let body = (|#inputs| async move #block)(#args);
+                let fn_body = (|#inputs| async move #block);
                 Box::pin(async move {
                     #exe_block;
-                    *cx.response().body_mut() = body.await.to_bytes().into();
+                    *cx.response().body_mut() = fn_body(#args).await.to_bytes().into();
                 })
             },
             _ => quote! {
-                let body = (|#inputs| async move #block)(#args);
+                let fn_body = (|#inputs| async move #block);
                 Box::pin(async move {
                     #exe_block
-                    body.await;
+                    fn_body(#args).await;
                 })
             },
         }
@@ -164,13 +164,13 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let output = if asyncness.is_some() {
         let r_arrow = RArrow::default();
         Some(
-            quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_ctx_lifetime>> },
+            quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_cx_lifetime>> },
         )
     } else {
         None
     };
     quote! {
-        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_ctx_lifetime mut ngyn::prelude::NgynContext) #output {
+        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext) #output {
             #handle_body
         }
     }
