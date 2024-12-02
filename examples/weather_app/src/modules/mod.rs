@@ -20,7 +20,7 @@ impl NgynGate for WeatherGate {
     }
 }
 
-#[injectable]
+#[derive(Default)]
 pub struct WeatherRepository;
 
 impl WeatherRepository {
@@ -45,7 +45,7 @@ impl WeatherRepository {
     }
 }
 
-#[injectable]
+#[derive(Service)]
 pub struct WeatherService {
     weather_repository: WeatherRepository,
 }

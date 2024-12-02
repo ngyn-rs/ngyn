@@ -178,7 +178,7 @@ pub trait NgynEngine: NgynPlatform {
     /// ### Arguments
     ///
     /// * `middleware` - The middleware to add.
-    fn use_middleware<'a, 'b>(&mut self, middleware: impl NgynMiddleware + 'static) {
+    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
@@ -203,7 +203,7 @@ pub trait NgynEngine: NgynPlatform {
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::handler::Handler, traits::NgynInjectable};
+    use crate::core::handler::Handler;
     use std::any::Any;
 
     use super::*;
@@ -221,15 +221,6 @@ mod tests {
     }
 
     struct MockMiddleware;
-
-    impl NgynInjectable for MockMiddleware {
-        fn new() -> Self
-        where
-            Self: Sized,
-        {
-            Self {}
-        }
-    }
 
     impl NgynMiddleware for MockMiddleware {
         async fn handle<'a>(_cx: &'a mut NgynContext) {}

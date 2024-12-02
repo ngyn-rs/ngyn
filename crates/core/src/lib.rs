@@ -20,7 +20,7 @@ pub mod prelude {
             Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
             ToBytes, Transducer,
         },
-        traits::{NgynGate, NgynInjectable, NgynMiddleware},
+        traits::{NgynGate, NgynMiddleware},
     };
 }
 
