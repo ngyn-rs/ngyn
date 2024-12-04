@@ -87,16 +87,10 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
 /// ```rust ignore
 /// use ngyn::prelude::*;
 ///
-/// #[controller]
-/// struct MyController;
-///
-/// #[routes]
-/// impl MyController {
-///    #[get("/")]
-///   async fn get(&self, cx: &mut NgynContext) -> JsonResult {
+/// #[handler]
+/// async fn get_values() -> JsonResult {
 ///     let data = json!({ "key": "value" });
 ///     Ok(data)
-///   }
 /// }
 /// ```
 pub type JsonResult = Result<Value, Value>;
@@ -161,13 +155,13 @@ pub trait PeekBytes {
 
 impl PeekBytes for NgynResponse {
     async fn peek_bytes(&mut self, mut f: impl FnMut(&Bytes)) {
-        let frame = self.frame().await;
-        if let Some(Ok(frame)) = frame {
-            if let Ok(bytes) = frame.into_data() {
+        match self.read_bytes().await {
+            Ok(bytes) => {
                 f(&bytes);
                 // body has been read, so we need to set it back
                 *self.body_mut() = bytes.into();
             }
+            Err(_) => {}
         }
     }
 }
