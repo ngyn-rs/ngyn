@@ -155,13 +155,10 @@ pub trait PeekBytes {
 
 impl PeekBytes for NgynResponse {
     async fn peek_bytes(&mut self, mut f: impl FnMut(&Bytes)) {
-        match self.read_bytes().await {
-            Ok(bytes) => {
-                f(&bytes);
-                // body has been read, so we need to set it back
-                *self.body_mut() = bytes.into();
-            }
-            Err(_) => {}
+        if let Ok(bytes) = self.read_bytes().await {
+            f(&bytes);
+            // body has been read, so we need to set it back
+            *self.body_mut() = bytes.into();
         }
     }
 }
@@ -199,7 +196,7 @@ mod tests {
 
         let mut bytes = Vec::new();
         let peek_fn = |data: &Bytes| {
-            bytes.extend_from_slice(&data);
+            bytes.extend_from_slice(data);
         };
 
         response.peek_bytes(peek_fn).await;

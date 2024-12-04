@@ -4,7 +4,7 @@ use serde_json::json;
 pub struct NotFoundMiddleware;
 
 impl NgynMiddleware for NotFoundMiddleware {
-    async fn handle<'a>(cx: &'a mut NgynContext) {
+    async fn handle(cx: &mut NgynContext) {
         if cx.params().is_none() {
             let body = json!({
                 "error": {

@@ -67,7 +67,7 @@ impl PlatformData {
 
         // trigger interpreters
         for interpreter in &self.interpreters {
-            interpreter.interpret(&mut cx.response()).await;
+            interpreter.interpret(cx.response()).await;
         }
 
         cx.response().clone()
@@ -223,7 +223,7 @@ mod tests {
     struct MockMiddleware;
 
     impl NgynMiddleware for MockMiddleware {
-        async fn handle<'a>(_cx: &'a mut NgynContext) {}
+        async fn handle(_cx: &mut NgynContext) {}
     }
 
     struct MockInterpreter;
@@ -233,6 +233,7 @@ mod tests {
         async fn interpret(&self, _res: &mut NgynResponse) {}
     }
 
+    #[derive(Default)]
     struct MockEngine {
         data: PlatformData,
     }
@@ -240,14 +241,6 @@ mod tests {
     impl NgynPlatform for MockEngine {
         fn data_mut(&mut self) -> &mut PlatformData {
             &mut self.data
-        }
-    }
-
-    impl Default for MockEngine {
-        fn default() -> Self {
-            Self {
-                data: PlatformData::default(),
-            }
         }
     }
 

@@ -605,13 +605,13 @@ mod tests {
         context.set("name", "John".to_string());
 
         let params_ref = context.params();
-        assert_eq!(params_ref.is_none(), true);
+        assert!(params_ref.is_none());
 
         let route_path = "/users/<id>";
         context.with(route_path, Some(&Method::GET));
 
         let params_ref = context.params();
-        assert_eq!(params_ref.is_some(), true);
+        assert!(params_ref.is_some());
         assert_eq!(params_ref.unwrap()[0].0, "id");
         assert_eq!(params_ref.unwrap()[0].1, "123");
     }
