@@ -1,11 +1,8 @@
 use http::Request;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::HashMap, mem::ManuallyDrop, sync::Arc};
+use std::{any::Any, collections::HashMap, sync::Arc};
 
-use crate::{
-    server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer},
-    traits::NgynController,
-};
+use crate::server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer};
 
 /// Represents the value of a context in Ngyn
 #[derive(Serialize, Deserialize)]
@@ -58,8 +55,8 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
+    response: NgynResponse,
     params: Option<Vec<(String, String)>>,
-    route_info: Option<(String, Arc<Box<dyn NgynController>>)>,
     store: HashMap<String, String>,
     pub(crate) state: Option<Box<dyn AppState>>,
 }
@@ -84,6 +81,10 @@ impl NgynContext {
     /// ```
     pub fn request(&self) -> &Request<Vec<u8>> {
         &self.request
+    }
+
+    pub fn response(&mut self) -> &mut NgynResponse {
+        &mut self.response
     }
 
     /// Retrieves the params associated with the context.
@@ -350,9 +351,9 @@ impl NgynContext {
     pub(crate) fn from_request(request: Request<Vec<u8>>) -> Self {
         NgynContext {
             request,
+            response: NgynResponse::default(),
             store: HashMap::new(),
             params: None,
-            route_info: None,
             state: None,
         }
     }
@@ -399,88 +400,33 @@ impl NgynContext {
             None
         }
     }
-
-    /// Prepares the context for execution by setting the route information.
-    ///
-    /// ### Arguments
-    ///
-    /// * `controller` - The controller to handle the request.
-    /// * `handler` - The handler to execute.
-    ///
-    /// ### Examples
-    ///
-    /// ```rust ignore
-    /// use ngyn_shared::core::context::NgynContext;
-    /// use ngyn_shared::NgynController;
-    ///
-    /// let mut context = NgynContext::from_request(request);
-    /// let controller = MyController::new();
-    ///
-    /// context.prepare(Box::new(controller), "index".to_string());
-    /// ```
-    pub(crate) fn prepare(&mut self, controller: Arc<Box<dyn NgynController>>, handler: String) {
-        self.route_info = Some((handler, controller));
-    }
-
-    /// Executes the handler associated with the route in the context.
-    ///
-    /// ### Arguments
-    ///
-    /// * `res` - The response to write to.
-    ///
-    /// ### Examples
-    ///
-    /// ```rust ignore
-    /// use ngyn_shared::core::context::NgynContext;
-    /// use ngyn_shared::NgynResponse;
-    ///
-    /// let mut context = NgynContext::from_request(request);
-    /// let mut response = NgynResponse::new();
-    ///
-    /// context.execute(&mut response).await;
-    /// ```
-    pub(crate) async fn execute(&mut self, res: &mut NgynResponse) {
-        // safely consume the route information, it will be set again if needed
-        let (handler, controller) = match self.route_info.take() {
-            Some((handler, ctrl)) => (handler, ctrl),
-            None => return,
-        };
-        // allow the controller to live even after the request is handled, until the server is stopped or crashes or in weird cases, the controller is dropped.
-        // If the controller is dropped, the server will panic.
-        let mut controller = ManuallyDrop::<Box<dyn NgynController>>::new(controller.into()); // panics if the controller has been dropped
-        controller.handle(&handler, self, res).await;
-    }
 }
 
 impl<'a> Transformer<'a> for &'a NgynContext {
-    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         cx
     }
 }
 
 impl<'a> Transformer<'a> for &'a mut NgynContext {
-    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         cx
     }
 }
 
 impl<'a> Transformer<'a> for &'a NgynRequest {
-    fn transform(cx: &'a mut NgynContext, _res: &'a mut NgynResponse) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         cx.request()
     }
 }
 
 impl Transformer<'_> for NgynRequest {
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         cx.request().clone()
     }
 }
 #[cfg(test)]
 mod tests {
-    use http::StatusCode;
-
-    use crate::traits::NgynInjectable;
-
     use super::*;
 
     struct TestAppState {
@@ -495,14 +441,6 @@ mod tests {
             self
         }
     }
-
-    struct TestController {}
-    impl NgynInjectable for TestController {
-        fn new() -> Self {
-            Self {}
-        }
-    }
-    impl NgynController for TestController {}
 
     #[test]
     fn test_request() {
@@ -667,42 +605,14 @@ mod tests {
         context.set("name", "John".to_string());
 
         let params_ref = context.params();
-        assert_eq!(params_ref.is_none(), true);
+        assert!(params_ref.is_none());
 
         let route_path = "/users/<id>";
         context.with(route_path, Some(&Method::GET));
 
         let params_ref = context.params();
-        assert_eq!(params_ref.is_some(), true);
+        assert!(params_ref.is_some());
         assert_eq!(params_ref.unwrap()[0].0, "id");
         assert_eq!(params_ref.unwrap()[0].1, "123");
-    }
-
-    #[test]
-    fn test_prepare() {
-        let request = Request::new(Vec::new());
-        let mut context = NgynContext::from_request(request);
-        let controller = Arc::new(Box::new(TestController::new()) as Box<dyn NgynController>);
-
-        context.prepare(controller.clone(), "index".to_string());
-
-        let (handler, ctrl) = context.route_info.unwrap();
-        assert_eq!(handler, "index");
-        assert_eq!(ctrl.prefix(), controller.prefix());
-    }
-
-    #[tokio::test]
-    async fn test_execute() {
-        let request = Request::new(Vec::new());
-        let mut context = NgynContext::from_request(request);
-        let mut response = NgynResponse::default();
-        let controller = Arc::new(Box::new(TestController::new()) as Box<dyn NgynController>);
-
-        assert_eq!(response.status(), StatusCode::OK);
-
-        context.prepare(controller.clone(), "index".to_string());
-        context.execute(&mut response).await;
-
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 }

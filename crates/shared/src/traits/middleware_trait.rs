@@ -1,9 +1,6 @@
 use std::{future::Future, pin::Pin};
 
-use crate::{
-    server::{NgynContext, NgynResponse},
-    traits::NgynInjectable,
-};
+use crate::server::NgynContext;
 
 /// Trait for implementing a middleware.
 ///
@@ -19,49 +16,36 @@ use crate::{
 /// ### Examples
 ///
 /// ```rust
-/// use ngyn_shared::traits::{NgynMiddleware, NgynInjectable};
+/// use ngyn_shared::traits::NgynMiddleware;
 /// use ngyn_shared::server::{NgynContext, NgynResponse};
 ///
 /// pub struct RequestReceivedLogger {}
 ///
-/// impl NgynInjectable for RequestReceivedLogger {
-///    fn new() -> Self {
-///       RequestReceivedLogger {}
-///   }
-/// }
-///
 /// impl NgynMiddleware for RequestReceivedLogger {
-///   async fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
+///   async fn handle(cx: &mut NgynContext) {
 ///    println!("Request received: {:?}", cx.request());
 ///  }
 /// }
 /// ```
-pub trait NgynMiddleware: NgynInjectable + Sync {
+pub trait NgynMiddleware: Send + Sync {
     /// Handles the request.
     #[allow(async_fn_in_trait)]
-    fn handle(
-        &self,
-        cx: &mut NgynContext,
-        res: &mut NgynResponse,
-    ) -> impl std::future::Future<Output = ()> + Send;
+    fn handle(cx: &mut NgynContext) -> impl std::future::Future<Output = ()> + Send
+    where
+        Self: Sized;
 }
 
-pub(crate) trait Middleware: NgynInjectable + Sync {
+pub(crate) trait Middleware: Send + Sync {
     fn run<'a>(
         &'a self,
         _cx: &'a mut NgynContext,
-        _res: &'a mut NgynResponse,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
         Box::pin(async move {})
     }
 }
 
-impl<T: NgynMiddleware> Middleware for T {
-    fn run<'a>(
-        &'a self,
-        cx: &'a mut NgynContext,
-        res: &'a mut NgynResponse,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
-        Box::pin(self.handle(cx, res))
+impl<'b, T: NgynMiddleware + Send + 'b> Middleware for T {
+    fn run<'a>(&'a self, cx: &'a mut NgynContext) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+        Box::pin(T::handle(cx))
     }
 }

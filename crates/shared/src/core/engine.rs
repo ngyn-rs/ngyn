@@ -6,7 +6,7 @@ use std::sync::Arc;
 use super::handler::RouteHandler;
 use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse},
-    traits::{Middleware, NgynController, NgynInterpreter, NgynMiddleware, NgynModule},
+    traits::{Middleware, NgynInterpreter, NgynMiddleware},
 };
 
 #[derive(Default)]
@@ -30,7 +30,6 @@ impl PlatformData {
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
         let mut cx = NgynContext::from_request(req);
-        let mut res = NgynResponse::default();
 
         if let Some(state) = &self.state {
             cx.state = Some(state.into());
@@ -48,31 +47,30 @@ impl PlatformData {
 
         // trigger global middlewares
         for middleware in &self.middlewares {
-            middleware.run(&mut cx, &mut res).await;
+            middleware.run(&mut cx).await;
         }
 
         // execute controlled route if it is handled
         if let Some(route_handler) = route_handler {
             match route_handler.as_ref() {
-                RouteHandler::Sync(handler) => handler(&mut cx, &mut res),
+                RouteHandler::Sync(handler) => handler(&mut cx),
                 RouteHandler::Async(async_handler) => {
-                    async_handler(&mut cx, &mut res).await;
+                    async_handler(&mut cx).await;
                 }
             }
-            cx.execute(&mut res).await;
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
-                *res.body_mut() = Full::new(Bytes::default());
+                *cx.response().body_mut() = Full::new(Bytes::default());
             }
         }
 
         // trigger interpreters
         for interpreter in &self.interpreters {
-            interpreter.interpret(&mut res).await;
+            interpreter.interpret(cx.response()).await;
         }
 
-        res
+        cx.response().clone()
     }
 
     /// Adds a route to the platform data.
@@ -201,49 +199,11 @@ pub trait NgynEngine: NgynPlatform {
     fn set_state(&mut self, state: impl AppState + 'static) {
         self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
-
-    /// Loads a component which implements [`NgynModule`] into the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `module` - The module to load.
-    fn load_module(&mut self, module: impl NgynModule + 'static) {
-        for controller in module.get_controllers() {
-            self.load_controller(controller);
-        }
-    }
-
-    /// Loads a component which implements [`NgynController`] into the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `controller` - The arc'd controller to load.
-    fn load_controller(&mut self, controller: Arc<Box<dyn NgynController + 'static>>) {
-        for (path, http_method, handler) in controller.routes() {
-            let controller = controller.clone();
-            self.route(
-                path.as_str(),
-                Method::from_bytes(http_method.as_bytes()).unwrap_or_default(),
-                Box::new(move |cx: &mut NgynContext, _res: &mut NgynResponse| {
-                    let controller = controller.clone();
-                    cx.prepare(controller, handler.clone());
-                }),
-            );
-        }
-    }
-
-    /// Builds the application with the specified module.
-    fn build<AppModule: NgynModule + 'static>() -> Self {
-        let module = AppModule::new();
-        let mut server = Self::default();
-        server.load_module(module);
-        server
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::handler::Handler, traits::NgynInjectable};
+    use crate::core::handler::Handler;
     use std::any::Any;
 
     use super::*;
@@ -262,17 +222,8 @@ mod tests {
 
     struct MockMiddleware;
 
-    impl NgynInjectable for MockMiddleware {
-        fn new() -> Self
-        where
-            Self: Sized,
-        {
-            Self {}
-        }
-    }
-
     impl NgynMiddleware for MockMiddleware {
-        async fn handle(&self, _cx: &mut NgynContext, _res: &mut NgynResponse) {}
+        async fn handle(_cx: &mut NgynContext) {}
     }
 
     struct MockInterpreter;
@@ -282,39 +233,7 @@ mod tests {
         async fn interpret(&self, _res: &mut NgynResponse) {}
     }
 
-    struct MockController;
-
-    impl NgynInjectable for MockController {
-        fn new() -> Self
-        where
-            Self: Sized,
-        {
-            Self {}
-        }
-    }
-
-    impl NgynController for MockController {
-        fn routes(&self) -> Vec<(String, String, String)> {
-            vec![(
-                "/test".to_string(),
-                Method::GET.to_string(),
-                "handler".to_string(),
-            )]
-        }
-    }
-
-    struct MockModule;
-
-    impl NgynModule for MockModule {
-        fn new() -> Self {
-            Self {}
-        }
-
-        fn get_controllers(&self) -> Vec<Arc<Box<dyn NgynController>>> {
-            vec![Arc::new(Box::new(MockController) as Box<dyn NgynController>)]
-        }
-    }
-
+    #[derive(Default)]
     struct MockEngine {
         data: PlatformData,
     }
@@ -322,14 +241,6 @@ mod tests {
     impl NgynPlatform for MockEngine {
         fn data_mut(&mut self) -> &mut PlatformData {
             &mut self.data
-        }
-    }
-
-    impl Default for MockEngine {
-        fn default() -> Self {
-            Self {
-                data: PlatformData::default(),
-            }
         }
     }
 
@@ -385,7 +296,7 @@ mod tests {
     #[tokio::test]
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.data_mut().add_route(
             "/test".to_string(),
             Some(Method::GET),
@@ -439,7 +350,7 @@ mod tests {
     #[tokio::test]
     async fn test_respond_with_head_method() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.data_mut().add_route(
             "/test".to_string(),
             Some(Method::GET),
@@ -460,7 +371,7 @@ mod tests {
     #[tokio::test]
     async fn test_add_route() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.data_mut().add_route(
             "/test".to_string(),
             Some(Method::GET),
@@ -491,7 +402,7 @@ mod tests {
     #[tokio::test]
     async fn test_route() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.route("/test", Method::GET, handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -500,7 +411,7 @@ mod tests {
     #[tokio::test]
     async fn test_any() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.any("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -509,7 +420,7 @@ mod tests {
     #[tokio::test]
     async fn test_get() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.get("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -518,7 +429,7 @@ mod tests {
     #[tokio::test]
     async fn test_post() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.post("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -527,7 +438,7 @@ mod tests {
     #[tokio::test]
     async fn test_put() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.put("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -536,7 +447,7 @@ mod tests {
     #[tokio::test]
     async fn test_delete() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.delete("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -545,7 +456,7 @@ mod tests {
     #[tokio::test]
     async fn test_patch() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.patch("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -554,7 +465,7 @@ mod tests {
     #[tokio::test]
     async fn test_head() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_, _| {});
+        let handler: Box<Handler> = Box::new(|_| {});
         engine.head("/test", handler);
 
         assert_eq!(engine.data.routes.len(), 1);
@@ -585,30 +496,5 @@ mod tests {
         engine.set_state(app_state);
 
         assert!(engine.data.state.is_some());
-    }
-
-    #[tokio::test]
-    async fn test_load_module() {
-        let mut engine = MockEngine::default();
-        let module = MockModule::new();
-        engine.load_module(module);
-
-        assert_eq!(engine.data.routes.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_load_controller() {
-        let mut engine = MockEngine::default();
-        let controller = Arc::new(Box::new(MockController) as Box<dyn NgynController>);
-        engine.load_controller(controller);
-
-        assert_eq!(engine.data.routes.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_build() {
-        let engine: MockEngine = MockEngine::build::<MockModule>();
-
-        assert_eq!(engine.data.routes.len(), 1);
     }
 }

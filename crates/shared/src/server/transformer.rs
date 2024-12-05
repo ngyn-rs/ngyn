@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::server::{NgynContext, NgynResponse};
+use crate::server::NgynContext;
 use std::borrow::Cow;
 
 /// Represents a transformer trait.
@@ -18,14 +18,14 @@ pub trait Transformer<'a> {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Self {
+    ///     fn transform(cx: &mut NgynContext) -> Self {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
     /// }
     /// ```
     #[must_use]
-    fn transform(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self
+    fn transform(cx: &'a mut NgynContext) -> Self
     where
         Self: Sized;
 }
@@ -48,7 +48,7 @@ impl<'a> Transducer {
     /// struct MyTransformer;
     ///
     /// impl Transformer for MyTransformer {
-    ///     fn transform(cx: &mut NgynContext, res: &mut NgynResponse) -> Option<Self> {
+    ///     fn transform(cx: &mut NgynContext) -> Option<Self> {
     ///         // Transformation logic goes here
     ///         MyTransformer
     ///     }
@@ -60,8 +60,8 @@ impl<'a> Transducer {
     /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
     /// ```
     #[must_use]
-    pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> S {
-        S::transform(cx, res)
+    pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext) -> S {
+        S::transform(cx)
     }
 }
 
@@ -107,12 +107,11 @@ impl Param {
 }
 
 impl Transformer<'_> for Param {
-    /// Transforms the given `NgynContext` and `_res` into a `Param` instance.
+    /// Transforms the given `NgynContext` into a `Param` instance.
     ///
     /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
-    /// * `_res` - The mutable reference to the `NgynResponse`.
     ///
     /// ### Returns
     ///
@@ -128,7 +127,7 @@ impl Transformer<'_> for Param {
     ///
     /// let param: Param = Param::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
             .params()
             .unwrap_or_else(|| panic!("Extracting params should only be done in routes.")) // Infallible, only fails if the route is invalid
@@ -181,12 +180,11 @@ impl Query {
 }
 
 impl Transformer<'_> for Query {
-    /// Transforms the given `NgynContext` and `_res` into a `Query` instance.
+    /// Transforms the given `NgynContext` into a `Query` instance.
     ///
     /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
-    /// * `_res` - The mutable reference to the `NgynResponse`.
     ///
     /// ### Returns
     ///
@@ -206,7 +204,7 @@ impl Transformer<'_> for Query {
     ///
     /// let query: Query = Query::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         Query {
             url: cx.request().uri().clone(),
         }
@@ -234,7 +232,7 @@ impl Body {
     /// ```rust ignore
     /// use serde::Deserialize;
     ///
-    /// let dto = Dto {
+    /// let body = Body {
     ///     data: r#"{"name": "John", "age": 30}"#.to_string(),
     /// };
     ///
@@ -244,25 +242,27 @@ impl Body {
     ///     age: u32,
     /// }
     ///
-    /// let result: Result<Person, serde_json::Error> = dto.parse();
+    /// let result: Result<Person, serde_json::Error> = body.json();
     /// ```
-    pub fn parse<S: for<'a> Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
-        let data = self.data.as_str();
-        serde_json::from_str(data)
+    pub fn json<S: for<'a> Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
+        serde_json::from_str(self.text())
+    }
+
+    pub fn text(&self) -> &str {
+        &self.data
     }
 }
 
 impl Transformer<'_> for Body {
-    /// Transforms the given `NgynContext` and `_res` into a `Dto` instance.
+    /// Transforms the given `NgynContext` into a `Body` instance.
     ///
     /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
-    /// * `_res` - The mutable reference to the `NgynResponse`.
     ///
     /// ### Returns
     ///
-    /// * `Dto` - The transformed `Dto` instance.
+    /// * `Body` - The transformed `Body` instance.
     ///
     /// ### Examples
     ///
@@ -272,9 +272,9 @@ impl Transformer<'_> for Body {
     /// let mut cx = NgynContext::new();
     /// let mut res = NgynResponse::new();
     ///
-    /// let dto: Dto = Dto::transform(&mut cx, &mut res);
+    /// let dto: Body = Body::transform(&mut cx, &mut res);
     /// ```
-    fn transform(cx: &mut NgynContext, _res: &mut NgynResponse) -> Self {
+    fn transform(cx: &mut NgynContext) -> Self {
         let data = String::from_utf8_lossy(cx.request().body()).to_string();
         Body { data }
     }

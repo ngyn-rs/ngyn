@@ -2,33 +2,28 @@ use std::{future::Future, pin::Pin};
 
 use http::{HeaderValue, StatusCode};
 
-use crate::server::{NgynContext, NgynResponse, ToBytes};
+use crate::server::{NgynContext, ToBytes};
 
 /// Represents a handler function that takes in a mutable reference to `NgynContext` and `NgynResponse`.
-pub(crate) type Handler = dyn Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static;
+pub(crate) type Handler = dyn Fn(&mut NgynContext) + Send + Sync + 'static;
 
-pub(crate) type AsyncHandler = Box<
-    dyn for<'a, 'b> Fn(
-            &'a mut NgynContext,
-            &'b mut NgynResponse,
-        ) -> Pin<Box<dyn Future<Output = ()> + Send + 'b>>
-        + Send
-        + Sync,
->;
+pub(crate) type AsyncHandler = dyn for<'a, 'b> Fn(&'a mut NgynContext) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>
+    + Send
+    + Sync;
 
 pub enum RouteHandler {
     Sync(Box<Handler>),
-    Async(AsyncHandler),
+    Async(Box<AsyncHandler>),
 }
 
-impl<F: Fn(&mut NgynContext, &mut NgynResponse) + Send + Sync + 'static> From<F> for RouteHandler {
+impl<F: Fn(&mut NgynContext) + Send + Sync + 'static> From<F> for RouteHandler {
     fn from(f: F) -> Self {
         RouteHandler::Sync(Box::new(f))
     }
 }
 
-impl From<AsyncHandler> for RouteHandler {
-    fn from(f: AsyncHandler) -> Self {
+impl From<Box<AsyncHandler>> for RouteHandler {
+    fn from(f: Box<AsyncHandler>) -> Self {
         RouteHandler::Async(f)
     }
 }
@@ -48,9 +43,9 @@ impl From<AsyncHandler> for RouteHandler {
 pub fn handler<S: ToBytes + 'static>(
     f: impl Fn(&mut NgynContext) -> S + Send + Sync + 'static,
 ) -> Box<Handler> {
-    Box::new(move |ctx: &mut NgynContext, res: &mut NgynResponse| {
+    Box::new(move |ctx: &mut NgynContext| {
         let body = f(ctx).to_bytes();
-        *res.body_mut() = body.into();
+        *ctx.response().body_mut() = body.into();
     })
 }
 
@@ -60,63 +55,76 @@ pub fn handler<S: ToBytes + 'static>(
 /// ```rust ignore
 /// use ngyn::server::{async_handler, NgynContext, ToBytes};
 ///
-/// app.get("/hello", async_handler(async |ctx: &mut NgynContext| {
+/// app.get("/hello", async_handler(|ctx: &mut NgynContext| async {
 ///    "Hello, World!"
 /// }));
 /// ```
 pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'static>(
     f: impl Fn(&mut NgynContext) -> Fut + Send + Sync + 'static,
-) -> AsyncHandler {
-    Box::new(move |ctx: &mut NgynContext, res: &mut NgynResponse| {
+) -> Box<AsyncHandler> {
+    Box::new(move |ctx: &mut NgynContext| {
         let fut = f(ctx);
         Box::pin(async move {
             let body = fut.await.to_bytes();
-            *res.body_mut() = body.into();
+            *ctx.response().body_mut() = body.into();
         })
     })
+}
+
+pub fn async_wrap(
+    f: impl for<'a, 'b> Fn(&'a mut NgynContext) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>
+        + Send
+        + Sync
+        + 'static,
+) -> Box<AsyncHandler> {
+    Box::new(f)
 }
 
 /// Create a not-implemented handler that returns a `501 Not Implemented` status code.
 ///
 /// This is very similar to unimplemented! macro in Rust.
 pub fn not_implemented() -> Box<Handler> {
-    Box::new(|_ctx: &mut NgynContext, res: &mut NgynResponse| {
-        *res.status_mut() = StatusCode::NOT_IMPLEMENTED;
+    Box::new(|ctx: &mut NgynContext| {
+        *ctx.response().status_mut() = StatusCode::NOT_IMPLEMENTED;
     })
 }
 
 /// Redirects to a specified location with a `303 See Other` status code.
 pub fn redirect_to(location: &'static str) -> Box<Handler> {
-    Box::new(|_ctx: &mut NgynContext, res: &mut NgynResponse| {
-        res.headers_mut()
+    Box::new(|ctx: &mut NgynContext| {
+        ctx.response()
+            .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *res.status_mut() = StatusCode::SEE_OTHER;
+        *ctx.response().status_mut() = StatusCode::SEE_OTHER;
     })
 }
 
 /// Redirects to a specified location with a `307 Temporary Redirect` status code.
 pub fn redirect_temporary(location: &'static str) -> Box<Handler> {
-    Box::new(|_ctx: &mut NgynContext, res: &mut NgynResponse| {
-        res.headers_mut()
+    Box::new(|ctx: &mut NgynContext| {
+        ctx.response()
+            .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *res.status_mut() = StatusCode::TEMPORARY_REDIRECT;
+        *ctx.response().status_mut() = StatusCode::TEMPORARY_REDIRECT;
     })
 }
 
 /// Redirects to a specified location with a `301 Moved Permanently` status code.
 pub fn redirect_permanent(location: &'static str) -> Box<Handler> {
-    Box::new(|_ctx: &mut NgynContext, res: &mut NgynResponse| {
-        res.headers_mut()
+    Box::new(|ctx: &mut NgynContext| {
+        ctx.response()
+            .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *res.status_mut() = StatusCode::MOVED_PERMANENTLY;
+        *ctx.response().status_mut() = StatusCode::MOVED_PERMANENTLY;
     })
 }
 
 /// Redirects to a specified location with a `302 Found` status code.
 pub fn redirect_found(location: &'static str) -> Box<Handler> {
-    Box::new(|_ctx: &mut NgynContext, res: &mut NgynResponse| {
-        res.headers_mut()
+    Box::new(|ctx: &mut NgynContext| {
+        ctx.response()
+            .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *res.status_mut() = StatusCode::FOUND;
+        *ctx.response().status_mut() = StatusCode::FOUND;
     })
 }

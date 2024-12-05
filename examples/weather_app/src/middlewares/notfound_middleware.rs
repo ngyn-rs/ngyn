@@ -1,11 +1,10 @@
 use ngyn::{prelude::*, shared::server::ToBytes};
 use serde_json::json;
 
-#[injectable]
 pub struct NotFoundMiddleware;
 
 impl NgynMiddleware for NotFoundMiddleware {
-    async fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
+    async fn handle(cx: &mut NgynContext) {
         if cx.params().is_none() {
             let body = json!({
                 "error": {
@@ -13,7 +12,7 @@ impl NgynMiddleware for NotFoundMiddleware {
                     "message": "Route not found",
                 }
             });
-            *res.body_mut() = body.to_bytes().into();
+            *cx.response().body_mut() = body.to_bytes().into();
         }
     }
 }

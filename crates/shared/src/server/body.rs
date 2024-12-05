@@ -40,6 +40,12 @@ impl ToBytes for String {
     }
 }
 
+impl ToBytes for &String {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
 impl ToBytes for Bytes {
     fn to_bytes(self) -> Bytes {
         self
@@ -143,6 +149,8 @@ where
 }
 #[cfg(test)]
 mod tests {
+    use std::f32::consts::PI;
+
     use super::*;
 
     #[test]
@@ -187,17 +195,15 @@ mod tests {
 
     #[test]
     fn test_to_bytes_f32() {
-        let input = 3.14;
-        let expected = Bytes::from(input.to_string());
-        let result = input.to_bytes();
+        let expected = Bytes::from(PI.to_string());
+        let result = PI.to_bytes();
         assert_eq!(result, expected);
     }
 
     #[test]
     fn test_to_bytes_f64() {
-        let input = 3.14;
-        let expected = Bytes::from(input.to_string());
-        let result = input.to_bytes();
+        let expected = Bytes::from(PI.to_string());
+        let result = PI.to_bytes();
         assert_eq!(result, expected);
     }
 

@@ -18,13 +18,15 @@ impl NgynPlatform for VercelApplication {
 impl VercelApplication {
     pub async fn handle(self, request: Request) -> Result<VercelResponse<Body>, Error> {
         let request = request.map(|b| b.to_vec());
-        let mut res = self.data.respond(request).await;
+        let mut response = self.data.respond(request).await;
 
-        let body = res.read_bytes().await.unwrap(); // infallible, only fails if the response is invalid
+        let body = response
+            .read_bytes()
+            .await
+            .expect("Response hasn't been set");
 
-        let (parts, ..) = res.into_parts();
+        let (parts, ..) = response.into_parts();
 
-        let response = VercelResponse::from_parts(parts, Body::from(body.to_vec()));
-        Ok(response)
+        Ok(VercelResponse::from_parts(parts, Body::from(body.to_vec())))
     }
 }

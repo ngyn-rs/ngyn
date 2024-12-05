@@ -1,7 +1,5 @@
-use ngyn::factory::NgynFactory;
-use ngyn_swagger::NgynEngineSwagger;
+use ngyn_swagger::{NgynEngineSwagger, SwaggerConfig};
 use ngyn_vercel::VercelApplication;
-use vercel_app::modules::sample::sample_module::SampleModule;
 use vercel_runtime::{run, Body, Error, Request, Response};
 
 #[tokio::main]
@@ -10,7 +8,10 @@ async fn main() -> Result<(), Error> {
 }
 
 pub async fn handler(req: Request) -> Result<Response<Body>, Error> {
-    let mut app = NgynFactory::<VercelApplication>::create::<SampleModule>();
-    app.use_swagger::<SampleModule>(Default::default());
+    let mut app = VercelApplication::default();
+    app.use_swagger(SwaggerConfig {
+        spec_url: "/openapi.json".to_string(),
+        ..Default::default()
+    });
     app.handle(req).await
 }

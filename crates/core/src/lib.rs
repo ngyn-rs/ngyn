@@ -1,5 +1,4 @@
 #![doc = include_str!("../README.md")]
-pub mod factory;
 
 pub mod macros {
     pub use async_std::main;
@@ -13,16 +12,15 @@ pub mod shared {
 
 #[doc(hidden)]
 pub mod prelude {
-    pub use crate::factory::*;
     pub use crate::macros::*;
     pub use ngyn_hyper::HyperApplication;
     pub use ngyn_shared::{
         core::{engine::NgynEngine, handler::*},
         server::{
             Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
-            Transducer,
+            ToBytes, Transducer,
         },
-        traits::{NgynGate, NgynInjectable, NgynMiddleware},
+        traits::{NgynGate, NgynMiddleware},
     };
 }
 

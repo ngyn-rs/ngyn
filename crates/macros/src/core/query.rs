@@ -14,8 +14,8 @@ pub(crate) fn query_macro(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #impl_generics ngyn::shared::server::Transformer<'_> for #ident #ty_generics #where_clause {
-            fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Self {
-                let query = ngyn::shared::server::Query::transform(cx, res);
+            fn transform(cx: &mut ngyn::prelude::NgynContext) -> Self {
+                let query = ngyn::shared::server::Query::transform(cx);
                 #ident {
                     #(
                         #field_names: query.get(stringify!(#field_names)).unwrap_or_default(),

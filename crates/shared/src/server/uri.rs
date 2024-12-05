@@ -84,7 +84,7 @@ mod tests {
 
         let params = uri.to_params(route_path);
 
-        assert_eq!(params.is_some(), true);
+        assert!(params.is_some());
         assert_eq!(params.unwrap(), vec![("id".to_string(), "123".to_string())]);
     }
 
@@ -95,7 +95,7 @@ mod tests {
 
         let params = uri.to_params(route_path);
 
-        assert_eq!(params.is_none(), true);
+        assert!(params.is_none());
     }
 
     #[test]
@@ -105,7 +105,7 @@ mod tests {
 
         let params = uri.to_params(route_path);
 
-        assert_eq!(params.is_some(), true);
+        assert!(params.is_some());
         assert_eq!(
             params.unwrap(),
             vec![
@@ -136,7 +136,7 @@ mod tests {
 
         let params = uri.to_params(route_path);
 
-        assert_eq!(params.is_some(), true);
+        assert!(params.is_some());
         assert_eq!(params.unwrap(), vec![("id".to_string(), "123".to_string())]);
     }
 }
