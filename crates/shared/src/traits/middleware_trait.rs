@@ -16,19 +16,13 @@ use crate::server::NgynContext;
 /// ### Examples
 ///
 /// ```rust
-/// use ngyn_shared::traits::{NgynMiddleware, NgynInjectable};
+/// use ngyn_shared::traits::NgynMiddleware;
 /// use ngyn_shared::server::{NgynContext, NgynResponse};
 ///
 /// pub struct RequestReceivedLogger {}
 ///
-/// impl NgynInjectable for RequestReceivedLogger {
-///    fn new() -> Self {
-///       RequestReceivedLogger {}
-///   }
-/// }
-///
 /// impl NgynMiddleware for RequestReceivedLogger {
-///   async fn handle(&self, cx: &mut NgynContext) {
+///   async fn handle(cx: &mut NgynContext) {
 ///    println!("Request received: {:?}", cx.request());
 ///  }
 /// }

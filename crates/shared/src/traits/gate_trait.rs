@@ -10,16 +10,10 @@ use crate::server::NgynContext;
 /// ### Examples
 ///
 /// ```rust
-/// use ngyn_shared::traits::{NgynGate, NgynInjectable};
+/// use ngyn_shared::traits::NgynGate;
 /// use ngyn_shared::server::{NgynContext, NgynResponse};
 ///
 /// pub struct AuthGate {}
-///
-/// impl NgynInjectable for AuthGate {
-///   fn new() -> Self {
-///     AuthGate {}
-///   }
-/// }
 ///
 /// impl NgynGate for AuthGate {
 ///    async fn can_activate(cx: &mut NgynContext) -> bool {
