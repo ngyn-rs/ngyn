@@ -1,5 +1,4 @@
 mod middlewares;
-mod shared;
 mod weather;
 
 use dotenv::dotenv;
@@ -18,7 +17,6 @@ async fn main() -> ShuttleNgyn {
     app.post("/", async_wrap(post_location));
 
     app.use_middleware(NotFoundMiddleware {});
-    app.use_interpreter(shared::ResponseInterpreter {});
 
     Ok(app.into())
 }

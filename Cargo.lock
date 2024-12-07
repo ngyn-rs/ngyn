@@ -1684,8 +1684,6 @@ dependencies = [
 name = "ngyn"
 version = "0.4.5"
 dependencies = [
- "async-std",
- "async-trait",
  "http 1.1.0",
  "ngyn-hyper 0.1.1",
  "ngyn_macros 0.4.5",
@@ -1831,7 +1829,6 @@ dependencies = [
 name = "ngyn_shared"
 version = "0.4.5"
 dependencies = [
- "async-trait",
  "bytes",
  "futures-util",
  "http 1.1.0",

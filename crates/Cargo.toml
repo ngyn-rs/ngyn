@@ -3,8 +3,6 @@ members = ["./*"]
 resolver = "2"
 
 [workspace.dependencies]
-async-std = { version = "1.6", features = ["attributes"] }
-async-trait = "0.1"
 bytes = "1.2"
 http = "1"
 http-body-util = "0.1"
