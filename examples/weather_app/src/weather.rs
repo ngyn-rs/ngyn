@@ -25,7 +25,7 @@ pub struct WeatherRepository;
 
 impl WeatherRepository {
     fn build_url(&self, api_type: &str, location: &str) -> String {
-        let api_key = std::env::var("WEATHER_API_KEY").unwrap();
+        let api_key = std::env::var("WEATHER_API_KEY").expect("WEATHER_API_KEY must be set");
         format!(
             "https://api.weatherapi.com/v1/{}.json?key={}&q={}",
             api_type, api_key, location
