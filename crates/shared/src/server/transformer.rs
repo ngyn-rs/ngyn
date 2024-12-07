@@ -1,3 +1,8 @@
+use bytes::Bytes;
+use futures_util::StreamExt;
+use http::{header::CONTENT_TYPE, HeaderValue};
+use http_body_util::{BodyStream, Full};
+use multer::Multipart;
 use serde::Deserialize;
 
 use crate::server::NgynContext;
@@ -54,10 +59,9 @@ impl<'a> Transducer {
     ///     }
     /// }
     ///
-    /// let mut cx = NgynContext::new();
-    /// let mut res = NgynResponse::new();
+    /// let mut cx = NgynContext::default();
     ///
-    /// let result: MyTransformer = Transducer::reduce(&mut cx, &mut res);
+    /// let result: MyTransformer = Transducer::reduce(&mut cx);
     /// ```
     #[must_use]
     pub fn reduce<S: Transformer<'a>>(cx: &'a mut NgynContext) -> S {
@@ -123,9 +127,8 @@ impl Transformer<'_> for Param {
     /// use crate::{context::NgynContext, NgynResponse};
     ///
     /// let mut cx = NgynContext::new();
-    /// let mut res = NgynResponse::new();
     ///
-    /// let param: Param = Param::transform(&mut cx, &mut res);
+    /// let param: Param = Param::transform(&mut cx);
     /// ```
     fn transform(cx: &mut NgynContext) -> Self {
         let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
@@ -196,13 +199,12 @@ impl Transformer<'_> for Query {
     /// use crate::{context::NgynContext, NgynResponse};
     /// use hyper::Uri;
     ///
-    /// let mut cx = NgynContext::new();
-    /// let mut res = NgynResponse::new();
+    /// let mut cx = NgynContext::default();
     ///
     /// let uri: Uri = "https://example.com/?id=123&name=John".parse().unwrap();
     /// cx.request.set_uri(uri);
     ///
-    /// let query: Query = Query::transform(&mut cx, &mut res);
+    /// let query: Query = Query::transform(&mut cx);
     /// ```
     fn transform(cx: &mut NgynContext) -> Self {
         Query {
@@ -212,12 +214,14 @@ impl Transformer<'_> for Query {
 }
 
 /// Represents a data transfer object struct.
-pub struct Body {
-    data: String,
+pub struct Body<'b> {
+    content_type: Option<&'b HeaderValue>,
+    data: &'b Vec<u8>,
 }
 
-impl Body {
+impl<'b> Body<'b> {
     /// Parses the data into the specified type using serde deserialization.
+    /// Once read, the body data is consumed and cannot be read again.
     ///
     /// ### Arguments
     ///
@@ -233,7 +237,7 @@ impl Body {
     /// use serde::Deserialize;
     ///
     /// let body = Body {
-    ///     data: r#"{"name": "John", "age": 30}"#.to_string(),
+    ///     data: r#"{"name": "John", "age": 30}"#.to_string().into_bytes(),
     /// };
     ///
     /// #[derive(Deserialize)]
@@ -244,16 +248,65 @@ impl Body {
     ///
     /// let result: Result<Person, serde_json::Error> = body.json();
     /// ```
-    pub fn json<S: for<'a> Deserialize<'a>>(&self) -> Result<S, serde_json::Error> {
-        serde_json::from_str(self.text())
+    pub fn json<S: for<'a> Deserialize<'a>>(self) -> Result<S, serde_json::Error> {
+        serde_json::from_str(&self.text())
     }
 
-    pub fn text(&self) -> &str {
-        &self.data
+    /// Reads the body data as a string.
+    /// Once read, the body data is consumed and cannot be read again.
+    ///
+    /// ### Returns
+    ///
+    /// * `String` - The body data as a string.
+    ///
+    /// ### Examples
+    ///
+    /// ```rust ignore
+    /// let body = Body {
+    ///    data: r#"{"name": "John", "age": 30}"#.to_string().into_bytes(),
+    /// };
+    ///
+    /// assert_eq!(body.text(), r#"{"name": "John", "age": 30}"#);
+    /// ```
+    pub fn text(self) -> String {
+        String::from_utf8_lossy(&self.data).to_string()
+    }
+
+    /// Parses the data into a `multipart/form-data` stream.
+    /// Once read, the body data is consumed and cannot be read again.
+    ///
+    /// ### Returns
+    ///
+    /// * `Multipart<'static>` - The body data as a `multipart/form-data` stream.
+    ///
+    /// ### Examples
+    ///
+    /// ```rust ignore
+    /// let body = Body {
+    ///    data: r#"------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="example.txt"\r\nContent-Type: text/plain\r\n\r\nHello World\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"#.to_string().into_bytes(),
+    /// };
+    ///
+    /// let stream = body.form_data();
+    /// ```
+    pub fn form_data(self) -> Result<Multipart<'b>, multer::Error> {
+        if let Some(content_type) = self.content_type {
+            let boundary = multer::parse_boundary(
+                content_type
+                    .to_str()
+                    .expect("Content Type header contains invalid ASCII value"),
+            )?;
+            let body: Full<Bytes> = Full::new(Bytes::from(self.data.to_owned()));
+            let stream = BodyStream::new(body).filter_map(|result| async move {
+                result.map(|frame| frame.into_data().ok()).transpose()
+            });
+            Ok(Multipart::new(stream, boundary))
+        } else {
+            Err(multer::Error::NoBoundary)
+        }
     }
 }
 
-impl Transformer<'_> for Body {
+impl<'a: 'b, 'b> Transformer<'a> for Body<'b> {
     /// Transforms the given `NgynContext` into a `Body` instance.
     ///
     /// ### Arguments
@@ -270,12 +323,12 @@ impl Transformer<'_> for Body {
     /// use crate::{context::NgynContext, NgynResponse};
     ///
     /// let mut cx = NgynContext::new();
-    /// let mut res = NgynResponse::new();
     ///
-    /// let dto: Body = Body::transform(&mut cx, &mut res);
+    /// let dto: Body = Body::transform(&mut cx);
     /// ```
-    fn transform(cx: &mut NgynContext) -> Self {
-        let data = String::from_utf8_lossy(cx.request().body()).to_string();
-        Body { data }
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        let data = cx.request().body();
+        let content_type = cx.request().headers().get(CONTENT_TYPE);
+        Body { data, content_type }
     }
 }

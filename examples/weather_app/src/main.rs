@@ -1,11 +1,11 @@
 mod middlewares;
-mod modules;
 mod shared;
+mod weather;
 
 use dotenv::dotenv;
-use modules::{get_location, post_location};
 use ngyn::prelude::*;
 use ngyn_shuttle::{ShuttleApplication, ShuttleNgyn};
+use weather::{get_location, post_location};
 
 use crate::middlewares::notfound_middleware::NotFoundMiddleware;
 
