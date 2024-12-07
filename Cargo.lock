@@ -320,7 +320,7 @@ checksum = "7319a086b79c3ff026a33a61e80f04fd3885fbb73237981ea080d21944e1cb1c"
 dependencies = [
  "base64 0.22.1",
  "bytes",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "http-serde",
  "query_map",
@@ -471,9 +471,9 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "bytes"
-version = "1.7.1"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8318a53db07bb3f8dca91a600466bdb3f2eaadeedfdbcf02e1accbad9271ba50"
+checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
 dependencies = [
  "serde",
 ]
@@ -1055,7 +1055,7 @@ dependencies = [
  "fnv",
  "futures-core",
  "futures-sink",
- "http 1.1.0",
+ "http 1.2.0",
  "indexmap 2.2.6",
  "slab",
  "tokio",
@@ -1121,9 +1121,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21b9ddb458710bc376481b842f5da65cdf31522de232c1ca8146abce2a358258"
+checksum = "f16ca2af56261c99fba8bac40a10251ce8188205a4c448fbb745a2e4daa76fea"
 dependencies = [
  "bytes",
  "fnv",
@@ -1148,7 +1148,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1cac85db508abc24a2e48553ba12a996e87244a0395ce011e62b37158745d643"
 dependencies = [
  "bytes",
- "http 1.1.0",
+ "http 1.2.0",
 ]
 
 [[package]]
@@ -1159,7 +1159,7 @@ checksum = "793429d76616a256bcb62c2a2ec2bed781c8307e797e2598c50010f2bee2544f"
 dependencies = [
  "bytes",
  "futures-util",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "pin-project-lite",
 ]
@@ -1170,7 +1170,7 @@ version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f056c8559e3757392c8d091e796416e4649d8e49e88b8d76df6c002f05027fd"
 dependencies = [
- "http 1.1.0",
+ "http 1.2.0",
  "serde",
 ]
 
@@ -1220,7 +1220,7 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "h2 0.4.5",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "httparse",
  "httpdate",
@@ -1252,7 +1252,7 @@ dependencies = [
  "bytes",
  "futures-channel",
  "futures-util",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "hyper 1.4.0",
  "pin-project-lite",
@@ -1459,7 +1459,7 @@ dependencies = [
  "encoding_rs",
  "futures",
  "futures-util",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "http-body-util",
  "hyper 1.4.0",
@@ -1484,7 +1484,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "futures",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "http-body-util",
  "http-serde",
@@ -1511,7 +1511,7 @@ dependencies = [
  "bytes",
  "futures-channel",
  "futures-util",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "http-body-util",
  "hyper 1.4.0",
@@ -1672,7 +1672,7 @@ dependencies = [
  "bytes",
  "encoding_rs",
  "futures-util",
- "http 1.1.0",
+ "http 1.2.0",
  "httparse",
  "memchr",
  "mime",
@@ -1684,7 +1684,7 @@ dependencies = [
 name = "ngyn"
 version = "0.4.5"
 dependencies = [
- "http 1.1.0",
+ "http 1.2.0",
  "ngyn-hyper 0.1.1",
  "ngyn_macros 0.4.5",
  "ngyn_shared 0.4.5",
@@ -1697,7 +1697,7 @@ source = "git+https://github.com/ngyn-rs/ngyn?branch=dev#d4d6fa35746c08cb181b746
 dependencies = [
  "async-std",
  "async-trait",
- "http 1.1.0",
+ "http 1.2.0",
  "ngyn-hyper 0.1.1 (git+https://github.com/ngyn-rs/ngyn?branch=dev)",
  "ngyn_macros 0.4.5 (git+https://github.com/ngyn-rs/ngyn?branch=dev)",
  "ngyn_shared 0.4.5 (git+https://github.com/ngyn-rs/ngyn?branch=dev)",
@@ -1791,7 +1791,7 @@ dependencies = [
 name = "ngyn_macros"
 version = "0.4.5"
 dependencies = [
- "http 1.1.0",
+ "http 1.2.0",
  "macrotest",
  "ngyn_shared 0.4.5",
  "quote",
@@ -1803,7 +1803,7 @@ name = "ngyn_macros"
 version = "0.4.5"
 source = "git+https://github.com/ngyn-rs/ngyn?branch=dev#d4d6fa35746c08cb181b7468e28224ffa967cb20"
 dependencies = [
- "http 1.1.0",
+ "http 1.2.0",
  "ngyn_shared 0.4.5 (git+https://github.com/ngyn-rs/ngyn?branch=dev)",
  "quote",
  "syn 2.0.77",
@@ -1831,7 +1831,7 @@ version = "0.4.5"
 dependencies = [
  "bytes",
  "futures-util",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body-util",
  "multer",
  "regex",
@@ -1848,7 +1848,7 @@ source = "git+https://github.com/ngyn-rs/ngyn?branch=dev#d4d6fa35746c08cb181b746
 dependencies = [
  "async-trait",
  "bytes",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body-util",
  "regex",
  "serde",
@@ -2918,7 +2918,7 @@ checksum = "1e9cd434a998747dd2c4276bc96ee2e0c7a2eadf3cae88e52be55a05fa9053f5"
 dependencies = [
  "bitflags 2.6.0",
  "bytes",
- "http 1.1.0",
+ "http 1.2.0",
  "http-body 1.0.0",
  "http-body-util",
  "pin-project-lite",
