@@ -1,8 +1,6 @@
 #![doc = include_str!("../README.md")]
 
 pub mod macros {
-    pub use async_std::main;
-    pub use async_trait::async_trait;
     pub use ngyn_macros::*;
 }
 

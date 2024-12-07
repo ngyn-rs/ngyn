@@ -6,14 +6,13 @@ use std::sync::Arc;
 use super::handler::RouteHandler;
 use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse},
-    traits::{Middleware, NgynInterpreter, NgynMiddleware},
+    traits::{Middleware, NgynMiddleware},
 };
 
 #[derive(Default)]
 pub struct PlatformData {
     routes: Vec<(String, Option<Method>, Box<RouteHandler>)>,
     middlewares: Vec<Box<dyn crate::traits::Middleware>>,
-    interpreters: Vec<Box<dyn NgynInterpreter>>,
     state: Option<Arc<Box<dyn AppState>>>,
 }
 
@@ -65,11 +64,6 @@ impl PlatformData {
             }
         }
 
-        // trigger interpreters
-        for interpreter in &self.interpreters {
-            interpreter.interpret(cx.response()).await;
-        }
-
         cx.response().clone()
     }
 
@@ -96,15 +90,6 @@ impl PlatformData {
     /// * `middleware` - The middleware to add.
     pub(self) fn add_middleware(&mut self, middleware: Box<dyn Middleware>) {
         self.middlewares.push(middleware);
-    }
-
-    /// Adds an interpreter to the platform data.
-    ///
-    /// ### Arguments
-    ///
-    /// * `interpreter` - The interpreter to add.
-    pub(self) fn add_interpreter(&mut self, interpreter: Box<dyn NgynInterpreter>) {
-        self.interpreters.push(interpreter);
     }
 }
 
@@ -182,15 +167,6 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().add_middleware(Box::new(middleware));
     }
 
-    /// Adds an interpreter to the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `interpreter` - The interpreter to add.
-    fn use_interpreter(&mut self, interpreter: impl NgynInterpreter + 'static) {
-        self.data_mut().add_interpreter(Box::new(interpreter));
-    }
-
     /// Sets the state of the application to any value that implements [`AppState`].
     ///
     /// ### Arguments
@@ -224,13 +200,6 @@ mod tests {
 
     impl NgynMiddleware for MockMiddleware {
         async fn handle(_cx: &mut NgynContext) {}
-    }
-
-    struct MockInterpreter;
-
-    #[async_trait::async_trait]
-    impl NgynInterpreter for MockInterpreter {
-        async fn interpret(&self, _res: &mut NgynResponse) {}
     }
 
     #[derive(Default)]
@@ -331,23 +300,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_respond_with_interpreter() {
-        let mut engine = MockEngine::default();
-        let interpreter = MockInterpreter;
-        engine.data_mut().add_interpreter(Box::new(interpreter));
-
-        let req = Request::builder()
-            .method(Method::GET)
-            .uri("/test")
-            .body(Vec::new())
-            .unwrap();
-
-        let res = engine.data.respond(req).await;
-
-        assert_eq!(res.status(), http::StatusCode::OK);
-    }
-
-    #[tokio::test]
     async fn test_respond_with_head_method() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
@@ -388,15 +340,6 @@ mod tests {
         engine.data_mut().add_middleware(Box::new(middleware));
 
         assert_eq!(engine.data.middlewares.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_add_interpreter() {
-        let mut engine = MockEngine::default();
-        let interpreter = MockInterpreter;
-        engine.data_mut().add_interpreter(Box::new(interpreter));
-
-        assert_eq!(engine.data.interpreters.len(), 1);
     }
 
     #[tokio::test]
@@ -478,15 +421,6 @@ mod tests {
         engine.use_middleware(middleware);
 
         assert_eq!(engine.data.middlewares.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_use_interpreter() {
-        let mut engine = MockEngine::default();
-        let interpreter = MockInterpreter;
-        engine.use_interpreter(interpreter);
-
-        assert_eq!(engine.data.interpreters.len(), 1);
     }
 
     #[tokio::test]
