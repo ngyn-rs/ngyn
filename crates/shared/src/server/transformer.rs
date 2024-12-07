@@ -269,7 +269,7 @@ impl<'b> Body<'b> {
     /// assert_eq!(body.text(), r#"{"name": "John", "age": 30}"#);
     /// ```
     pub fn text(self) -> String {
-        String::from_utf8_lossy(&self.data).to_string()
+        String::from_utf8_lossy(self.data).to_string()
     }
 
     /// Parses the data into a `multipart/form-data` stream.
