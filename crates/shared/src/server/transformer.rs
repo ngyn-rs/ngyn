@@ -6,16 +6,14 @@ use multer::Multipart;
 use serde::Deserialize;
 
 use crate::server::NgynContext;
-use std::borrow::Cow;
 
 /// Represents a transformer trait.
 pub trait Transformer<'a> {
-    /// Transforms the given `NgynContext` and `NgynResponse` and returns an instance of `Self`.
+    /// Transforms the given `NgynContext` and returns an instance of `Self`.
     ///
     /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
-    /// * `res` - The mutable reference to the `NgynResponse`.
     ///
     /// ### Examples
     ///
@@ -39,12 +37,11 @@ pub trait Transformer<'a> {
 pub struct Transducer;
 
 impl<'a> Transducer {
-    /// Reduces the given `NgynContext` and `NgynResponse` using the specified `Transformer` and returns an instance of `S`.
+    /// Reduces the given `NgynContext` using the specified `Transformer` and returns an instance of `S`.
     ///
     /// ### Arguments
     ///
     /// * `cx` - The mutable reference to the `NgynContext`.
-    /// * `res` - The mutable reference to the `NgynResponse`.
     ///
     /// ### Examples
     ///
@@ -70,11 +67,11 @@ impl<'a> Transducer {
 }
 
 /// Represents a parameter struct.
-pub struct Param {
-    data: Vec<(Cow<'static, str>, Cow<'static, str>)>,
+pub struct Param<'a> {
+    data: Vec<(&'a str, &'a str)>,
 }
 
-impl Param {
+impl<'a> Param<'a> {
     /// Retrieves the value associated with the specified `id` from the parameter data.
     ///
     /// ### Arguments
@@ -91,8 +88,8 @@ impl Param {
     /// ```rust ignore
     /// let param = Param {
     ///     data: vec![
-    ///         (Cow::Borrowed("id"), Cow::Borrowed("123")),
-    ///         (Cow::Borrowed("name"), Cow::Borrowed("John")),
+    ///         ("id", "123"),
+    ///         ("name", "John"),
     ///     ],
     /// };
     ///
@@ -102,7 +99,7 @@ impl Param {
     /// ```
     pub fn get(&self, id: &str) -> Option<String> {
         for (key, value) in &self.data {
-            if key == id {
+            if *key == id {
                 return Some(value.to_string());
             }
         }
@@ -110,7 +107,7 @@ impl Param {
     }
 }
 
-impl Transformer<'_> for Param {
+impl<'a: 'b, 'b> Transformer<'a> for Param<'b> {
     /// Transforms the given `NgynContext` into a `Param` instance.
     ///
     /// ### Arguments
@@ -130,23 +127,23 @@ impl Transformer<'_> for Param {
     ///
     /// let param: Param = Param::transform(&mut cx);
     /// ```
-    fn transform(cx: &mut NgynContext) -> Self {
-        let data: Vec<(Cow<'static, str>, Cow<'static, str>)> = cx
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        let data: Vec<(&'a str, &'a str)> = cx
             .params()
-            .unwrap_or_else(|| panic!("Extracting params should only be done in routes.")) // Infallible, only fails if the route is invalid
+            .unwrap_or_else(|| panic!("Extracting params should only be done in route handlers.")) // Infallible, only fails if the route is invalid
             .iter()
-            .map(|(key, value)| (Cow::Owned(key.to_string()), Cow::Owned(value.to_string())))
+            .map(|(key, value)| (key.as_str(), value.as_str()))
             .collect();
         Param { data }
     }
 }
 
 /// Represents a query struct.
-pub struct Query {
-    url: http::uri::Uri,
+pub struct Query<'q> {
+    url: &'q http::uri::Uri,
 }
 
-impl Query {
+impl<'q> Query<'q> {
     /// Retrieves the value associated with the specified `id` from the query parameters.
     ///
     /// ### Arguments
@@ -164,7 +161,7 @@ impl Query {
     /// use hyper::Uri;
     ///
     /// let uri: Uri = "https://example.com/?id=123&name=John".parse().unwrap();
-    /// let query = Query { url: uri };
+    /// let query = Query { url: &uri };
     ///
     /// assert_eq!(query.get("id"), Some("123".to_string()));
     /// assert_eq!(query.get("name"), Some("John".to_string()));
@@ -182,7 +179,7 @@ impl Query {
     }
 }
 
-impl Transformer<'_> for Query {
+impl<'a: 'q, 'q> Transformer<'a> for Query<'q> {
     /// Transforms the given `NgynContext` into a `Query` instance.
     ///
     /// ### Arguments
@@ -206,9 +203,9 @@ impl Transformer<'_> for Query {
     ///
     /// let query: Query = Query::transform(&mut cx);
     /// ```
-    fn transform(cx: &mut NgynContext) -> Self {
+    fn transform(cx: &'a mut NgynContext) -> Self {
         Query {
-            url: cx.request().uri().clone(),
+            url: &cx.request().uri(),
         }
     }
 }
