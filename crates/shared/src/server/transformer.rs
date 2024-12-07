@@ -205,7 +205,7 @@ impl<'a: 'q, 'q> Transformer<'a> for Query<'q> {
     /// ```
     fn transform(cx: &'a mut NgynContext) -> Self {
         Query {
-            url: &cx.request().uri(),
+            url: cx.request().uri(),
         }
     }
 }
