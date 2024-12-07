@@ -121,10 +121,9 @@ impl<'a: 'b, 'b> Transformer<'a> for Param<'b> {
     /// ### Examples
     ///
     /// ```rust ignore
-    /// use crate::{context::NgynContext, NgynResponse};
+    /// use crate::context::NgynContext;
     ///
-    /// let mut cx = NgynContext::new();
-    ///
+    /// let mut cx = NgynContext::default();
     /// let param: Param = Param::transform(&mut cx);
     /// ```
     fn transform(cx: &'a mut NgynContext) -> Self {
@@ -140,7 +139,7 @@ impl<'a: 'b, 'b> Transformer<'a> for Param<'b> {
 
 /// Represents a query struct.
 pub struct Query<'q> {
-    url: &'q http::uri::Uri,
+    uri: &'q http::uri::Uri,
 }
 
 impl<'q> Query<'q> {
@@ -161,14 +160,14 @@ impl<'q> Query<'q> {
     /// use hyper::Uri;
     ///
     /// let uri: Uri = "https://example.com/?id=123&name=John".parse().unwrap();
-    /// let query = Query { url: &uri };
+    /// let query = Query { uri: &uri };
     ///
     /// assert_eq!(query.get("id"), Some("123".to_string()));
     /// assert_eq!(query.get("name"), Some("John".to_string()));
     /// assert_eq!(query.get("age"), None);
     /// ```
     pub fn get(&self, id: &str) -> Option<String> {
-        let query = self.url.query().unwrap_or("");
+        let query = self.uri.query().unwrap_or("");
         let query = url::form_urlencoded::parse(query.as_bytes());
         for (key, value) in query {
             if key == id {
@@ -193,7 +192,7 @@ impl<'a: 'q, 'q> Transformer<'a> for Query<'q> {
     /// ### Examples
     ///
     /// ```rust ignore
-    /// use crate::{context::NgynContext, NgynResponse};
+    /// use crate::context::NgynContext;
     /// use hyper::Uri;
     ///
     /// let mut cx = NgynContext::default();
@@ -205,7 +204,7 @@ impl<'a: 'q, 'q> Transformer<'a> for Query<'q> {
     /// ```
     fn transform(cx: &'a mut NgynContext) -> Self {
         Query {
-            url: cx.request().uri(),
+            uri: cx.request().uri(),
         }
     }
 }
@@ -317,9 +316,9 @@ impl<'a: 'b, 'b> Transformer<'a> for Body<'b> {
     /// ### Examples
     ///
     /// ```rust ignore
-    /// use crate::{context::NgynContext, NgynResponse};
+    /// use crate::context::NgynContext;
     ///
-    /// let mut cx = NgynContext::new();
+    /// let mut cx = NgynContext::default();
     ///
     /// let dto: Body = Body::transform(&mut cx);
     /// ```
