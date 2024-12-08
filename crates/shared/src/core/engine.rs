@@ -1,6 +1,7 @@
 use bytes::Bytes;
 use http::Request;
 use http_body_util::Full;
+use matchit::{Match, Router};
 use std::sync::Arc;
 
 use super::handler::RouteHandler;
@@ -11,7 +12,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct PlatformData {
-    routes: Vec<(String, Option<Method>, Box<RouteHandler>)>,
+    router: Router<RouteHandler>,
     middlewares: Vec<Box<dyn crate::traits::Middleware>>,
     state: Option<Arc<Box<dyn AppState>>>,
 }
@@ -28,21 +29,20 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
+        let path = &req.uri().to_string();
         let mut cx = NgynContext::from_request(req);
 
         if let Some(state) = &self.state {
             cx.state = Some(state.into());
         }
 
-        let route_handler = self
-            .routes
-            .iter()
-            .find_map(|(path, method, route_handler)| {
-                if cx.with(path, method.as_ref()).is_some() {
-                    return Some(route_handler);
-                }
-                None
-            });
+        let route_info = self.router.at(path);
+        let mut route_handler = None;
+
+        if let Ok(Match { params, value, .. }) = route_info {
+            // cx.params = Some(params);
+            route_handler = Some(value);
+        }
 
         // trigger global middlewares
         for middleware in &self.middlewares {
@@ -51,7 +51,7 @@ impl PlatformData {
 
         // execute controlled route if it is handled
         if let Some(route_handler) = route_handler {
-            match route_handler.as_ref() {
+            match route_handler {
                 RouteHandler::Sync(handler) => handler(&mut cx),
                 RouteHandler::Async(async_handler) => {
                     async_handler(&mut cx).await;
@@ -74,13 +74,10 @@ impl PlatformData {
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
-    pub(self) fn add_route(
-        &mut self,
-        path: String,
-        method: Option<Method>,
-        handler: Box<RouteHandler>,
-    ) {
-        self.routes.push((path, method, handler));
+    pub(self) fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
+        let mut route = method.map(|method| method.to_string()).unwrap_or_default();
+        route.push_str(&path);
+        self.router.insert(route, handler).unwrap();
     }
 
     /// Adds a middleware to the platform data.
@@ -120,12 +117,11 @@ pub trait NgynEngine: NgynPlatform {
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: impl Into<RouteHandler>) {
         self.data_mut()
-            .add_route(path.to_string(), Some(method), Box::new(handler.into()));
+            .add_route(path, Some(method), handler.into());
     }
 
     fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
-        self.data_mut()
-            .add_route(path.to_string(), None, Box::new(handler.into()));
+        self.data_mut().add_route(path, None, handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -266,11 +262,9 @@ mod tests {
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine.data_mut().add_route(
-            "/test".to_string(),
-            Some(Method::GET),
-            Box::new(RouteHandler::Sync(handler)),
-        );
+        engine
+            .data_mut()
+            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         let req = Request::builder()
             .method(Method::GET)
@@ -303,11 +297,9 @@ mod tests {
     async fn test_respond_with_head_method() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine.data_mut().add_route(
-            "/test".to_string(),
-            Some(Method::GET),
-            Box::new(RouteHandler::Sync(handler)),
-        );
+        engine
+            .data_mut()
+            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         let req = Request::builder()
             .method(Method::HEAD)
@@ -324,13 +316,11 @@ mod tests {
     async fn test_add_route() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine.data_mut().add_route(
-            "/test".to_string(),
-            Some(Method::GET),
-            Box::new(RouteHandler::Sync(handler)),
-        );
+        engine
+            .data_mut()
+            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -348,7 +338,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.route("/test", Method::GET, handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -357,7 +347,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.any("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -366,7 +356,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.get("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -375,7 +365,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.post("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -384,7 +374,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.put("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -393,7 +383,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.delete("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -402,7 +392,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.patch("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]
@@ -411,7 +401,7 @@ mod tests {
         let handler: Box<Handler> = Box::new(|_| {});
         engine.head("/test", handler);
 
-        assert_eq!(engine.data.routes.len(), 1);
+        engine.data.router.at("/test");
     }
 
     #[tokio::test]

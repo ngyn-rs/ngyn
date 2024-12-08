@@ -26,12 +26,6 @@ pub(crate) fn service_macro(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         impl #impl_generics ngyn::shared::server::Transformer<'_> for #ident #ty_generics #where_clause {
             fn transform(cx: &mut ngyn::prelude::NgynContext) -> Self {
-                Self::default()
-            }
-        }
-
-        impl #impl_generics Default for #ident #ty_generics #where_clause {
-            fn default() -> Self {
                 Self {
                     #(#fields)*
                 }

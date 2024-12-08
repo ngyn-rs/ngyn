@@ -13,7 +13,7 @@ use crate::server::NgynContext;
 ///
 /// ```rust
 /// use ngyn_shared::traits::NgynGate;
-/// use ngyn_shared::server::{NgynContext, NgynResponse};
+/// use ngyn_shared::server::NgynContext;
 ///
 /// pub struct AuthGate {}
 ///
@@ -58,7 +58,7 @@ pub trait NgynGate: Send + Sync {
 ///
 /// ```rust
 /// use ngyn_shared::traits::NgynMiddleware;
-/// use ngyn_shared::server::{NgynContext, NgynResponse};
+/// use ngyn_shared::server::NgynContext;
 ///
 /// pub struct RequestReceivedLogger {}
 ///
@@ -77,12 +77,8 @@ pub trait NgynMiddleware: Send + Sync {
 }
 
 pub(crate) trait Middleware: Send + Sync {
-    fn run<'a>(
-        &'a self,
-        _cx: &'a mut NgynContext,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
-        Box::pin(async move {})
-    }
+    fn run<'a>(&'a self, _cx: &'a mut NgynContext)
+        -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
 }
 
 impl<'b, T: NgynMiddleware + Send + 'b> Middleware for T {

@@ -41,18 +41,12 @@ use crate::server::{NgynContext, NgynResponse, Transformer};
 ///
 /// #### Example
 /// ```rust ignore
+/// use serde_json::json;
 /// use ngyn::prelude::*;
 ///
-/// #[controller]
-/// struct MyController;
-///
-/// #[routes]
-/// impl MyController {
-///    #[get("/")]
-///   async fn get(&self, cx: &mut NgynContext) -> Result<Vec<u8>, ()> {
-///    let data = vec![1, 2, 3];
-///    Ok(data)
-///   }
+/// #[handler]
+/// fn handle_json_response() -> JsonResult {
+///     Ok(json!({ "key": "value" }))
 /// }
 /// ```
 pub struct JsonResponse<D: Serialize, E: Serialize> {
@@ -85,6 +79,7 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
 /// ### Example
 ///
 /// ```rust ignore
+/// use serde_json::json;
 /// use ngyn::prelude::*;
 ///
 /// #[handler]

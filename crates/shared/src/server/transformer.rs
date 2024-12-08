@@ -23,7 +23,7 @@ pub trait Transformer<'a> {
     /// impl Transformer for MyTransformer {
     ///     fn transform(cx: &mut NgynContext) -> Self {
     ///         // Transformation logic goes here
-    ///         MyTransformer
+    ///         MyTransformer {}
     ///     }
     /// }
     /// ```

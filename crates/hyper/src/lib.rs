@@ -32,7 +32,7 @@ impl HyperApplication {
     pub async fn listen<A: tokio::net::ToSocketAddrs>(
         self,
         address: A,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), std::io::Error> {
         let server = TcpListener::bind(address).await?;
 
         let data = Arc::new(self.data);

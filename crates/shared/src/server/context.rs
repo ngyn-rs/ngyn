@@ -43,9 +43,10 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 
         let state_ptr: *const dyn AppState = state_ref as *const dyn AppState;
 
-        // SAFETY: state_ptr is not null, it is safe to convert it to a NonNull pointer, this way we can safely convert it back to a Box
+        // SAFETY: state_ptr is never null, it is safe to convert it to a NonNull pointer, this way we can safely convert it back to a Box
+        // If it is ever found as null, this is a bug. It probably means the memory has been poisoned
         let nn_ptr = std::ptr::NonNull::new(state_ptr as *mut dyn AppState)
-            .expect("State has been dropped, ensure it is being cloned correctly."); // This should never happen, if it does, it's a bug
+            .expect("State has been dropped, but this should never happen, ensure it is being cloned correctly."); // This should never happen, if it does, it's a bug
         let raw_ptr = nn_ptr.as_ptr();
 
         unsafe { Box::from_raw(raw_ptr) }
