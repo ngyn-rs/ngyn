@@ -1,6 +1,5 @@
 use bytes::Bytes;
 use http::Request;
-use http_body_util::Full;
 use matchit::{Match, Router};
 use std::sync::Arc;
 
@@ -40,7 +39,12 @@ impl PlatformData {
         let mut route_handler = None;
 
         if let Ok(Match { params, value, .. }) = route_info {
-            // cx.params = Some(params);
+            cx.params = Some(
+                params
+                    .iter()
+                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .collect(),
+            );
             route_handler = Some(value);
         }
 
@@ -60,7 +64,7 @@ impl PlatformData {
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
-                *cx.response().body_mut() = Full::new(Bytes::default());
+                *cx.response().body_mut() = Bytes::default().into();
             }
         }
 
@@ -320,7 +324,7 @@ mod tests {
             .data_mut()
             .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
-        engine.data.router.at("/test");
+        assert!(engine.data.router.at("/test").is_ok());
     }
 
     #[tokio::test]
@@ -330,78 +334,6 @@ mod tests {
         engine.data_mut().add_middleware(Box::new(middleware));
 
         assert_eq!(engine.data.middlewares.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_route() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.route("/test", Method::GET, handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_any() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.any("/test", handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_get() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.get("/test", handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_post() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.post("/test", handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_put() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.put("/test", handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_delete() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.delete("/test", handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_patch() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.patch("/test", handler);
-
-        engine.data.router.at("/test");
-    }
-
-    #[tokio::test]
-    async fn test_head() {
-        let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
-        engine.head("/test", handler);
-
-        engine.data.router.at("/test");
     }
 
     #[tokio::test]
