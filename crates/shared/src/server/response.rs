@@ -37,7 +37,7 @@ use crate::server::{NgynContext, NgynResponse, Transformer};
 ///
 /// ### How to create a json response?
 /// Ngyn provides an implementation on [`JsonResult`] to convert it to a json response.
-/// This means anytime you make use of a `JsonResult` in your controlled routes, it will be converted to a json response.
+/// This means anytime you make use of a `JsonResult` in your handlers, it will be converted to a json response.
 ///
 /// #### Example
 /// ```rust ignore

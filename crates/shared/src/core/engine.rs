@@ -56,7 +56,7 @@ impl PlatformData {
             middleware.run(&mut cx).await;
         }
 
-        // execute controlled route if it is handled
+        // run the route handler
         if let Some(route_handler) = route_handler {
             match route_handler {
                 RouteHandler::Sync(handler) => handler(&mut cx),
