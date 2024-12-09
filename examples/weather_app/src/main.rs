@@ -13,8 +13,8 @@ async fn main() -> ShuttleNgyn {
     dotenv().ok();
     let mut app = ShuttleApplication::default();
 
-    app.get("/<location>/<city>", async_wrap(get_location));
-    app.post("/", async_wrap(post_location));
+    app.get("/{location}/{city}", async_wrap(get_location));
+    app.any("/", async_wrap(post_location));
 
     app.use_middleware(NotFoundMiddleware {});
 

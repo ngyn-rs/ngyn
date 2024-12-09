@@ -56,7 +56,7 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 /// Represents the context of a request in Ngyn
 pub struct NgynContext {
     request: Request<Vec<u8>>,
-    response: NgynResponse,
+    pub(crate) response: NgynResponse,
     pub(crate) params: Option<Vec<(String, String)>>,
     store: HashMap<String, String>,
     pub(crate) state: Option<Box<dyn AppState>>,

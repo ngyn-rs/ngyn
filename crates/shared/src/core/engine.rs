@@ -28,15 +28,15 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
-        let path = &req.uri().to_string();
+        let path = req.method().to_string() + req.uri().path();
         let mut cx = NgynContext::from_request(req);
 
         if let Some(state) = &self.state {
             cx.state = Some(state.into());
         }
 
-        let route_info = self.router.at(path);
         let mut route_handler = None;
+        let route_info = self.router.at(&path);
 
         if let Ok(Match { params, value, .. }) = route_info {
             cx.params = Some(
@@ -46,6 +46,9 @@ impl PlatformData {
                     .collect(),
             );
             route_handler = Some(value);
+        } else {
+            // if no route is found, we should return a 404 response
+            *cx.response().status_mut() = http::StatusCode::NOT_FOUND;
         }
 
         // trigger global middlewares
@@ -68,7 +71,7 @@ impl PlatformData {
             }
         }
 
-        cx.response().clone()
+        cx.response
     }
 
     /// Adds a route to the platform data.
@@ -79,8 +82,10 @@ impl PlatformData {
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
     pub(self) fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
-        let mut route = method.map(|method| method.to_string()).unwrap_or_default();
-        route.push_str(&path);
+        let route = method
+            .map(|method| method.to_string())
+            .unwrap_or("{METHOD}".to_string())
+            + path;
         self.router.insert(route, handler).unwrap();
     }
 
@@ -112,7 +117,7 @@ pub trait NgynEngine: NgynPlatform {
     /// ### Examples
     ///
     /// ```rust ignore
-    /// use crate::{Method, NgynEngine};
+    /// # use crate::{Method, NgynEngine};
     ///
     /// struct MyEngine;
     ///
@@ -324,7 +329,7 @@ mod tests {
             .data_mut()
             .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
-        assert!(engine.data.router.at("/test").is_ok());
+        assert!(engine.data.router.at("GET/test").is_ok());
     }
 
     #[tokio::test]

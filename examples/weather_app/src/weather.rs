@@ -70,12 +70,12 @@ pub struct GetWeatherParams {
     // pub city: String,
 }
 
-#[handler(middlewares=[TestMiddleware], gates=[WeatherGate])]
+#[handler(middlewares=[TestMiddleware])]
 pub async fn get_location(
     params: GetWeatherParams,
     weather_service: WeatherService,
 ) -> Result<String, Value> {
-    println!("{:?}", "Getting location weather");
+    println!("Getting location weather for {:?}", params.location);
     if !params.location.is_empty() {
         match weather_service.get_weather(&params.location).await {
             Ok(r) => Ok(r),
