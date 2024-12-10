@@ -18,7 +18,7 @@ use crate::server::NgynContext;
 /// pub struct AuthGate {}
 ///
 /// impl NgynGate for AuthGate {
-///    async fn can_activate(cx: &mut NgynContext) -> bool {
+///    async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
 ///      // Check if the user is authenticated
 ///      // If the user is authenticated, return true
 ///      // Otherwise, return false
@@ -38,7 +38,7 @@ pub trait NgynGate: Send + Sync {
     ///
     /// Returns `true` if the route can activate, `false` otherwise.
     #[allow(async_fn_in_trait, unused_variables)]
-    async fn can_activate(cx: &mut NgynContext) -> bool {
+    async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
         true // default implementation
     }
 }
@@ -63,7 +63,7 @@ pub trait NgynGate: Send + Sync {
 /// pub struct RequestReceivedLogger {}
 ///
 /// impl NgynMiddleware for RequestReceivedLogger {
-///   async fn handle(cx: &mut NgynContext) {
+///   async fn handle(cx: &mut NgynContext<'_>) {
 ///    println!("Request received: {:?}", cx.request());
 ///  }
 /// }
@@ -71,18 +71,23 @@ pub trait NgynGate: Send + Sync {
 pub trait NgynMiddleware: Send + Sync {
     /// Handles the request.
     #[allow(async_fn_in_trait)]
-    fn handle(cx: &mut NgynContext) -> impl std::future::Future<Output = ()> + Send
+    fn handle(cx: &mut NgynContext<'_>) -> impl std::future::Future<Output = ()> + Send
     where
         Self: Sized;
 }
 
 pub(crate) trait Middleware: Send + Sync {
-    fn run<'a>(&'a self, _cx: &'a mut NgynContext)
-        -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+    fn run<'a>(
+        &'a self,
+        _cx: &'a mut NgynContext<'_>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
 }
 
 impl<'b, T: NgynMiddleware + Send + 'b> Middleware for T {
-    fn run<'a>(&'a self, cx: &'a mut NgynContext) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
+    fn run<'a>(
+        &'a self,
+        cx: &'a mut NgynContext<'_>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
         Box::pin(T::handle(cx))
     }
 }

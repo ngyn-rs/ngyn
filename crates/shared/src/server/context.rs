@@ -1,4 +1,5 @@
 use http::Request;
+use matchit::Params;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, sync::Arc};
 
@@ -54,15 +55,15 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 }
 
 /// Represents the context of a request in Ngyn
-pub struct NgynContext {
+pub struct NgynContext<'a> {
     request: Request<Vec<u8>>,
     pub(crate) response: NgynResponse,
-    pub(crate) params: Option<Vec<(String, String)>>,
-    store: HashMap<String, String>,
+    pub(crate) params: Option<Params<'a, 'a>>,
+    store: HashMap<&'a str, String>,
     pub(crate) state: Option<Box<dyn AppState>>,
 }
 
-impl NgynContext {
+impl<'a> NgynContext<'a> {
     /// Retrieves the request associated with the context.
     ///
     /// ### Returns
@@ -104,12 +105,12 @@ impl NgynContext {
     ///
     /// let params_ref = context.params();
     /// ```
-    pub fn params(&self) -> Option<&Vec<(String, String)>> {
+    pub fn params(&self) -> Option<&Params<'a, 'a>> {
         self.params.as_ref()
     }
 }
 
-impl NgynContext {
+impl NgynContext<'_> {
     /// Retrieves the state of the context as a reference to the specified type.
     ///
     /// # Type Parameters
@@ -163,7 +164,7 @@ impl NgynContext {
     }
 }
 
-impl NgynContext {
+impl<'b> NgynContext<'b> {
     /// Retrieves the value associated with the given key from the context.
     ///
     /// ### Arguments
@@ -213,9 +214,9 @@ impl NgynContext {
     /// let value: String = context.get("name").unwrap();
     /// assert_eq!(value, "John".to_string());
     /// ```
-    pub fn set<V: Serialize>(&mut self, key: &str, value: V) {
+    pub fn set<V: Serialize>(&mut self, key: &'b str, value: V) {
         if let Ok(value) = serde_json::to_string(&NgynContextValue::create(value)) {
-            self.store.insert(key.trim().to_lowercase(), value);
+            self.store.insert(key.trim(), value);
         }
     }
 
@@ -328,7 +329,7 @@ impl NgynContext {
     }
 }
 
-impl NgynContext {
+impl NgynContext<'_> {
     /// Creates a new `NgynContext` from the given request.
     ///
     /// ### Arguments
@@ -360,17 +361,17 @@ impl NgynContext {
     }
 }
 
-impl<'a> Transformer<'a> for &'a NgynContext {
+impl<'a> Transformer<'a> for &'a NgynContext<'a> {
     fn transform(cx: &'a mut NgynContext) -> Self {
         cx
     }
 }
 
-impl<'a> Transformer<'a> for &'a mut NgynContext {
-    fn transform(cx: &'a mut NgynContext) -> Self {
-        cx
-    }
-}
+// impl<'a: 'b, 'b> Transformer<'a> for &'a mut NgynContext<'b> {
+//     fn transform(cx: &'a mut NgynContext) -> Self {
+//         cx
+//     }
+// }
 
 impl<'a> Transformer<'a> for &'a NgynRequest {
     fn transform(cx: &'a mut NgynContext) -> Self {

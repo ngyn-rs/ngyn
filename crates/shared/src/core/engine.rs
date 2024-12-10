@@ -39,12 +39,7 @@ impl PlatformData {
         let route_info = self.router.at(&path);
 
         if let Ok(Match { params, value, .. }) = route_info {
-            cx.params = Some(
-                params
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
-                    .collect(),
-            );
+            cx.params = Some(params);
             route_handler = Some(value);
         } else {
             // if no route is found, we should return a 404 response
@@ -206,7 +201,7 @@ mod tests {
     struct MockMiddleware;
 
     impl NgynMiddleware for MockMiddleware {
-        async fn handle(cx: &mut NgynContext) {
+        async fn handle(cx: &mut NgynContext<'_>) {
             *cx.response().status_mut() = StatusCode::OK;
         }
     }

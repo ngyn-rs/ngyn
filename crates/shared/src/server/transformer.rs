@@ -129,9 +129,8 @@ impl<'a: 'b, 'b> Transformer<'a> for Param<'b> {
     fn transform(cx: &'a mut NgynContext) -> Self {
         let data: Vec<(&'a str, &'a str)> = cx
             .params()
-            .unwrap_or_else(|| panic!("Extracting params should only be done in route handlers.")) // Infallible, only fails if the route is invalid
+            .unwrap_or_else(|| panic!("Extracting params should only be done in route handlers."))
             .iter()
-            .map(|(key, value)| (key.as_str(), value.as_str()))
             .collect();
         Param { data }
     }

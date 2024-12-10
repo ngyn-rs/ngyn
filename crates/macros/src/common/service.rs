@@ -25,7 +25,7 @@ pub(crate) fn service_macro(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #impl_generics ngyn::shared::server::Transformer<'_> for #ident #ty_generics #where_clause {
-            fn transform(cx: &mut ngyn::prelude::NgynContext) -> Self {
+            fn transform(cx: &mut ngyn::prelude::NgynContext<'_>) -> Self {
                 Self {
                     #(#fields)*
                 }

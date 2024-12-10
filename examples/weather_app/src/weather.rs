@@ -8,7 +8,7 @@ use crate::middlewares::test_middleware::TestMiddleware;
 pub struct WeatherGate;
 
 impl NgynGate for WeatherGate {
-    async fn can_activate(cx: &mut NgynContext) -> bool {
+    async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
         let query = Query::transform(cx);
         if query.get("location").is_some() {
             return true;
