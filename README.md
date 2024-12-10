@@ -6,14 +6,16 @@
 ![MSRV](https://img.shields.io/badge/MSRV-1.75-blue)
 [![Made in Nigeria](https://img.shields.io/badge/made%20in-nigeria-008751.svg?style=flat-square)](https://github.com/acekyd/made-in-nigeria)
 
-A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web servers through an opinionated architecture.
+A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web servers.
 
 More information about Ngyn can be found in the [documentation](https://ngyn.rs).
 
 ## Features
 
-- Macro API for organizing your application into reusable components
-- Asynchronous middleware for handling requests and responses
+- Battle tested Ergonomic API.
+- Performance-balanced approaches
+- Optional Macro API for enhancing route handlers
+- Asynchronous access gates and middleware for handling requests and responses
 - Asynchronous routing support for defining routes
 - [Platform-agnostic](#platform-agnosticism) for supporting multiple libraries and frameworks
 

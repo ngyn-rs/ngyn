@@ -94,17 +94,13 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
                     panic!("Expected a reference or a path");
                 }
             };
-            let arg_def = quote! {
+            let arg = quote! {
                 #and_token #mutability ngyn::prelude::Transducer::reduce::<#and_token #mutability #path>(cx)
             };
             if args.is_none() {
-                Some(quote! {
-                    #arg_def
-                })
+                Some(quote! { #arg })
             } else {
-                Some(quote! {
-                    #args, #arg_def
-                })
+                Some(quote! { #args, #arg })
             }
         } else {
             args
@@ -137,16 +133,16 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let handle_body = if asyncness.is_some() {
         match output {
             syn::ReturnType::Type(_, ty) => quote! {
-                let fn_body = (|#inputs| async move #block);
-                Box::pin(async move {
+                let fn_body = (|#inputs| #asyncness move #block);
+                Box::pin(#asyncness move {
                     #exe_block;
                     let output: #ty = fn_body(#args).await;
                     *cx.response().body_mut() = output.to_bytes().into();
                 })
             },
             _ => quote! {
-                let fn_body = (|#inputs| async move #block);
-                Box::pin(async move {
+                let fn_body = (|#inputs| #asyncness move #block);
+                Box::pin(#asyncness move {
                     #exe_block
                     fn_body(#args).await;
                 })
@@ -163,14 +159,12 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
             },
         }
     };
-    let output = if asyncness.is_some() {
+
+    let output = asyncness.map(|_t| {
         let r_arrow = RArrow::default();
-        Some(
-            quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_cx_lifetime>> },
-        )
-    } else {
-        None
-    };
+        quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_cx_lifetime>> }
+    });
+
     quote! {
         #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext) #output {
             #handle_body

@@ -6,7 +6,7 @@ struct UserParam {
     name: String,
 }
 impl ngyn::shared::server::Transformer<'_> for UserParam {
-    fn transform(cx: &mut ngyn::prelude::NgynContext) -> Self {
+    fn transform(cx: &mut ngyn::prelude::NgynContext<'_>) -> Self {
         let param = ngyn::shared::server::Param::transform(cx);
         UserParam {
             id: param.get("id").unwrap_or_default(),

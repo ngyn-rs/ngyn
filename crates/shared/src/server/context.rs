@@ -1,8 +1,9 @@
 use http::Request;
+use matchit::Params;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, collections::HashMap, sync::Arc};
 
-use crate::server::{uri::ToParams, Method, NgynRequest, NgynResponse, Transformer};
+use crate::server::{NgynRequest, NgynResponse, Transformer};
 
 /// Represents the value of a context in Ngyn
 #[derive(Serialize, Deserialize)]
@@ -43,9 +44,10 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 
         let state_ptr: *const dyn AppState = state_ref as *const dyn AppState;
 
-        // SAFETY: state_ptr is not null, it is safe to convert it to a NonNull pointer, this way we can safely convert it back to a Box
+        // SAFETY: state_ptr is never null, it is safe to convert it to a NonNull pointer, this way we can safely convert it back to a Box
+        // If it is ever found as null, this is a bug. It probably means the memory has been poisoned
         let nn_ptr = std::ptr::NonNull::new(state_ptr as *mut dyn AppState)
-            .expect("State has been dropped, ensure it is being cloned correctly."); // This should never happen, if it does, it's a bug
+            .expect("State has been dropped, but this should never happen, ensure it is being cloned correctly."); // This should never happen, if it does, it's a bug
         let raw_ptr = nn_ptr.as_ptr();
 
         unsafe { Box::from_raw(raw_ptr) }
@@ -53,15 +55,15 @@ impl From<&Arc<Box<dyn AppState>>> for Box<dyn AppState> {
 }
 
 /// Represents the context of a request in Ngyn
-pub struct NgynContext {
+pub struct NgynContext<'a> {
     request: Request<Vec<u8>>,
-    response: NgynResponse,
-    params: Option<Vec<(String, String)>>,
-    store: HashMap<String, String>,
+    pub(crate) response: NgynResponse,
+    pub(crate) params: Option<Params<'a, 'a>>,
+    store: HashMap<&'a str, String>,
     pub(crate) state: Option<Box<dyn AppState>>,
 }
 
-impl NgynContext {
+impl<'a> NgynContext<'a> {
     /// Retrieves the request associated with the context.
     ///
     /// ### Returns
@@ -103,12 +105,12 @@ impl NgynContext {
     ///
     /// let params_ref = context.params();
     /// ```
-    pub fn params(&self) -> Option<&Vec<(String, String)>> {
+    pub fn params(&self) -> Option<&Params<'a, 'a>> {
         self.params.as_ref()
     }
 }
 
-impl NgynContext {
+impl NgynContext<'_> {
     /// Retrieves the state of the context as a reference to the specified type.
     ///
     /// # Type Parameters
@@ -162,7 +164,7 @@ impl NgynContext {
     }
 }
 
-impl NgynContext {
+impl<'b> NgynContext<'b> {
     /// Retrieves the value associated with the given key from the context.
     ///
     /// ### Arguments
@@ -212,9 +214,9 @@ impl NgynContext {
     /// let value: String = context.get("name").unwrap();
     /// assert_eq!(value, "John".to_string());
     /// ```
-    pub fn set<V: Serialize>(&mut self, key: &str, value: V) {
+    pub fn set<V: Serialize>(&mut self, key: &'b str, value: V) {
         if let Ok(value) = serde_json::to_string(&NgynContextValue::create(value)) {
-            self.store.insert(key.trim().to_lowercase(), value);
+            self.store.insert(key.trim(), value);
         }
     }
 
@@ -327,7 +329,7 @@ impl NgynContext {
     }
 }
 
-impl NgynContext {
+impl NgynContext<'_> {
     /// Creates a new `NgynContext` from the given request.
     ///
     /// ### Arguments
@@ -357,62 +359,19 @@ impl NgynContext {
             state: None,
         }
     }
-
-    /// Sets the route information for the context.
-    ///
-    /// ### Arguments
-    ///
-    /// * `path` - The path of the route.
-    /// * `method` - The HTTP method of the route.
-    ///
-    /// ### Returns
-    ///
-    /// If the method of the request matches the given method and the path matches the route, returns a mutable reference to the context. Otherwise, returns `None`.
-    ///
-    /// ### Examples
-    ///
-    /// ```rust ignore
-    /// use ngyn_shared::core::context::NgynContext;
-    /// use ngyn_shared::Method;
-    ///
-    /// let mut context = NgynContext::from_request(request);
-    /// context.set("name", "John".to_string());
-    ///
-    /// let result = context.with("/users", &Method::GET);
-    /// assert!(result.is_none());
-    ///
-    /// let result = context.with("/users", &Method::POST);
-    /// assert!(result.is_some());
-    /// ```
-    pub(crate) fn with(&mut self, path: &str, method: Option<&Method>) -> Option<&mut Self> {
-        if let Some(method) = method {
-            if method != self.request.method()
-            // HEAD is a GET request without a body
-                || (method != Method::GET && self.request.method() != Method::HEAD)
-            {
-                return None;
-            }
-        }
-        if let Some(params) = self.request.uri().to_params(path) {
-            self.params = Some(params);
-            Some(self)
-        } else {
-            None
-        }
-    }
 }
 
-impl<'a> Transformer<'a> for &'a NgynContext {
+impl<'a> Transformer<'a> for &'a NgynContext<'a> {
     fn transform(cx: &'a mut NgynContext) -> Self {
         cx
     }
 }
 
-impl<'a> Transformer<'a> for &'a mut NgynContext {
-    fn transform(cx: &'a mut NgynContext) -> Self {
-        cx
-    }
-}
+// impl<'a: 'b, 'b> Transformer<'a> for &'a mut NgynContext<'b> {
+//     fn transform(cx: &'a mut NgynContext) -> Self {
+//         cx
+//     }
+// }
 
 impl<'a> Transformer<'a> for &'a NgynRequest {
     fn transform(cx: &'a mut NgynContext) -> Self {
@@ -428,6 +387,7 @@ impl Transformer<'_> for NgynRequest {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use http::Method;
 
     struct TestAppState {
         value: u128,
@@ -570,49 +530,5 @@ mod tests {
 
         assert!(context.has("name"));
         assert!(!context.has("age"));
-    }
-
-    #[test]
-    fn test_with() {
-        let mut request = Request::new(Vec::new());
-        *request.method_mut() = Method::GET;
-        *request.uri_mut() = "/users".parse().unwrap();
-
-        let mut context = NgynContext::from_request(request);
-
-        let path = "/users";
-        let result = context.with(path, None);
-        assert!(result.is_some());
-
-        let path = "/users";
-        let method = &Method::GET;
-        let result = context.with(path, Some(method));
-        assert!(result.is_some());
-
-        let path = "/users";
-        let method = &Method::POST;
-        let result = context.with(path, Some(method));
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_params() {
-        let mut request = Request::new(Vec::new());
-        *request.uri_mut() = "/users/123".parse().unwrap();
-        *request.method_mut() = Method::GET;
-
-        let mut context = NgynContext::from_request(request);
-        context.set("name", "John".to_string());
-
-        let params_ref = context.params();
-        assert!(params_ref.is_none());
-
-        let route_path = "/users/<id>";
-        context.with(route_path, Some(&Method::GET));
-
-        let params_ref = context.params();
-        assert!(params_ref.is_some());
-        assert_eq!(params_ref.unwrap()[0].0, "id");
-        assert_eq!(params_ref.unwrap()[0].1, "123");
     }
 }

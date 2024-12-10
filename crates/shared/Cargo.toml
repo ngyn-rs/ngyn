@@ -16,6 +16,7 @@ bytes = { workspace = true }
 futures-util = { version = "0.3", default-features = false }
 http-body-util = { workspace = true }
 http = { workspace = true }
+matchit = "0.8.5"
 multer = "3.1.0"
 regex = "1.10"
 serde = { workspace = true }

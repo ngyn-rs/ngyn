@@ -6,7 +6,7 @@ struct User {
     name: String,
 }
 impl ngyn::shared::server::Transformer<'_> for User {
-    fn transform(cx: &mut ngyn::prelude::NgynContext) -> Self {
+    fn transform(cx: &mut ngyn::prelude::NgynContext<'_>) -> Self {
         ngyn::prelude::Body::transform(cx).json::<User>().unwrap()
     }
 }

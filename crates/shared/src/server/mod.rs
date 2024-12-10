@@ -2,7 +2,6 @@ pub mod body;
 pub mod context;
 pub mod response;
 pub mod transformer;
-pub mod uri;
 
 pub use self::response::{JsonResponse, JsonResult};
 pub use body::ToBytes;

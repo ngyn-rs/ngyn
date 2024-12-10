@@ -37,22 +37,16 @@ use crate::server::{NgynContext, NgynResponse, Transformer};
 ///
 /// ### How to create a json response?
 /// Ngyn provides an implementation on [`JsonResult`] to convert it to a json response.
-/// This means anytime you make use of a `JsonResult` in your controlled routes, it will be converted to a json response.
+/// This means anytime you make use of a `JsonResult` in your handlers, it will be converted to a json response.
 ///
 /// #### Example
 /// ```rust ignore
+/// use serde_json::json;
 /// use ngyn::prelude::*;
 ///
-/// #[controller]
-/// struct MyController;
-///
-/// #[routes]
-/// impl MyController {
-///    #[get("/")]
-///   async fn get(&self, cx: &mut NgynContext) -> Result<Vec<u8>, ()> {
-///    let data = vec![1, 2, 3];
-///    Ok(data)
-///   }
+/// #[handler]
+/// fn handle_json_response() -> JsonResult {
+///     Ok(json!({ "key": "value" }))
 /// }
 /// ```
 pub struct JsonResponse<D: Serialize, E: Serialize> {
@@ -85,6 +79,7 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
 /// ### Example
 ///
 /// ```rust ignore
+/// use serde_json::json;
 /// use ngyn::prelude::*;
 ///
 /// #[handler]

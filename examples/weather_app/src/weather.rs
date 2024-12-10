@@ -8,7 +8,7 @@ use crate::middlewares::test_middleware::TestMiddleware;
 pub struct WeatherGate;
 
 impl NgynGate for WeatherGate {
-    async fn can_activate(cx: &mut NgynContext) -> bool {
+    async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
         let query = Query::transform(cx);
         if query.get("location").is_some() {
             return true;
@@ -70,12 +70,12 @@ pub struct GetWeatherParams {
     // pub city: String,
 }
 
-#[handler(middlewares=[TestMiddleware], gates=[WeatherGate])]
+#[handler(middlewares=[TestMiddleware])]
 pub async fn get_location(
     params: GetWeatherParams,
     weather_service: WeatherService,
 ) -> Result<String, Value> {
-    println!("{:?}", "Getting location weather");
+    println!("Getting location weather for {:?}", params.location);
     if !params.location.is_empty() {
         match weather_service.get_weather(&params.location).await {
             Ok(r) => Ok(r),
