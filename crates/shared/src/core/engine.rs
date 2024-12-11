@@ -168,7 +168,7 @@ pub trait NgynEngine: NgynPlatform {
     }
 
     /// Sets up static file routes.
-    /// 
+    ///
     /// This is great for apps tha would want to output files in a specific folder.
     /// For instance, a `public` directory can be set up and include all files in the directory
     fn use_static(&mut self, path_buf: std::path::PathBuf) -> std::io::Result<()> {
@@ -177,7 +177,9 @@ pub trait NgynEngine: NgynPlatform {
 
             if path.is_file() {
                 let file_path = path.clone();
-                let file_path = file_path.to_str().unwrap();
+                let file_path = file_path
+                    .to_str()
+                    .expect("file name contains invalid unicode characters");
 
                 self.get(
                     file_path,
