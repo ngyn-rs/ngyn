@@ -1,3 +1,7 @@
+<div align="center">
+
+![ngyn](https://avatars.githubusercontent.com/u/142031159?s=120&v=4)
+
 # ngyn (`en·jn`)
 
 [![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
@@ -9,15 +13,15 @@
 A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web servers.
 
 More information about Ngyn can be found in the [documentation](https://ngyn.rs).
+</div>
 
 ## Features
 
-- Battle tested Ergonomic API.
+- Battle tested Ergonomic API. (You'll love writing routes in ngyn)
 - Performance-balanced approaches
 - Optional Macro API for enhancing route handlers
 - Asynchronous access gates and middleware for handling requests and responses
-- Asynchronous routing support for defining routes
-- [Platform-agnostic](#platform-agnosticism) for supporting multiple libraries and frameworks
+- Optional Asynchronous routing support for defining routes
 
 Please note that Ngyn is still in its early stages of development, and the API is subject to change.
 
@@ -27,57 +31,33 @@ This example demonstrates how to create a simple web server using Ngyn and [Hype
 
 ```toml
 [dependencies]
-ngyn = { version = "0.4" }
+ngyn = { version = "0.5" }
 ```
 
 And here's the code:
 
 ```rust ignore
 use ngyn::prelude::*;
-use ngyn_hyper::HyperApplication;
 
-#[controller]
-struct MyController;
-
-#[routes]
-impl MyController {
-    #[get("/")]
-    fn index(&self) -> String {
-        "Hello World!".to_string()
-    }
-
-    #[get("/hello/<name>")]
-    fn hello(&self, param: Param) -> String {
-        let name = param.get("name").unwrap();
-        format!("Hello, {}!", name)
-    }
+#[handler]
+fn echo_hello() -> String {
+    "Hello World!".to_string()
 }
 
-#[module(controllers = [MyController])]
-struct MyAppModule;
 
 #[main]
 async fn main() {
-    let app = NgynFactory::<HyperApplication>::create::<MyAppModule>();
+    let mut app = HyperApplication::default();
+    app.any("*", echo_hello); // handle all routes and http methods
     let _ = app.listen("127.0.0.1:8080").await;
 }
 ```
 
-## Philosophy
-
-### Description
-
-Ngyn proposes an opinionated, modular, and scalable architecture, largely inspired by [NestJS](https://nestjs.com/) and structured around the concept of modules - discrete, reusable components that collectively shape an application. These modules, each addressing specific functionalities, can be nested to form a functional hierarchy. This modular design simplifies organization and enhances reusability across various projects.
-
-### Platform Agnosticism
-
-A platform (more properly called platform engine) in Ngyn refers to the underlying library or framework that is used to build your application. For example, you could build your web server using [Actix](https://actix.rs/) or [Warp](https://docs.rs/warp) or [Tide](https://docs.rs/tide), and each of these platforms would provide a different set of features for building your web server.
-
-By default, Ngyn uses [Hyper](https://hyper.rs) as its underlying platform. However, you're not limited to this and can choose to also create your own platform engines.
-
 ## Contribution
 
 Ngyn is an open-source project, and we welcome contributions from the community. Feel free to report issues, suggest enhancements, or submit pull requests to help us improve Ngyn.
+
+If this project helped you, looks interesting or you're already making use of it, please drop a star and mention it to others.
 
 ## License
 
