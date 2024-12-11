@@ -3,16 +3,16 @@ use http::Request;
 use matchit::{Match, Router};
 use std::sync::Arc;
 
-use super::handler::RouteHandler;
+use super::handler::{handler, RouteHandler};
 use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse},
-    traits::{Middleware, NgynMiddleware},
+    Middleware, NgynMiddleware,
 };
 
 #[derive(Default)]
 pub struct PlatformData {
     router: Router<RouteHandler>,
-    middlewares: Vec<Box<dyn crate::traits::Middleware>>,
+    middlewares: Vec<Box<dyn crate::Middleware>>,
     state: Option<Arc<Box<dyn AppState>>>,
 }
 
@@ -165,6 +165,29 @@ pub trait NgynEngine: NgynPlatform {
     /// * `middleware` - The middleware to add.
     fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
         self.data_mut().add_middleware(Box::new(middleware));
+    }
+
+    /// Sets up static file routes.
+    /// 
+    /// This is great for apps tha would want to output files in a specific folder.
+    /// For instance, a `public` directory can be set up and include all files in the directory
+    fn use_static(&mut self, path_buf: std::path::PathBuf) -> std::io::Result<()> {
+        for entry in std::fs::read_dir(path_buf)? {
+            let path = entry?.path();
+
+            if path.is_file() {
+                let file_path = path.clone();
+                let file_path = file_path.to_str().unwrap();
+
+                self.get(
+                    file_path,
+                    handler(move |_| std::fs::read(path.clone()).unwrap()), // Infallible, the file will always exist
+                );
+            } else if path.is_dir() {
+                self.use_static(path)?;
+            }
+        }
+        Ok(())
     }
 
     /// Sets the state of the application to any value that implements [`AppState`].
