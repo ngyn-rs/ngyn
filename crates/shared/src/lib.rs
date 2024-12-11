@@ -3,7 +3,7 @@ pub mod server;
 
 use std::{future::Future, pin::Pin};
 
-use crate::server::NgynContext;
+use server::context::NgynContext;
 
 /// Trait for implementing a gate.
 ///
@@ -15,8 +15,8 @@ use crate::server::NgynContext;
 /// ### Examples
 ///
 /// ```rust
-/// use ngyn_shared::traits::NgynGate;
-/// use ngyn_shared::server::NgynContext;
+/// # use ngyn_shared::NgynGate;
+/// # use ngyn_shared::server::NgynContext;
 ///
 /// pub struct AuthGate {}
 ///
@@ -35,7 +35,6 @@ pub trait NgynGate: Send + Sync {
     /// ### Arguments
     ///
     /// * `cx` - The request context to check.
-    /// * `res` - The response to optionally modify.
     ///
     /// ### Returns
     ///
@@ -60,8 +59,8 @@ pub trait NgynGate: Send + Sync {
 /// ### Examples
 ///
 /// ```rust
-/// use ngyn_shared::traits::NgynMiddleware;
-/// use ngyn_shared::server::NgynContext;
+/// # use ngyn_shared::NgynMiddleware;
+/// # use ngyn_shared::server::NgynContext;
 ///
 /// pub struct RequestReceivedLogger {}
 ///
