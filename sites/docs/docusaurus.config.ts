@@ -87,14 +87,18 @@ const config: Config = {
 					type: "docsVersionDropdown",
 				},
 				{
-					href: "https://docs.rs/ngyn",
-					label: "API Reference",
-					position: "right",
-				},
-				{
 					type: "doc",
 					docId: "index",
 					label: "Docs",
+				},
+				{
+					href: "https://github.com/ngyn-rs/ngyn/",
+					label: "Examples",
+				},
+				{
+					href: "https://docs.rs/ngyn",
+					label: "API Reference",
+					position: "right",
 				},
 				{
 					href: "https://showcase.ngyn.rs",
