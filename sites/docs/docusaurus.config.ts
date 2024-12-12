@@ -28,6 +28,16 @@ const config: Config = {
 		defaultLocale: "en",
 		locales: ["en"],
 	},
+	themes: [
+		[
+			require.resolve("@easyops-cn/docusaurus-search-local"),
+			/** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
+			({
+				hashed: true,
+				docsDir: "versioned_docs",
+			}),
+		],
+	],
 
 	plugins: [
 		async function docusaurusTaillwind() {
@@ -41,7 +51,6 @@ const config: Config = {
 				},
 			};
 		},
-		[require.resolve("docusaurus-lunr-search"), {}],
 	],
 
 	presets: [
@@ -92,7 +101,7 @@ const config: Config = {
 					label: "Docs",
 				},
 				{
-					href: "https://github.com/ngyn-rs/ngyn/",
+					href: "https://github.com/ngyn-rs/ngyn/tree/main/examples",
 					label: "Examples",
 				},
 				{

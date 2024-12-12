@@ -50,4 +50,4 @@ Ngyn is an open-source project, and we welcome contributions from the community.
 
 ## License
 
-Ngyn is licensed under the [MIT License](LICENSE.md), allowing you to use, modify, and distribute the framework freely.
+Ngyn is licensed under the [MIT License](https://github.com/ngyn-rs/ngyn/tree/main/LICENSE.md), allowing you to use, modify, and distribute the framework freely.
