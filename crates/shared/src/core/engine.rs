@@ -77,10 +77,16 @@ impl PlatformData {
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
     pub(self) fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
-        let route = method
+        let method = method
             .map(|method| method.to_string())
-            .unwrap_or("{METHOD}".to_string())
-            + path;
+            .unwrap_or_else(|| "{METHOD}".to_string());
+
+        let route = if path.starts_with("/") {
+            method + path
+        } else {
+            method + "/" + path
+        };
+
         self.router.insert(route, handler).unwrap();
     }
 
@@ -171,20 +177,22 @@ pub trait NgynEngine: NgynPlatform {
     ///
     /// This is great for apps tha would want to output files in a specific folder.
     /// For instance, a `public` directory can be set up and include all files in the directory
+    ///
+    /// The behavior of `use_static` in ngyn is different from other frameworks.
+    /// 1. You can call it multiple times, each call registers a new set of routes
+    /// 2. The directory used as static folder is prefixed to all routes.
+    ///     This means: project_root/static/logo.png -> https://example.com/static/logo.png
     fn use_static(&mut self, path_buf: std::path::PathBuf) -> std::io::Result<()> {
         for entry in std::fs::read_dir(path_buf)? {
             let path = entry?.path();
 
             if path.is_file() {
-                let file_path = path.clone();
-                let file_path = file_path
+                let file_path = path
                     .to_str()
                     .expect("file name contains invalid unicode characters");
 
-                self.get(
-                    file_path,
-                    handler(move |_| std::fs::read(path.clone()).unwrap()), // Infallible, the file will always exist
-                );
+                let file = std::fs::read(file_path).unwrap(); // Infallible, the file should always exist at this point
+                self.get(file_path, handler(move |_| Bytes::from(file.clone())));
             } else if path.is_dir() {
                 self.use_static(path)?;
             }
