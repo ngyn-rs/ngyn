@@ -8,6 +8,7 @@ documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
 rust-version = "1.75"
+keywords = ["ngyn", "run-time", "platform", "hyper", "framework"]
 
 [dependencies]
 http-body-util = { workspace = true }

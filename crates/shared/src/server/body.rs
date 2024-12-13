@@ -28,6 +28,12 @@ pub trait ToBytes {
     fn to_bytes(self) -> Bytes;
 }
 
+impl ToBytes for () {
+    fn to_bytes(self) -> Bytes {
+        Bytes::default()
+    }
+}
+
 impl ToBytes for &str {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())

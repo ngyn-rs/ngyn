@@ -8,6 +8,7 @@ rust-version = "1.75"
 documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
+keywords = ["web-apps", "web-server", "web-framework", "back-end", "applications"]
 
 [lib]
 path = "src/lib.rs"
