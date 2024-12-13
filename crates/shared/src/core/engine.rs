@@ -81,7 +81,7 @@ impl PlatformData {
             .map(|method| method.to_string())
             .unwrap_or_else(|| "{METHOD}".to_string());
 
-        let route = if path.starts_with("/") {
+        let route = if path.starts_with('/') {
             method + path
         } else {
             method + "/" + path
