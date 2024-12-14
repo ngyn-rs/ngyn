@@ -6,13 +6,14 @@ use ngyn_shared::server::NgynRequest;
 use std::io::ErrorKind;
 use std::net::ToSocketAddrs;
 use std::sync::{Arc, Mutex};
+use websocket::sync::Writer;
 use websocket::Message;
-use websocket::{sync::Client, sync::Server, OwnedMessage};
+use websocket::{sync::Server, OwnedMessage};
 
 #[derive(Default)]
 pub struct WebsocketApplication {
     data: PlatformData,
-    clients: Arc<Mutex<Vec<Client<std::net::TcpStream>>>>,
+    clients: Arc<Mutex<Vec<Writer<std::net::TcpStream>>>>,
 }
 
 impl NgynPlatform for WebsocketApplication {
@@ -63,8 +64,9 @@ impl WebsocketApplication {
             let data_handler = data_handler.clone();
 
             tokio::spawn(async move {
-                if let Ok(mut client) = request.accept() {
-                    for message in client.incoming_messages() {
+                if let Ok(client) = request.accept() {
+                    let (mut receiver, mut sender) = client.split().unwrap();
+                    for message in receiver.incoming_messages() {
                         match message {
                             Ok(OwnedMessage::Text(_)) | Ok(OwnedMessage::Binary(_)) => {
                                 // Infallible at this point, so we can safely call `unwrap`
@@ -78,21 +80,25 @@ impl WebsocketApplication {
                                 *req.uri_mut() = path.parse().unwrap_or_default();
 
                                 let mut response = data_handler.respond(req).await;
-                                if let Ok(data) = response.read_bytes().await {
-                                    let message = Message::binary(data.to_vec());
-                                    client.send_message(&message).unwrap();
-                                }
 
-                                break;
+                                if let Ok(data) = response.read_bytes().await {
+                                    let message =
+                                        if response.headers().get("Content-Type").is_none() {
+                                            Message::text(String::from_utf8_lossy(&data))
+                                        } else {
+                                            Message::binary(data.to_vec())
+                                        };
+                                    sender.send_message(&message).unwrap();
+                                }
                             }
                             Ok(OwnedMessage::Close(_)) => {
                                 let message = Message::close();
-                                client.send_message(&message).unwrap();
+                                sender.send_message(&message).unwrap();
                                 break;
                             }
                             Ok(OwnedMessage::Ping(data)) => {
                                 let message = Message::pong(data);
-                                client.send_message(&message).unwrap();
+                                sender.send_message(&message).unwrap();
                                 break;
                             }
                             Err(_) => break,
@@ -102,7 +108,7 @@ impl WebsocketApplication {
 
                     // Add client to the list of connected clients
                     if let Ok(mut client_list) = clients.lock() {
-                        client_list.push(client);
+                        client_list.push(sender);
                     }
                 }
             });
