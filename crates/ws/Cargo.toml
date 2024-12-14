@@ -1,5 +1,5 @@
 [package]
-name = "ngyn-ws"
+name = "ngyn-websocket"
 version = "0.1.1"
 edition = "2021"
 description = "Websocket Runtime Platform for ngyn web framework"

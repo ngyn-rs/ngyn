@@ -454,9 +454,7 @@ dependencies = [
 name = "basic_app"
 version = "0.1.0"
 dependencies = [
- "async-std",
  "ngyn 0.4.5",
- "ngyn-hyper 0.1.0",
  "tokio",
 ]
 
@@ -2038,19 +2036,6 @@ dependencies = [
 
 [[package]]
 name = "ngyn-hyper"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "217094c3a98db26eac2368eabe6ee354ca05d7d6e74d118bfebd800dfb1d9721"
-dependencies = [
- "http-body-util",
- "hyper 1.4.0",
- "hyper-util",
- "ngyn_shared 0.4.0",
- "tokio",
-]
-
-[[package]]
-name = "ngyn-hyper"
 version = "0.1.1"
 dependencies = [
  "http-body-util",
@@ -2121,12 +2106,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngyn-ws"
+name = "ngyn-websocket"
 version = "0.1.1"
 dependencies = [
  "ngyn_shared 0.4.5",
  "tokio",
- "websocket",
+ "websocket 0.27.1",
 ]
 
 [[package]]
@@ -2149,22 +2134,6 @@ dependencies = [
  "ngyn_shared 0.4.5 (git+https://github.com/ngyn-rs/ngyn?branch=dev)",
  "quote",
  "syn 2.0.77",
-]
-
-[[package]]
-name = "ngyn_shared"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28b475a4ca263dbf7435908a6bbd61fc89f02034f32841ff60d9e32be0679bda"
-dependencies = [
- "async-trait",
- "http-body-util",
- "hyper 1.4.0",
- "hyper-util",
- "regex",
- "serde",
- "serde_json",
- "url 2.5.2",
 ]
 
 [[package]]
@@ -4184,6 +4153,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd7c23921eeb1713a4e851530e9b9756e4fb0e89978582942612524cf09f01cd"
 dependencies = [
  "rustls-pki-types",
+]
+
+[[package]]
+name = "websocket"
+version = "0.1.0"
+dependencies = [
+ "ngyn 0.4.5",
+ "ngyn-websocket",
+ "tokio",
 ]
 
 [[package]]

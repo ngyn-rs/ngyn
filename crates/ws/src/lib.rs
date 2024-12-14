@@ -1,5 +1,6 @@
 use core::fmt;
 use ngyn_shared::core::engine::{NgynPlatform, PlatformData};
+use ngyn_shared::core::handler::RouteHandler;
 use ngyn_shared::server::response::ReadBytes;
 use ngyn_shared::server::NgynRequest;
 use std::io::ErrorKind;
@@ -21,6 +22,11 @@ impl NgynPlatform for WebsocketApplication {
 }
 
 impl WebsocketApplication {
+    /// add a route to handle
+    pub fn route(&mut self, path: &str, handler: impl Into<RouteHandler>) {
+        self.data_mut().add_route(path, None, handler.into());
+    }
+
     // Broadcast message to all connected clients
     pub fn broadcast(&self, message: &str) -> Result<(), websocket::WebSocketError> {
         let mut clients = self

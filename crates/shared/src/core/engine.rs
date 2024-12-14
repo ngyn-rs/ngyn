@@ -76,7 +76,7 @@ impl PlatformData {
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
-    pub(self) fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
+    pub fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
         let method = method
             .map(|method| method.to_string())
             .unwrap_or_else(|| "{METHOD}".to_string());
@@ -104,9 +104,11 @@ pub trait NgynPlatform: Default {
     fn data_mut(&mut self) -> &mut PlatformData;
 }
 
-impl<T: NgynPlatform> NgynEngine for T {}
+pub trait NgynHttpPlatform: Default {
+    fn data_mut(&mut self) -> &mut PlatformData;
+}
 
-pub trait NgynEngine: NgynPlatform {
+pub trait NgynHttpEngine: NgynEngine {
     /// Adds a route to the application.
     ///
     /// ### Arguments
@@ -128,10 +130,6 @@ pub trait NgynEngine: NgynPlatform {
     fn route(&mut self, path: &str, method: Method, handler: impl Into<RouteHandler>) {
         self.data_mut()
             .add_route(path, Some(method), handler.into());
-    }
-
-    fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
-        self.data_mut().add_route(path, None, handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -164,15 +162,6 @@ pub trait NgynEngine: NgynPlatform {
         self.route(path, Method::HEAD, handler.into())
     }
 
-    /// Adds a middleware to the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `middleware` - The middleware to add.
-    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
-        self.data_mut().add_middleware(Box::new(middleware));
-    }
-
     /// Sets up static file routes.
     ///
     /// This is great for apps tha would want to output files in a specific folder.
@@ -199,6 +188,21 @@ pub trait NgynEngine: NgynPlatform {
         }
         Ok(())
     }
+}
+
+pub trait NgynEngine: NgynPlatform {
+    fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
+        self.data_mut().add_route(path, None, handler.into());
+    }
+
+    /// Adds a middleware to the application.
+    ///
+    /// ### Arguments
+    ///
+    /// * `middleware` - The middleware to add.
+    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
+        self.data_mut().add_middleware(Box::new(middleware));
+    }
 
     /// Sets the state of the application to any value that implements [`AppState`].
     ///
@@ -209,6 +213,15 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
 }
+
+impl<T: NgynHttpPlatform> NgynPlatform for T {
+    fn data_mut(&mut self) -> &mut PlatformData {
+        self.data_mut()
+    }
+}
+
+impl<T: NgynPlatform> NgynEngine for T {}
+impl<T: NgynHttpPlatform> NgynHttpEngine for T {}
 
 #[cfg(test)]
 mod tests {
