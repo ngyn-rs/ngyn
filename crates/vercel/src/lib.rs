@@ -1,5 +1,5 @@
 use ngyn_shared::{
-    core::engine::{NgynPlatform, PlatformData},
+    core::engine::{NgynHttpPlatform, PlatformData},
     server::response::ReadBytes,
 };
 use vercel_runtime::{Body, Error, Request, Response as VercelResponse};
@@ -9,7 +9,7 @@ pub struct VercelApplication {
     data: PlatformData,
 }
 
-impl NgynPlatform for VercelApplication {
+impl NgynHttpPlatform for VercelApplication {
     fn data_mut(&mut self) -> &mut PlatformData {
         &mut self.data
     }

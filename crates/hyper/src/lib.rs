@@ -3,7 +3,7 @@ use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request};
 use hyper_util::rt::TokioIo;
-use ngyn_shared::core::engine::{NgynPlatform, PlatformData};
+use ngyn_shared::core::engine::{NgynHttpPlatform, PlatformData};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -13,7 +13,7 @@ pub struct HyperApplication {
     data: PlatformData,
 }
 
-impl NgynPlatform for HyperApplication {
+impl NgynHttpPlatform for HyperApplication {
     fn data_mut(&mut self) -> &mut PlatformData {
         &mut self.data
     }
