@@ -1,5 +1,5 @@
 use core::fmt;
-use ngyn_shared::core::engine::{NgynPlatform, PlatformData};
+use ngyn_shared::core::engine::{NgynPlatform, PlatformData, RouteInstance};
 use ngyn_shared::core::handler::RouteHandler;
 use ngyn_shared::server::response::ReadBytes;
 use ngyn_shared::server::NgynRequest;
@@ -25,7 +25,7 @@ impl NgynPlatform for WebsocketApplication {
 impl WebsocketApplication {
     /// add a route to handle
     pub fn route(&mut self, path: &str, handler: impl Into<RouteHandler>) {
-        self.data_mut().add_route(path, None, handler.into());
+        self.add_route(path, None, handler.into());
     }
 
     // Broadcast message to all connected clients
