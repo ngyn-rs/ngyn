@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use http::Request;
-use matchit::{Match, Router};
+use matchit::{Match, MergeError, Router};
 use std::sync::Arc;
 
 use super::handler::{handler, RouteHandler};
@@ -8,6 +8,17 @@ use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse},
     Middleware, NgynMiddleware,
 };
+
+#[derive(Default)]
+pub struct GroupRouter {
+    router: Router<RouteHandler>,
+}
+
+impl RouteInstance for GroupRouter {
+    fn router_mut(&mut self) -> &mut Router<RouteHandler> {
+        &mut self.router
+    }
+}
 
 #[derive(Default)]
 pub struct PlatformData {
@@ -69,27 +80,6 @@ impl PlatformData {
         cx.response
     }
 
-    /// Adds a route to the platform data.
-    ///
-    /// ### Arguments
-    ///
-    /// * `path` - The path of the route.
-    /// * `method` - The HTTP method of the route.
-    /// * `handler` - The handler function for the route.
-    pub fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
-        let method = method
-            .map(|method| method.to_string())
-            .unwrap_or_else(|| "{METHOD}".to_string());
-
-        let route = if path.starts_with('/') {
-            method + path
-        } else {
-            method + "/" + path
-        };
-
-        self.router.insert(route, handler).unwrap();
-    }
-
     /// Adds a middleware to the platform data.
     ///
     /// ### Arguments
@@ -104,11 +94,29 @@ pub trait NgynPlatform: Default {
     fn data_mut(&mut self) -> &mut PlatformData;
 }
 
-pub trait NgynHttpPlatform: Default {
-    fn data_mut(&mut self) -> &mut PlatformData;
-}
+pub trait RouteInstance {
+    fn router_mut(&mut self) -> &mut Router<RouteHandler>;
+    /// Adds a route to the platform data.
+    ///
+    /// ### Arguments
+    ///
+    /// * `path` - The path of the route.
+    /// * `method` - The HTTP method of the route.
+    /// * `handler` - The handler function for the route.
+    fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
+        let method = method
+            .map(|method| method.to_string())
+            .unwrap_or_else(|| "{METHOD}".to_string());
 
-pub trait NgynHttpEngine: NgynEngine {
+        let route = if path.starts_with('/') {
+            method + path
+        } else {
+            method + "/" + path
+        };
+
+        self.router_mut().insert(route, handler).unwrap();
+    }
+
     /// Adds a route to the application.
     ///
     /// ### Arguments
@@ -128,8 +136,7 @@ pub trait NgynHttpEngine: NgynEngine {
     /// engine.route('/', Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: impl Into<RouteHandler>) {
-        self.data_mut()
-            .add_route(path, Some(method), handler.into());
+        self.add_route(path, Some(method), handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -161,7 +168,13 @@ pub trait NgynHttpEngine: NgynEngine {
     fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
+}
 
+pub trait NgynHttpPlatform: Default {
+    fn data_mut(&mut self) -> &mut PlatformData;
+}
+
+pub trait NgynHttpEngine: NgynPlatform {
     /// Sets up static file routes.
     ///
     /// This is great for apps tha would want to output files in a specific folder.
@@ -192,7 +205,15 @@ pub trait NgynHttpEngine: NgynEngine {
 
 pub trait NgynEngine: NgynPlatform {
     fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
-        self.data_mut().add_route(path, None, handler.into());
+        self.add_route(path, None, handler.into());
+    }
+
+    fn group(&mut self, registry: impl Fn(&mut GroupRouter)) -> Result<(), MergeError> {
+        let mut group = GroupRouter {
+            router: Router::<RouteHandler>::new(),
+        };
+        registry(&mut group);
+        self.data_mut().router.merge(group.router)
     }
 
     /// Adds a middleware to the application.
@@ -221,6 +242,11 @@ impl<T: NgynHttpPlatform> NgynPlatform for T {
 }
 
 impl<T: NgynPlatform> NgynEngine for T {}
+impl<T: NgynPlatform> RouteInstance for T {
+    fn router_mut(&mut self) -> &mut Router<RouteHandler> {
+        &mut self.data_mut().router
+    }
+}
 impl<T: NgynHttpPlatform> NgynHttpEngine for T {}
 
 #[cfg(test)]
@@ -316,9 +342,7 @@ mod tests {
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine
-            .data_mut()
-            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
+        engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         let req = Request::builder()
             .method(Method::GET)
@@ -369,9 +393,7 @@ mod tests {
     async fn test_add_route() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine
-            .data_mut()
-            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
+        engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         assert!(engine.data.router.at("GET/test").is_ok());
     }

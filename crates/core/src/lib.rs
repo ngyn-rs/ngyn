@@ -14,7 +14,7 @@ pub mod prelude {
     pub use ngyn_hyper::HyperApplication;
     pub use ngyn_shared::{
         core::{
-            engine::{NgynEngine, NgynHttpEngine},
+            engine::{NgynEngine, NgynHttpEngine, RouteInstance},
             handler::*,
         },
         server::{
