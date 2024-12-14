@@ -58,6 +58,7 @@ impl WebsocketApplication {
         let data_handler = Arc::new(self.data);
 
         for request in server.filter_map(Result::ok) {
+            let path = request.uri();
             let clients = Arc::clone(&self.clients);
             let data_handler = data_handler.clone();
 
@@ -65,20 +66,24 @@ impl WebsocketApplication {
                 if let Ok(mut client) = request.accept() {
                     for message in client.incoming_messages() {
                         match message {
-                            Ok(OwnedMessage::Text(msg)) => {
-                                let (path, body) =
-                                    msg.split_once(':').unwrap_or_else(|| ("/", &msg));
+                            Ok(OwnedMessage::Text(_)) | Ok(OwnedMessage::Binary(_)) => {
+                                // Infallible at this point, so we can safely call `unwrap`
+                                let body = match message.unwrap() {
+                                    OwnedMessage::Binary(data) => data,
+                                    OwnedMessage::Text(data) => data.into(),
+                                    _ => return,
+                                };
+                                let mut req = NgynRequest::new(body);
+                                // default to index url if parsing fails
+                                *req.uri_mut() = path.parse().unwrap_or_default();
 
-                                let mut req = NgynRequest::new(body.into());
-                                if let Ok(uri) = path.parse() {
-                                    *req.uri_mut() = uri;
-                                    let mut response = data_handler.respond(req).await;
-                                    if let Ok(data) = response.read_bytes().await {
-                                        let message = Message::binary(data.to_vec());
-                                        client.send_message(&message).unwrap();
-                                    }
-                                    return;
+                                let mut response = data_handler.respond(req).await;
+                                if let Ok(data) = response.read_bytes().await {
+                                    let message = Message::binary(data.to_vec());
+                                    client.send_message(&message).unwrap();
                                 }
+
+                                break;
                             }
                             Ok(OwnedMessage::Close(_)) => {
                                 let message = Message::close();
