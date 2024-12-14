@@ -18,7 +18,7 @@ pub(crate) fn query_macro(input: TokenStream) -> TokenStream {
                 let query = ngyn::shared::server::Query::transform(cx);
                 #ident {
                     #(
-                        #field_names: query.get(stringify!(#field_names)).unwrap_or_default(),
+                        #field_names: query.get(stringify!(#field_names)).unwrap_or_default().parse().unwrap_or_default(),
                     )*
                 }
             }

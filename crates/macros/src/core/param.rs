@@ -18,7 +18,7 @@ pub(crate) fn param_macro(input: TokenStream) -> TokenStream {
                 let param = ngyn::shared::server::Param::transform(cx);
                 #ident {
                     #(
-                        #field_names: param.get(stringify!(#field_names)).unwrap_or_default(),
+                        #field_names: param.get(stringify!(#field_names)).unwrap_or_default().parse().unwrap_or_default(),
                     )*
                 }
             }

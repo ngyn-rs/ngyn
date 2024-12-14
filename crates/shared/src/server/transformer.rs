@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use bytes::Bytes;
 use futures_util::StreamExt;
 use http::{header::CONTENT_TYPE, HeaderValue};
@@ -263,8 +265,8 @@ impl<'b> Body<'b> {
     ///
     /// assert_eq!(body.text(), r#"{"name": "John", "age": 30}"#);
     /// ```
-    pub fn text(self) -> String {
-        String::from_utf8_lossy(self.data).to_string()
+    pub fn text(self) -> Cow<'b, str> {
+        String::from_utf8_lossy(self.data)
     }
 
     /// Parses the data into a `multipart/form-data` stream.

@@ -1,4 +1,4 @@
-use bytes::{Buf, Bytes};
+use bytes::Bytes;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::any::{Any, TypeId};
@@ -127,21 +127,17 @@ impl<D: Serialize, E: Serialize> ToBytes for JsonResponse<D, E> {
 /// In Ngyn, a `Result` can be converted into a `Bytes` object.
 impl<T, E> ToBytes for Result<T, E>
 where
-    T: ToBytes + Any,
-    E: ToBytes + Any,
+    T: ToBytes + Serialize + Any,
+    E: ToBytes + Serialize + Any,
 {
     fn to_bytes(self) -> Bytes {
         if TypeId::of::<E>() == TypeId::of::<Value>() && TypeId::of::<T>() == TypeId::of::<Value>()
         {
             // This is likely a JsonResult
             match self {
-                Ok(value) => {
-                    JsonResponse::<Value, Value>::new(Some(json!(value.to_bytes().chunk())), None)
-                        .to_bytes()
-                }
+                Ok(value) => JsonResponse::<Value, Value>::new(Some(json!(value)), None).to_bytes(),
                 Err(error) => {
-                    JsonResponse::<Value, Value>::new(None, Some(json!(error.to_bytes().chunk())))
-                        .to_bytes()
+                    JsonResponse::<Value, Value>::new(None, Some(json!(error))).to_bytes()
                 }
             }
         } else {
@@ -276,7 +272,7 @@ mod tests {
     fn test_to_bytes_result_json_result() {
         let value = json!({ "key": "value" });
         let result: Result<Value, Value> = Ok(value.clone());
-        let expected = Bytes::from(json!({ "data": value.to_bytes().chunk() }).to_string());
+        let expected = Bytes::from(json!({ "data": value }).to_string());
         let result_bytes = result.to_bytes();
         assert_eq!(result_bytes, expected);
     }
@@ -285,7 +281,7 @@ mod tests {
     fn test_to_bytes_result_json_result_error() {
         let error = json!({ "message": "Error occurred" });
         let result: Result<Value, Value> = Err(error.clone());
-        let expected = Bytes::from(json!({ "error": error.to_bytes().chunk() }).to_string());
+        let expected = Bytes::from(json!({ "error": error }).to_string());
         let result_bytes = result.to_bytes();
         assert_eq!(result_bytes, expected);
     }
