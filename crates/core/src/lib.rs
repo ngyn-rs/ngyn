@@ -13,7 +13,10 @@ pub mod prelude {
     pub use crate::macros::*;
     pub use ngyn_hyper::HyperApplication;
     pub use ngyn_shared::{
-        core::{engine::NgynEngine, handler::*},
+        core::{
+            engine::{NgynEngine, NgynHttpEngine},
+            handler::*,
+        },
         server::{
             Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
             ToBytes, Transducer,

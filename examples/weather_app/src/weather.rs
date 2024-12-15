@@ -10,7 +10,7 @@ pub struct WeatherGate;
 impl NgynGate for WeatherGate {
     async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
         let query = Query::transform(cx);
-        if query.get("location").is_some() {
+        if query.get::<String>("location").is_some() {
             return true;
         }
         *cx.response().status_mut() = StatusCode::BAD_REQUEST;

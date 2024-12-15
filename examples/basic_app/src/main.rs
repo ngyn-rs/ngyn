@@ -6,7 +6,10 @@ use ngyn::prelude::*;
 async fn main() {
     let mut app = HyperApplication::default();
 
-    app.get("/author", handler(|_cx| "Ngyn is created by @elcharitas."));
+    app.get(
+        "/author",
+        handler(|_| Ok::<&str, ()>("Ngyn is created by @elcharitas.")),
+    );
 
     let _ = app.use_static(PathBuf::from("public"));
 

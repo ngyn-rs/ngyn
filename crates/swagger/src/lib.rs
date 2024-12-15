@@ -1,6 +1,6 @@
 use ngyn::shared::{
     core::{
-        engine::{NgynEngine, PlatformData},
+        engine::{NgynHttpEngine, PlatformData},
         handler::handler,
     },
     server::{NgynContext, NgynResponse},
@@ -147,7 +147,7 @@ pub fn build_specs_with_config(config: &SwaggerConfig, _platform: &mut PlatformD
     })
 }
 
-pub trait NgynEngineSwagger: NgynEngine {
+pub trait NgynEngineSwagger: NgynHttpEngine {
     fn use_swagger(&mut self, config: SwaggerConfig) {
         let template = include_str!("templates/swagger.html");
         let docs_body = template
@@ -169,7 +169,7 @@ pub trait NgynEngineSwagger: NgynEngine {
     }
 }
 
-impl<T: NgynEngine> NgynEngineSwagger for T {}
+impl<T: NgynHttpEngine> NgynEngineSwagger for T {}
 
 // fn merge(a: &mut Value, b: Value) {
 //     match (a, b) {

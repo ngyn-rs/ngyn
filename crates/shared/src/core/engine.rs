@@ -9,6 +9,21 @@ use crate::{
     Middleware, NgynMiddleware,
 };
 
+pub struct GroupRouter<'b> {
+    base_path: &'b str,
+    router: Router<RouteHandler>,
+}
+
+impl RouteInstance for GroupRouter<'_> {
+    fn router_mut(&mut self) -> &mut Router<RouteHandler> {
+        &mut self.router
+    }
+
+    fn mount(&self) -> &str {
+        self.base_path
+    }
+}
+
 #[derive(Default)]
 pub struct PlatformData {
     router: Router<RouteHandler>,
@@ -69,27 +84,6 @@ impl PlatformData {
         cx.response
     }
 
-    /// Adds a route to the platform data.
-    ///
-    /// ### Arguments
-    ///
-    /// * `path` - The path of the route.
-    /// * `method` - The HTTP method of the route.
-    /// * `handler` - The handler function for the route.
-    pub(self) fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
-        let method = method
-            .map(|method| method.to_string())
-            .unwrap_or_else(|| "{METHOD}".to_string());
-
-        let route = if path.starts_with('/') {
-            method + path
-        } else {
-            method + "/" + path
-        };
-
-        self.router.insert(route, handler).unwrap();
-    }
-
     /// Adds a middleware to the platform data.
     ///
     /// ### Arguments
@@ -104,9 +98,41 @@ pub trait NgynPlatform: Default {
     fn data_mut(&mut self) -> &mut PlatformData;
 }
 
-impl<T: NgynPlatform> NgynEngine for T {}
+pub trait RouteInstance {
+    fn router_mut(&mut self) -> &mut Router<RouteHandler>;
 
-pub trait NgynEngine: NgynPlatform {
+    /// Mounts the route on a path, defaults to "/"
+    fn mount(&self) -> &str {
+        "/"
+    }
+
+    /// Adds a route to the platform data.
+    ///
+    /// ### Arguments
+    ///
+    /// * `path` - The path of the route.
+    /// * `method` - The HTTP method of the route.
+    /// * `handler` - The handler function for the route.
+    fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
+        let method = method
+            .map(|method| method.to_string())
+            .unwrap_or_else(|| "{METHOD}".to_string());
+
+        let route = if path.starts_with('/') {
+            method + path
+        } else {
+            method + self.mount() + path
+        };
+
+        self.router_mut().insert(route, handler).unwrap();
+    }
+}
+
+pub trait NgynHttpPlatform: Default {
+    fn data_mut(&mut self) -> &mut PlatformData;
+}
+
+pub trait NgynHttpEngine: NgynPlatform {
     /// Adds a route to the application.
     ///
     /// ### Arguments
@@ -126,12 +152,7 @@ pub trait NgynEngine: NgynPlatform {
     /// engine.route('/', Method::GET, Box::new(|_, _| {}));
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: impl Into<RouteHandler>) {
-        self.data_mut()
-            .add_route(path, Some(method), handler.into());
-    }
-
-    fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
-        self.data_mut().add_route(path, None, handler.into());
+        self.add_route(path, Some(method), handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
@@ -163,16 +184,6 @@ pub trait NgynEngine: NgynPlatform {
     fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
-
-    /// Adds a middleware to the application.
-    ///
-    /// ### Arguments
-    ///
-    /// * `middleware` - The middleware to add.
-    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
-        self.data_mut().add_middleware(Box::new(middleware));
-    }
-
     /// Sets up static file routes.
     ///
     /// This is great for apps tha would want to output files in a specific folder.
@@ -199,6 +210,31 @@ pub trait NgynEngine: NgynPlatform {
         }
         Ok(())
     }
+}
+
+pub trait NgynEngine: NgynPlatform {
+    fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
+        self.add_route(path, None, handler.into());
+    }
+
+    /// Groups related routes
+    fn group(&mut self, base_path: &str, registry: impl Fn(&mut GroupRouter)) {
+        let mut group = GroupRouter {
+            base_path,
+            router: Router::<RouteHandler>::new(),
+        };
+        registry(&mut group);
+        self.data_mut().router.merge(group.router).unwrap();
+    }
+
+    /// Adds a middleware to the application.
+    ///
+    /// ### Arguments
+    ///
+    /// * `middleware` - The middleware to add.
+    fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
+        self.data_mut().add_middleware(Box::new(middleware));
+    }
 
     /// Sets the state of the application to any value that implements [`AppState`].
     ///
@@ -209,6 +245,20 @@ pub trait NgynEngine: NgynPlatform {
         self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
 }
+
+impl<T: NgynHttpPlatform> NgynPlatform for T {
+    fn data_mut(&mut self) -> &mut PlatformData {
+        self.data_mut()
+    }
+}
+
+impl<T: NgynPlatform> NgynEngine for T {}
+impl<T: NgynPlatform> RouteInstance for T {
+    fn router_mut(&mut self) -> &mut Router<RouteHandler> {
+        &mut self.data_mut().router
+    }
+}
+impl<T: NgynHttpPlatform> NgynHttpEngine for T {}
 
 #[cfg(test)]
 mod tests {
@@ -303,9 +353,7 @@ mod tests {
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine
-            .data_mut()
-            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
+        engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         let req = Request::builder()
             .method(Method::GET)
@@ -356,9 +404,7 @@ mod tests {
     async fn test_add_route() {
         let mut engine = MockEngine::default();
         let handler: Box<Handler> = Box::new(|_| {});
-        engine
-            .data_mut()
-            .add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
+        engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         assert!(engine.data.router.at("GET/test").is_ok());
     }
