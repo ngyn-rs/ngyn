@@ -60,7 +60,7 @@ export default function CodeWrap({ children, className }: Props): JSX.Element {
 	return (
 		<div
 			className={clsx(
-				"relative overflow-hidden shadow-xl flex sm:max-h-[none] sm:rounded-xl lg:h-[34.6875rem] xl:h-[31.625rem] bg-zinc-900/50 backdrop-blur ring-1 ring-inset ring-white/10 !h-auto max-h-[none] mb-4 text-base",
+				"relative overflow-hidden shadow-xl flex rounded-xl lg:h-[34.6875rem] xl:h-[31.625rem] bg-zinc-900/50 backdrop-blur ring-1 ring-inset ring-white/10 !h-auto max-h-[none] mb-4 text-xs md:text-base",
 				className,
 			)}
 		>

@@ -46,7 +46,7 @@ export default function Home(): JSX.Element {
 						className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
 					/>
 				</div>
-				<div className="flex justify-between items-center">
+				<div className="flex flex-col md:flex-row justify-between items-center">
 					<div className="py-32 sm:py-24 lg:py-32">
 						<div className="hidden sm:mb-8 sm:flex">
 							<div className="relative rounded-full px-3 py-1 text-sm/6 md:text-base/6 text-neutral-300 bg-neutral-400/10 hover:bg-gray-400/20 flex items-center gap-2">
@@ -64,7 +64,7 @@ export default function Home(): JSX.Element {
 								</Link>
 							</div>
 						</div>
-						<div className="max-w-[50%]">
+						<div className="md:isolatemax-w-[50%] text-center md:text-left">
 							<h1 className="text-balance text-5xl font-semibold tracking-tight text-neutral-300 sm:text-7xl">
 								ngyn{" "}
 								<code className="text-2xl rounded-full font-medium">
@@ -75,7 +75,7 @@ export default function Home(): JSX.Element {
 								The next-generation web framework for building ergonomic,
 								lightning-fast, type-safe, reliable backend services in Rust.
 							</p>
-							<div className="mt-10 flex items-center gap-x-6">
+							<div className="mt-10 flex justify-center md:justify-start items-center gap-6 flex-wrap">
 								<Button href="/docs" variant="filled">
 									Get started
 								</Button>
@@ -97,7 +97,7 @@ export default function Home(): JSX.Element {
 							</div>
 						</div>
 					</div>
-					<div>
+					<div className="max-w-[98%]">
 						<CodeBlock className="mt-8" code={homePageCode} hideLineNumber />
 					</div>
 				</div>

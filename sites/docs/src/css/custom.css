@@ -50,10 +50,18 @@ a[href="/docs/next/intro"] {
     margin-bottom: theme("spacing.3");
 }
 
-.navbar__item, .breadcrumbs, .breadcrumbs__item {
+.breadcrumbs, .breadcrumbs__item {
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+@media (min-width: 800px){
+    .navbar__item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 }
 
 kbd {

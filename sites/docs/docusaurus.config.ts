@@ -23,16 +23,7 @@ const config: Config = {
 		defaultLocale: "en",
 		locales: ["en"],
 	},
-	themes: [
-		[
-			require.resolve("@easyops-cn/docusaurus-search-local"),
-			/** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
-			({
-				hashed: true,
-				docsDir: "versioned_docs",
-			}),
-		],
-	],
+	themes: [],
 
 	plugins: [
 		async function docusaurusTaillwind() {
@@ -40,7 +31,9 @@ const config: Config = {
 				name: "docusaurus-tailwindcss",
 				configurePostCss(postcssOptions) {
 					// Appends TailwindCSS and AutoPrefixer.
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
 					postcssOptions.plugins.push(require("tailwindcss"));
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
 					postcssOptions.plugins.push(require("autoprefixer"));
 					return postcssOptions;
 				},

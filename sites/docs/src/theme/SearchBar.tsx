@@ -64,7 +64,7 @@ function useAutocomplete({ close }: { close: () => void }) {
 			React.KeyboardEvent
 		>({
 			id,
-			placeholder: "Find something...",
+			placeholder: "Search documentation...",
 			defaultActiveItemId: 0,
 			onStateChange({ state }) {
 				setAutocompleteState(state);
@@ -76,7 +76,31 @@ function useAutocomplete({ close }: { close: () => void }) {
 				navigate,
 			},
 			getSources({ query }) {
-				return [];
+				return new Promise((resolve) =>
+					resolve({
+						search: (query: string, { limit }: { limit?: number }) => [
+							{
+								label: "Twitter",
+								title: "Twitter",
+								url: "https://twitter.com",
+							},
+						],
+					}),
+				).then(({ search }) => {
+					return [
+						{
+							sourceId: "documentation",
+							getItems() {
+								console.log(search(query, { limit: 5 }));
+								return search(query, { limit: 5 });
+							},
+							getItemUrl({ item }) {
+								return item.url;
+							},
+							onSelect: navigate,
+						},
+					];
+				});
 			},
 		}),
 	);
@@ -197,8 +221,8 @@ function SearchResult({
 	return (
 		<li
 			className={clsx(
-				"group block cursor-default px-4 py-3 aria-selected:bg-zinc-50 dark:aria-selected:bg-zinc-800/50",
-				resultIndex > 0 && "border-t border-zinc-100 dark:border-zinc-800",
+				"group block cursor-default px-4 py-3 light:aria-selected:bg-zinc-50 aria-selected:bg-zinc-800/50",
+				resultIndex > 0 && "border-t light:border-zinc-100 border-zinc-800",
 			)}
 			aria-labelledby={`${id}-hierarchy ${id}-title`}
 			{...autocomplete.getItemProps({
@@ -209,7 +233,7 @@ function SearchResult({
 			<div
 				id={`${id}-title`}
 				aria-hidden="true"
-				className="text-sm font-medium text-zinc-900 group-aria-selected:text-orange-500 dark:text-white"
+				className="text-sm font-medium light:text-zinc-900 group-aria-selected:text-orange-500 text-white"
 			>
 				<HighlightQuery text={result.title} query={query} />
 			</div>
@@ -227,7 +251,7 @@ function SearchResult({
 								className={
 									itemIndex === items.length - 1
 										? "sr-only"
-										: "mx-2 text-zinc-300 dark:text-zinc-700"
+										: "mx-2 light:text-zinc-300 text-zinc-700"
 								}
 							>
 								/
@@ -252,10 +276,10 @@ function SearchResults({
 	if (collection.items.length === 0) {
 		return (
 			<div className="p-6 text-center">
-				<NoResultsIcon className="mx-auto h-5 w-5 stroke-zinc-900 dark:stroke-zinc-600" />
-				<p className="mt-2 text-xs text-zinc-700 dark:text-zinc-400">
+				<NoResultsIcon className="mx-auto h-5 w-5 light:stroke-zinc-900 stroke-zinc-600" />
+				<p className="mt-2 text-xs light:text-zinc-700 text-zinc-400">
 					Nothing found for{" "}
-					<strong className="break-words font-semibold text-zinc-900 dark:text-white">
+					<strong className="break-words font-semibold light:text-zinc-900 text-white">
 						&lsquo;{query}&rsquo;
 					</strong>
 					. Please try again.
@@ -299,7 +323,7 @@ function SearchInput({
 				ref={ref}
 				data-autofocus
 				className={clsx(
-					"flex-auto appearance-none bg-transparent pl-10 text-zinc-900 outline-none placeholder:text-zinc-500 focus:w-full focus:flex-none sm:text-sm dark:text-white [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden",
+					"flex-auto appearance-none bg-transparent pl-10 light:text-zinc-900 outline-none placeholder:text-zinc-500 focus:w-full focus:flex-none sm:text-sm text-white [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden",
 					autocompleteState.status === "stalled" ? "pr-11" : "pr-4",
 				)}
 				{...inputProps}
@@ -323,7 +347,7 @@ function SearchInput({
 			/>
 			{autocompleteState.status === "stalled" && (
 				<div className="absolute inset-y-0 right-3 flex items-center">
-					<LoadingIcon className="h-5 w-5 animate-spin stroke-zinc-200 text-zinc-900 dark:stroke-zinc-800 dark:text-orange-400" />
+					<LoadingIcon className="h-5 w-5 animate-spin light:stroke-zinc-200 light:text-zinc-900 stroke-zinc-800 text-orange-400" />
 				</div>
 			)}
 		</div>
@@ -384,13 +408,13 @@ function SearchDialog({
 		>
 			<DialogBackdrop
 				transition
-				className="fixed inset-0 bg-zinc-400/25 backdrop-blur-sm data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in dark:bg-black/40"
+				className="fixed inset-0 light:bg-zinc-400/25 backdrop-blur-sm data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in bg-black/40"
 			/>
 
 			<div className="fixed inset-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-20 md:py-32 lg:px-8 lg:py-[15vh]">
 				<DialogPanel
 					transition
-					className="mx-auto transform-gpu overflow-hidden rounded-lg bg-zinc-50 shadow-xl ring-1 ring-zinc-900/7.5 data-[closed]:scale-95 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:max-w-xl dark:bg-zinc-900 dark:ring-zinc-800"
+					className="mx-auto transform-gpu overflow-hidden rounded-lg light:bg-zinc-50 shadow-xl ring-1 ring-zinc-900/7.5 data-[closed]:scale-95 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:max-w-xl bg-zinc-900 ring-zinc-800"
 				>
 					<div {...autocomplete.getRootProps({})}>
 						<form
@@ -407,7 +431,7 @@ function SearchDialog({
 							/>
 							<div
 								ref={panelRef}
-								className="border-t border-zinc-200 bg-white empty:hidden dark:border-zinc-100/5 dark:bg-white/2.5"
+								className="border-t border-zinc-200 light:bg-white empty:hidden border-zinc-100/5 bg-white/2.5"
 								{...autocomplete.getPanelProps({})}
 							>
 								{autocompleteState.isOpen && (
@@ -427,14 +451,7 @@ function SearchDialog({
 }
 
 export default function Search() {
-	const [modifierKey, setModifierKey] = useState<string>();
 	const { buttonProps, dialogProps } = useSearchProps();
-
-	useEffect(() => {
-		setModifierKey(
-			/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? "⌘" : "Ctrl ",
-		);
-	}, []);
 
 	return (
 		<div className="hidden lg:block lg:max-w-md lg:flex-auto -ml-2">
@@ -444,7 +461,7 @@ export default function Search() {
 				{...buttonProps}
 			>
 				<SearchIcon className="h-5 w-5 stroke-current" />
-				Find something...
+				Search documentation...
 				<kbd className="ml-auto text-2xs light:text-zinc-400 text-neutral-500">
 					<kbd className="font-sans text-neutral-500">
 						{/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? "⌘" : "Ctrl "}
