@@ -81,7 +81,7 @@ const config: Config = {
 			isCloseable: true,
 		},
 		navbar: {
-			title: "Ngyn",
+			title: "ngyn",
 			logo: {
 				alt: "Ngyn Logo",
 				src: "https://avatars.githubusercontent.com/u/142031159?s=200&v=4",

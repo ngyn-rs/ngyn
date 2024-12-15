@@ -16,6 +16,7 @@ import type { Props } from "@theme/Layout";
 import styles from "./styles.module.css";
 import { SectionProvider } from "@site/src/components/SectionProvider";
 import { Footer } from "@site/src/components/Footer";
+import { Toaster } from "react-hot-toast";
 
 export default function Layout(props: Props): JSX.Element {
 	const {
@@ -57,6 +58,17 @@ export default function Layout(props: Props): JSX.Element {
 
 				{!noFooter && <Footer />}
 			</SectionProvider>
+			<Toaster
+				position="bottom-center"
+				toastOptions={{
+					className: "text-xs",
+					style: {
+						background: "rgb(251 146 60 / var(--tw-text-opacity, 1))",
+						color: "white",
+					},
+					duration: 3000,
+				}}
+			/>
 		</LayoutProvider>
 	);
 }
