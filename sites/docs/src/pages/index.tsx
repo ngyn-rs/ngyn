@@ -8,10 +8,25 @@ import Link from "@docusaurus/Link";
 import { Button } from "../components/Button";
 import toast from "react-hot-toast";
 
-const homePageCode = `#[handler]
+const homePageCode = `use ngyn::prelude::*;
+
+#[handler]
 fn echo_hello() -> String {
-    "Hello World!".to_string()
-}`;
+    "Hello World, Ngyn!".to_string()
+}
+
+
+#[tokio::main]
+async fn main() {
+
+    let mut app = HyperApplication::default();
+
+    // echo hello for every route and http post verb
+    app.any("*", echo_hello);
+
+    let _ = app.listen("127.0.0.1:3000").await;
+}
+`;
 
 export default function Home(): JSX.Element {
 	const { siteConfig } = useDocusaurusContext();
@@ -53,10 +68,13 @@ export default function Home(): JSX.Element {
 						</div>
 						<div className="max-w-[50%]">
 							<h1 className="text-balance text-5xl font-semibold tracking-tight text-neutral-300 sm:text-7xl">
-								ngyn
+								ngyn{" "}
+								<code className="text-2xl rounded-full font-medium">
+									(en·jn)
+								</code>
 							</h1>
 							<p className="mt-8 text-pretty text-lg md:text-xl font-medium text-gray-500 dark:text-neutral-50 sm:text-xl/8">
-								A next-generation web framework for building ergonomic
+								The next-generation web framework for building ergonomic,
 								lightning-fast, type-safe, reliable backend services in Rust.
 							</p>
 							<div className="mt-10 flex items-center gap-x-6">

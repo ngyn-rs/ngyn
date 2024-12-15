@@ -3,26 +3,27 @@ import { Heading } from "@site/src/components/Heading";
 
 const guides = [
 	{
+		href: "/webhooks",
+		name: "Basics",
+		description:
+			"Learn how to write superpowered sync and async routes and handlers.",
+	},
+	{
 		href: "/authentication",
-		name: "Authentication",
-		description: "Learn how to authenticate your API requests.",
+		name: "Authentication & Authorization",
+		description:
+			"Learn how to restrict access to your endpoints based on specific requirements.",
 	},
 	{
 		href: "/pagination",
-		name: "Pagination",
-		description: "Understand how to work with paginated responses.",
+		name: "Context API",
+		description:
+			"Understand how to work with ngyn at it's core with the context API.",
 	},
 	{
 		href: "/errors",
-		name: "Errors",
-		description:
-			"Read about the different types of errors returned by the API.",
-	},
-	{
-		href: "/webhooks",
-		name: "Webhooks",
-		description:
-			"Learn how to programmatically configure webhooks for your app.",
+		name: "Error Handling",
+		description: "Empower your apps with a fluid error handling mechanism.",
 	},
 ];
 
