@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use http::Request;
-use matchit::{Match, MergeError, Router};
+use matchit::{Match, Router};
 use std::sync::Arc;
 
 use super::handler::{handler, RouteHandler};
@@ -126,7 +126,13 @@ pub trait RouteInstance {
 
         self.router_mut().insert(route, handler).unwrap();
     }
+}
 
+pub trait NgynHttpPlatform: Default {
+    fn data_mut(&mut self) -> &mut PlatformData;
+}
+
+pub trait NgynHttpEngine: NgynPlatform {
     /// Adds a route to the application.
     ///
     /// ### Arguments
@@ -178,13 +184,6 @@ pub trait RouteInstance {
     fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
-}
-
-pub trait NgynHttpPlatform: Default {
-    fn data_mut(&mut self) -> &mut PlatformData;
-}
-
-pub trait NgynHttpEngine: NgynPlatform {
     /// Sets up static file routes.
     ///
     /// This is great for apps tha would want to output files in a specific folder.
@@ -219,17 +218,13 @@ pub trait NgynEngine: NgynPlatform {
     }
 
     /// Groups related routes
-    fn group(
-        &mut self,
-        base_path: &str,
-        registry: impl Fn(&mut GroupRouter),
-    ) -> Result<(), MergeError> {
+    fn group(&mut self, base_path: &str, registry: impl Fn(&mut GroupRouter)) {
         let mut group = GroupRouter {
             base_path,
             router: Router::<RouteHandler>::new(),
         };
         registry(&mut group);
-        self.data_mut().router.merge(group.router)
+        self.data_mut().router.merge(group.router).unwrap();
     }
 
     /// Adds a middleware to the application.
