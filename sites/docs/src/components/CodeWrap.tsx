@@ -39,9 +39,10 @@ export function CodeBlock({
 										{i + 1}
 									</span>
 								)}
-								{line.map((token) => (
+								{line.map((token, i) => (
 									<span
-										key={token.content}
+										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+										key={i}
 										{...getTokenProps({
 											token,
 										})}

@@ -87,7 +87,10 @@ function useAutocomplete({ close }: { close: () => void }) {
 							const response = await fetch(
 								`${customFields.chipSearchUrl}/search?query=${query}&limit=${limit}`,
 							);
-							return response.json().catch(() => []);
+							return response
+								.json()
+								.then(({ data }) => data ?? [])
+								.catch(() => []);
 						},
 					}),
 				).then(({ search }) => {
@@ -95,7 +98,6 @@ function useAutocomplete({ close }: { close: () => void }) {
 						{
 							sourceId: "documentation",
 							getItems() {
-								console.log(search(query, { limit: 5 }));
 								return search(query, { limit: 5 });
 							},
 							getItemUrl({ item }) {
@@ -435,13 +437,13 @@ function SearchDialog({
 							/>
 							<div
 								ref={panelRef}
-								className="border-t border-zinc-200 light:bg-white empty:hidden border-zinc-100/5 bg-white/2.5"
+								className="border-t light:border-zinc-200 light:bg-white empty:hidden border-zinc-100/5 bg-white/2.5"
 								{...autocomplete.getPanelProps({})}
 							>
 								{autocompleteState.isOpen && (
 									<SearchResults
 										autocomplete={autocomplete}
-										query={autocompleteState.query}
+										query={autocompleteState.query ?? ""}
 										collection={autocompleteState.collections[0]}
 									/>
 								)}

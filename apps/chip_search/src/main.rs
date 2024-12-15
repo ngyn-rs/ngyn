@@ -1,6 +1,6 @@
 use dotenv::dotenv;
 use ngyn::prelude::*;
-use reqwest;
+use reqwest::{self, header::ACCESS_CONTROL_ALLOW_ORIGIN};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::env;
@@ -9,6 +9,12 @@ use std::env;
 struct SearchResponse {
     total_count: u32,
     items: Vec<MarkdownFile>,
+}
+
+#[derive(Query)]
+struct SearchQuery {
+    query: String,
+    limit: u8,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -77,10 +83,14 @@ impl GitHubSearchClient {
     }
 }
 
-#[derive(Query)]
-struct SearchQuery {
-    query: String,
-    limit: u8,
+struct CorsMiddleware;
+
+impl NgynMiddleware for CorsMiddleware {
+    async fn handle(cx: &mut NgynContext<'_>) {
+        cx.response()
+            .headers_mut()
+            .append(ACCESS_CONTROL_ALLOW_ORIGIN, "*".parse().unwrap());
+    }
 }
 
 #[handler]
@@ -105,6 +115,8 @@ async fn main() {
     dotenv().ok();
 
     let mut app = HyperApplication::default();
+
+    app.use_middleware(CorsMiddleware {});
 
     app.get("/search", async_wrap(handle_search));
 
