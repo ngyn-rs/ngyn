@@ -95,13 +95,14 @@ export function Heading<Level extends 2 | 3>({
 			registerHeading({ id: props.id, ref, offsetRem: tag || label ? 8 : 6 });
 		}
 	});
+	const val = Math.abs(level - 6);
 
 	return (
 		<>
 			<Eyebrow tag={tag} label={label} />
 			<Component
 				ref={ref}
-				className={tag || label ? "mt-2 scroll-mt-32" : "scroll-mt-24"}
+				className={`${tag || label ? "mt-2 scroll-mt-32" : "scroll-mt-24"} text-${val}xl`}
 				{...props}
 			>
 				{anchor ? (

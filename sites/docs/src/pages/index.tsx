@@ -15,7 +15,6 @@ fn echo_hello() -> String {
     "Hello World, Ngyn!".to_string()
 }
 
-
 #[tokio::main]
 async fn main() {
 
@@ -25,8 +24,7 @@ async fn main() {
     app.any("*", echo_hello);
 
     let _ = app.listen("127.0.0.1:3000").await;
-}
-`;
+}`;
 
 export default function Home(): JSX.Element {
 	const { siteConfig } = useDocusaurusContext();

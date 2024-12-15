@@ -28,7 +28,7 @@ export function CodeBlock({
 			>
 				{({ className, style, tokens, getLineProps, getTokenProps }) => (
 					<pre
-						className={clsx(className, "block  flex-auto mb-0")}
+						className={clsx(className, "block  flex-auto mb-0 rounded-t-none")}
 						style={style}
 					>
 						{tokens.map((line, i) => (
@@ -60,7 +60,7 @@ export default function CodeWrap({ children, className }: Props): JSX.Element {
 	return (
 		<div
 			className={clsx(
-				"relative overflow-hidden shadow-xl flex bg-white border border-black sm:max-h-[none] sm:rounded-xl lg:h-[34.6875rem] xl:h-[31.625rem] bg-zinc-900/50 backdrop-blur ring-1 ring-inset ring-white/10 !h-auto max-h-[none] mb-4",
+				"relative overflow-hidden shadow-xl flex sm:max-h-[none] sm:rounded-xl lg:h-[34.6875rem] xl:h-[31.625rem] bg-zinc-900/50 backdrop-blur ring-1 ring-inset ring-white/10 !h-auto max-h-[none] mb-4 text-base",
 				className,
 			)}
 		>

@@ -176,7 +176,7 @@ function FeaturePattern({
 				/>
 			</div>
 			<motion.div
-				className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#D7EDEA] to-[#F4FBDF] opacity-0 transition duration-300 group-hover:opacity-100 dark:from-[#202D2E] dark:to-[#303428]"
+				className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#0c0d0d] to-[#242320] opacity-0 transition duration-300 group-hover:opacity-100 dark:from-[#202D2E] dark:to-[#303428]"
 				style={style}
 			/>
 			<motion.div
@@ -219,13 +219,13 @@ function Feature({ feature }: { feature: Feature }) {
 			<div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-zinc-900/7.5 group-hover:ring-zinc-900/10 dark:ring-white/10 dark:group-hover:ring-white/20" />
 			<div className="relative rounded-2xl px-4 pb-4 pt-16">
 				<FeatureIcon icon={feature.icon} />
-				<h3 className="mt-4 text-sm font-semibold leading-7 text-zinc-900 dark:text-white">
+				<h3 className="mt-4 text-sm font-semibold leading-7 light:text-zinc-900 text-white">
 					<Link href={feature.href}>
 						<span className="absolute inset-0 rounded-2xl" />
 						{feature.name}
 					</Link>
 				</h3>
-				<p className="mt-1 text-sm light:text-zinc-600 dark:text-zinc-400">
+				<p className="mt-1 mb-2 text-sm light:text-zinc-600 dark:text-zinc-400">
 					{feature.description}
 				</p>
 				<Button variant="filled">Learn more</Button>
@@ -240,7 +240,7 @@ export function EcosystemFeatures() {
 			<Heading level={2} id="ecosystem">
 				The Ecosystem
 			</Heading>
-			<div className="not-prose mt-4 grid grid-cols-1 gap-8 border-t light:border-zinc-900/5 pt-10 sm:grid-cols-2 xl:grid-cols-4 dark:border-white/5">
+			<div className="not-prose mt-4 grid grid-cols-1 gap-8 pt-10 sm:grid-cols-2 xl:grid-cols-4">
 				{features.map((feature) => (
 					<Feature key={feature.name} feature={feature} />
 				))}

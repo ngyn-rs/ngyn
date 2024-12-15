@@ -1,3 +1,4 @@
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -7,6 +8,7 @@
     --ifm-navbar-background-color: var(--ifm-background-color);
     --ifm-navbar-link-hover-color: theme("colors.white");
     --docusaurus-highlighted-code-line-bg: theme("colors.zinc.700");
+    --ifm-code-border-radius: 0;
 
     --ifm-code-font-size: 95%;
     --ifm-font-size-base: 95%;
@@ -46,6 +48,18 @@ a[href="/docs/next/intro"] {
 .menu__list-item {
     margin-top: theme("spacing.3");
     margin-bottom: theme("spacing.3");
+}
+
+.navbar__item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+kbd {
+    background: none;
+    border: none;
+    box-shadow: none;
 }
 
 @layer components {

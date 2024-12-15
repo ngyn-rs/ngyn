@@ -3,19 +3,19 @@ import { Heading } from "@site/src/components/Heading";
 
 const guides = [
 	{
-		href: "/webhooks",
+		href: "/basics",
 		name: "Basics",
 		description:
 			"Learn how to write superpowered sync and async routes and handlers.",
 	},
 	{
-		href: "/authentication",
+		href: "/gates",
 		name: "Authentication & Authorization",
 		description:
 			"Learn how to restrict access to your endpoints based on specific requirements.",
 	},
 	{
-		href: "/pagination",
+		href: "/context",
 		name: "Context API",
 		description:
 			"Understand how to work with ngyn at it's core with the context API.",
@@ -43,7 +43,7 @@ export function Guides() {
 							{guide.description}
 						</p>
 						<p className="mt-4">
-							<Button href={guide.href} variant="text" arrow="right">
+							<Button href={`/docs/${guide.href}`} variant="text" arrow="right">
 								Read more
 							</Button>
 						</p>

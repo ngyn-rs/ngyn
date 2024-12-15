@@ -1,29 +1,29 @@
-"use client";
+// By default, the classic theme does not provide any SearchBar implementation
+// If you swizzled this, it is your responsibility to provide an implementation
+// Tip: swizzle the SearchBar from the Algolia theme for inspiration:
+// npm run swizzle @docusaurus/theme-search-algolia SearchBar
 
-import {
-	forwardRef,
-	Fragment,
-	Suspense,
-	useCallback,
-	useEffect,
-	useId,
-	useRef,
-	useState,
-} from "react";
+import { useHistory, useLocation } from "@docusaurus/router";
+import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
+import clsx from "clsx";
 import Highlighter from "react-highlight-words";
-// import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+	useState,
+	useEffect,
+	Suspense,
+	useRef,
+	useId,
+	Fragment,
+	useCallback,
+} from "react";
+
 import {
 	type AutocompleteApi,
 	type AutocompleteCollection,
 	type AutocompleteState,
 	createAutocomplete,
 } from "@algolia/autocomplete-core";
-import { Dialog, DialogPanel, DialogBackdrop } from "@headlessui/react";
-import clsx from "clsx";
-
-import { navigation } from "@site/src/components/Navigation";
 import type { Result } from "@site/src/mdx/search.mjs";
-import { useHistory, useLocation } from "@docusaurus/router";
 
 type EmptyObject = Record<string, never>;
 
@@ -76,25 +76,36 @@ function useAutocomplete({ close }: { close: () => void }) {
 				navigate,
 			},
 			getSources({ query }) {
-				return import("@site/src/mdx/search.mjs").then(({ search }) => {
-					return [
-						{
-							sourceId: "documentation",
-							getItems() {
-								return search(query, { limit: 5 });
-							},
-							getItemUrl({ item }) {
-								return item.url;
-							},
-							onSelect: navigate,
-						},
-					];
-				});
+				return [];
 			},
 		}),
 	);
 
 	return { autocomplete, autocompleteState };
+}
+
+function useSearchProps() {
+	const buttonRef = useRef<React.ElementRef<"button">>(null);
+	const [open, setOpen] = useState(false);
+
+	return {
+		buttonProps: {
+			ref: buttonRef,
+			onClick() {
+				setOpen(true);
+			},
+		},
+		dialogProps: {
+			open,
+			setOpen: useCallback((open: boolean) => {
+				const { width = 0, height = 0 } =
+					buttonRef.current?.getBoundingClientRect() ?? {};
+				if (!open || (width !== 0 && height !== 0)) {
+					setOpen(open);
+				}
+			}, []),
+		},
+	};
 }
 
 function SearchIcon(props: React.ComponentPropsWithoutRef<"svg">) {
@@ -176,7 +187,7 @@ function SearchResult({
 }) {
 	const id = useId();
 
-	const sectionTitle = navigation.find((section) =>
+	const sectionTitle = [].find((section) =>
 		section.links.find((link) => link.href === result.url.split("#")[0]),
 	)?.title;
 	const hierarchy = [sectionTitle, result.pageTitle].filter(
@@ -269,21 +280,23 @@ function SearchResults({
 	);
 }
 
-const SearchInput = forwardRef<
-	React.ElementRef<"input">,
-	{
-		autocomplete: Autocomplete;
-		autocompleteState: AutocompleteState<Result> | EmptyObject;
-		onClose: () => void;
-	}
->(function SearchInput({ autocomplete, autocompleteState, onClose }, inputRef) {
+function SearchInput({
+	ref,
+	autocomplete,
+	autocompleteState,
+	onClose,
+}: React.ComponentPropsWithRef<"input"> & {
+	autocomplete: Autocomplete;
+	autocompleteState: AutocompleteState<Result> | EmptyObject;
+	onClose: () => void;
+}) {
 	const inputProps = autocomplete.getInputProps({ inputElement: null });
 
 	return (
 		<div className="group relative flex h-12">
 			<SearchIcon className="pointer-events-none absolute left-3 top-0 h-full w-5 stroke-zinc-500" />
 			<input
-				ref={inputRef}
+				ref={ref}
 				data-autofocus
 				className={clsx(
 					"flex-auto appearance-none bg-transparent pl-10 text-zinc-900 outline-none placeholder:text-zinc-500 focus:w-full focus:flex-none sm:text-sm dark:text-white [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden",
@@ -315,7 +328,7 @@ const SearchInput = forwardRef<
 			)}
 		</div>
 	);
-});
+}
 
 function SearchDialog({
 	open,
@@ -413,33 +426,9 @@ function SearchDialog({
 	);
 }
 
-function useSearchProps() {
-	const buttonRef = useRef<React.ElementRef<"button">>(null);
-	const [open, setOpen] = useState(false);
-
-	return {
-		buttonProps: {
-			ref: buttonRef,
-			onClick() {
-				setOpen(true);
-			},
-		},
-		dialogProps: {
-			open,
-			setOpen: useCallback((open: boolean) => {
-				const { width = 0, height = 0 } =
-					buttonRef.current?.getBoundingClientRect() ?? {};
-				if (!open || (width !== 0 && height !== 0)) {
-					setOpen(open);
-				}
-			}, []),
-		},
-	};
-}
-
-export function Search() {
+export default function Search() {
 	const [modifierKey, setModifierKey] = useState<string>();
-	// const { buttonProps, dialogProps } = useSearchProps();
+	const { buttonProps, dialogProps } = useSearchProps();
 
 	useEffect(() => {
 		setModifierKey(
@@ -448,41 +437,23 @@ export function Search() {
 	}, []);
 
 	return (
-		<div className="hidden lg:block lg:max-w-md lg:flex-auto">
+		<div className="hidden lg:block lg:max-w-md lg:flex-auto -ml-2">
 			<button
 				type="button"
-				className="hidden h-8 w-full items-center gap-2 rounded-full bg-white pl-2 pr-3 text-sm text-zinc-500 ring-1 ring-zinc-900/10 transition hover:ring-zinc-900/20 ui-not-focus-visible:outline-none lg:flex dark:bg-white/5 dark:text-zinc-400 dark:ring-inset dark:ring-white/10 dark:hover:ring-white/20"
-				// {...buttonProps}
+				className="hidden h-8 w-full items-center gap-2 rounded-full bg-white pl-2 pr-3 text-sm light:text-zinc-500 ring-1 light:ring-zinc-900/10 transition light:hover:ring-zinc-900/20 ui-not-focus-visible:outline-none lg:flex bg-white/5 text-zinc-400 ring-inset ring-white/10 hover:ring-white/20"
+				{...buttonProps}
 			>
 				<SearchIcon className="h-5 w-5 stroke-current" />
 				Find something...
-				<kbd className="ml-auto text-2xs text-zinc-400 dark:text-zinc-500">
-					<kbd className="font-sans">{modifierKey}</kbd>
-					<kbd className="font-sans">K</kbd>
+				<kbd className="ml-auto text-2xs light:text-zinc-400 text-neutral-500">
+					<kbd className="font-sans text-neutral-500">
+						{/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? "⌘" : "Ctrl "}
+					</kbd>
+					<kbd className="font-sans text-neutral-500">K</kbd>
 				</kbd>
 			</button>
-			{/* <Suspense fallback={null}>
-				<SearchDialog className="hidden lg:block" {...dialogProps} />
-			</Suspense> */}
-		</div>
-	);
-}
-
-export function MobileSearch() {
-	const { buttonProps, dialogProps } = useSearchProps();
-
-	return (
-		<div className="contents lg:hidden">
-			<button
-				type="button"
-				className="flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-zinc-900/5 ui-not-focus-visible:outline-none lg:hidden dark:hover:bg-white/5"
-				aria-label="Find something..."
-				{...buttonProps}
-			>
-				<SearchIcon className="h-5 w-5 stroke-zinc-900 dark:stroke-white" />
-			</button>
 			<Suspense fallback={null}>
-				<SearchDialog className="lg:hidden" {...dialogProps} />
+				<SearchDialog className="hidden lg:block" {...dialogProps} />
 			</Suspense>
 		</div>
 	);
