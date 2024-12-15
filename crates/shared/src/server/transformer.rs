@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, str::FromStr};
 
 use bytes::Bytes;
 use futures_util::StreamExt;
@@ -99,10 +99,12 @@ impl<'a> Param<'a> {
     /// assert_eq!(param.get("name"), Some("John".to_string()));
     /// assert_eq!(param.get("age"), None);
     /// ```
-    pub fn get(&self, id: &str) -> Option<String> {
+    pub fn get<F: FromStr>(&self, id: &str) -> Option<F> {
         for (key, value) in &self.data {
             if *key == id {
-                return Some(value.to_string());
+                if let Ok(value) = value.parse() {
+                    return Some(value);
+                }
             }
         }
         None
@@ -131,7 +133,7 @@ impl<'a: 'b, 'b> Transformer<'a> for Param<'b> {
     fn transform(cx: &'a mut NgynContext) -> Self {
         let data: Vec<(&'a str, &'a str)> = cx
             .params()
-            .unwrap_or_else(|| panic!("Extracting params should only be done in route handlers."))
+            .expect("Extracting params should only be done in route handlers.")
             .iter()
             .collect();
         Param { data }
@@ -167,12 +169,14 @@ impl<'q> Query<'q> {
     /// assert_eq!(query.get("name"), Some("John".to_string()));
     /// assert_eq!(query.get("age"), None);
     /// ```
-    pub fn get(&self, id: &str) -> Option<String> {
+    pub fn get<F: FromStr>(&self, id: &str) -> Option<F> {
         let query = self.uri.query().unwrap_or("");
         let query = url::form_urlencoded::parse(query.as_bytes());
         for (key, value) in query {
             if key == id {
-                return Some(value.to_string());
+                if let Ok(value) = value.parse() {
+                    return Some(value);
+                }
             }
         }
         None

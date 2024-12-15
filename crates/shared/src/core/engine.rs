@@ -9,14 +9,18 @@ use crate::{
     Middleware, NgynMiddleware,
 };
 
-#[derive(Default)]
-pub struct GroupRouter {
+pub struct GroupRouter<'b> {
+    base_path: &'b str,
     router: Router<RouteHandler>,
 }
 
-impl RouteInstance for GroupRouter {
+impl RouteInstance for GroupRouter<'_> {
     fn router_mut(&mut self) -> &mut Router<RouteHandler> {
         &mut self.router
+    }
+
+    fn mount(&self) -> &str {
+        self.base_path
     }
 }
 
@@ -96,6 +100,12 @@ pub trait NgynPlatform: Default {
 
 pub trait RouteInstance {
     fn router_mut(&mut self) -> &mut Router<RouteHandler>;
+
+    /// Mounts the route on a path, defaults to "/"
+    fn mount(&self) -> &str {
+        "/"
+    }
+
     /// Adds a route to the platform data.
     ///
     /// ### Arguments
@@ -111,7 +121,7 @@ pub trait RouteInstance {
         let route = if path.starts_with('/') {
             method + path
         } else {
-            method + "/" + path
+            method + self.mount() + path
         };
 
         self.router_mut().insert(route, handler).unwrap();
@@ -208,8 +218,14 @@ pub trait NgynEngine: NgynPlatform {
         self.add_route(path, None, handler.into());
     }
 
-    fn group(&mut self, registry: impl Fn(&mut GroupRouter)) -> Result<(), MergeError> {
+    /// Groups related routes
+    fn group(
+        &mut self,
+        base_path: &str,
+        registry: impl Fn(&mut GroupRouter),
+    ) -> Result<(), MergeError> {
         let mut group = GroupRouter {
+            base_path,
             router: Router::<RouteHandler>::new(),
         };
         registry(&mut group);
