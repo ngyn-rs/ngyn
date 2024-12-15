@@ -1,4 +1,3 @@
-import React from "react";
 import clsx from "clsx";
 import ErrorBoundary from "@docusaurus/ErrorBoundary";
 import {
@@ -10,11 +9,13 @@ import { useKeyboardNavigation } from "@docusaurus/theme-common/internal";
 import SkipToContent from "@theme/SkipToContent";
 import AnnouncementBar from "@theme/AnnouncementBar";
 import Navbar from "@theme/Navbar";
-import Footer from "@theme/Footer";
+// import Footer from "@theme/Footer";
 import LayoutProvider from "@theme/Layout/Provider";
 import ErrorPageContent from "@theme/ErrorPageContent";
 import type { Props } from "@theme/Layout";
 import styles from "./styles.module.css";
+import { SectionProvider } from "@site/src/components/SectionProvider";
+import { Footer } from "@site/src/components/Footer";
 
 export default function Layout(props: Props): JSX.Element {
 	const {
@@ -30,28 +31,32 @@ export default function Layout(props: Props): JSX.Element {
 
 	return (
 		<LayoutProvider>
-			<PageMetadata title={title} description={description} />
+			<SectionProvider sections={[]}>
+				<PageMetadata title={title} description={description} />
 
-			<SkipToContent />
+				<SkipToContent />
 
-			<AnnouncementBar />
+				<AnnouncementBar />
 
-			<Navbar />
+				<Navbar />
 
-			<div
-				id={SkipToContentFallbackId}
-				className={clsx(
-					ThemeClassNames.wrapper.main,
-					styles.mainWrapper,
-					wrapperClassName,
-				)}
-			>
-				<ErrorBoundary fallback={(params) => <ErrorPageContent {...params} />}>
-					{children}
-				</ErrorBoundary>
-			</div>
+				<div
+					id={SkipToContentFallbackId}
+					className={clsx(
+						ThemeClassNames.wrapper.main,
+						styles.mainWrapper,
+						wrapperClassName,
+					)}
+				>
+					<ErrorBoundary
+						fallback={(params) => <ErrorPageContent {...params} />}
+					>
+						{children}
+					</ErrorBoundary>
+				</div>
 
-			{!noFooter && <Footer />}
+				{!noFooter && <Footer />}
+			</SectionProvider>
 		</LayoutProvider>
 	);
 }

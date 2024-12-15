@@ -25,11 +25,15 @@
         "@tailwindcss/typography": "0.5.15",
         "autoprefixer": "10.4.20",
         "clsx": "^2.0.0",
+        "framer-motion": "11.14.4",
+        "lucide-react": "0.468.0",
         "postcss": "8.4.38",
         "prism-react-renderer": "^2.3.0",
         "react": "19.0.0",
         "react-dom": "19.0.0",
-        "tailwindcss": "3.4.16"
+        "react-highlight-words": "0.20.0",
+        "tailwindcss": "3.4.16",
+        "zustand": "5.0.2"
     },
     "devDependencies": {
         "@docusaurus/module-type-aliases": "3.6.3",
@@ -38,6 +42,7 @@
         "@eslint/compat": "^1.1.0",
         "@eslint/js": "^9.5.0",
         "@types/node": "22.10.2",
+        "@types/react-highlight-words": "0.20.0",
         "eslint": "9.x",
         "eslint-config-universe": "14.0.0",
         "eslint-plugin-react": "7.37.2",

@@ -22,7 +22,7 @@ export function CodeBlock({
 	return (
 		<CodeWrap className={className}>
 			<Highlight
-				theme={colorMode === "dark" ? themes.palenight : themes.oneLight}
+				theme={colorMode === "dark" ? themes.oneDark : themes.oneLight}
 				code={code}
 				language={language}
 			>
