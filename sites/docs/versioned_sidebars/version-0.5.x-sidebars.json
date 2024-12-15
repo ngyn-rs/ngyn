@@ -10,9 +10,9 @@
             "href": "https://docs.rs/ngyn"
         },
         {
-            "type": "html",
-            "value": "<a class='btn btn-primary w-full block text-center' href='https://cal.com/elcharitas'>Get Support</a>",
-            "className": "w-full mt-6"
+            "type": "link",
+            "label": "Get Support",
+            "href": "https://docs.rs/ngyn"
         }
     ]
 }

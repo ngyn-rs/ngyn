@@ -33,12 +33,8 @@ export default function Home(): JSX.Element {
 	async function onKeyDown(event: KeyboardEvent) {
 		if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
-			// try {
 			await navigator.clipboard.writeText("cargo add ngyn");
 			toast.success("Copied to clipboard successfully");
-			// } catch {
-			// 	/* empty */
-			// }
 		}
 	}
 
@@ -80,7 +76,7 @@ export default function Home(): JSX.Element {
 								</Link>
 							</div>
 						</div>
-						<div className="md:max-w-[50%] text-center md:text-left">
+						<div className="md:max-w-[60%] 2xl:max-w-[50%] text-center md:text-left">
 							<h1 className="text-balance text-5xl font-semibold tracking-tight text-neutral-300 sm:text-7xl">
 								ngyn{" "}
 								<code className="text-2xl rounded-full font-medium">
