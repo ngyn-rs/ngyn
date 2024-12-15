@@ -16,6 +16,7 @@ import {
 	Fragment,
 	useCallback,
 } from "react";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import {
 	type AutocompleteApi,
@@ -40,6 +41,10 @@ function useAutocomplete({ close }: { close: () => void }) {
 	const [autocompleteState, setAutocompleteState] = useState<
 		AutocompleteState<Result> | EmptyObject
 	>({});
+
+	const {
+		siteConfig: { customFields },
+	} = useDocusaurusContext();
 
 	function navigate({ itemUrl }: { itemUrl?: string }) {
 		if (!itemUrl) {
@@ -78,13 +83,12 @@ function useAutocomplete({ close }: { close: () => void }) {
 			getSources({ query }) {
 				return new Promise((resolve) =>
 					resolve({
-						search: (query: string, { limit }: { limit?: number }) => [
-							{
-								label: "Twitter",
-								title: "Twitter",
-								url: "https://twitter.com",
-							},
-						],
+						search: async (query: string, { limit }: { limit?: number }) => {
+							const response = await fetch(
+								`${customFields.chipSearchUrl}/search?query=${query}&limit=${limit}`,
+							);
+							return response.json().catch(() => []);
+						},
 					}),
 				).then(({ search }) => {
 					return [

@@ -35,7 +35,7 @@ interface Feature {
 
 const features: Array<Feature> = [
 	{
-		href: "/",
+		href: "/basics",
 		name: "High Performance",
 		description:
 			"Ngyn is built for speed, leveraging Rust's blazing-fast runtime and zero-cost abstractions to deliver unparalleled backend performance.",

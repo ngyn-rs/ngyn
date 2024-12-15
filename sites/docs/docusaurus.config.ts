@@ -7,6 +7,10 @@ const config: Config = {
 	tagline: "Web Framework for ergonomic crabs",
 	favicon: "https://avatars.githubusercontent.com/u/142031159?s=32&v=4",
 
+	customFields: {
+		chipSearchUrl: process.env.CHIP_SET_URL ?? "http://127.0.0.1:8000",
+	},
+
 	// Set the production url of your site here
 	url: "https://ngyn.rs",
 	// Set the /<baseUrl>/ pathname under which your site is served

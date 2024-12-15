@@ -64,7 +64,7 @@ export default function Home(): JSX.Element {
 								</Link>
 							</div>
 						</div>
-						<div className="md:isolatemax-w-[50%] text-center md:text-left">
+						<div className="md:max-w-[50%] text-center md:text-left">
 							<h1 className="text-balance text-5xl font-semibold tracking-tight text-neutral-300 sm:text-7xl">
 								ngyn{" "}
 								<code className="text-2xl rounded-full font-medium">
