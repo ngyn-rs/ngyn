@@ -7,6 +7,7 @@ import { EcosystemFeatures } from "../components/Features";
 import Link from "@docusaurus/Link";
 import { Button } from "../components/Button";
 import toast from "react-hot-toast";
+import { useEvent } from "react-use";
 
 const homePageCode = `use ngyn::prelude::*;
 
@@ -32,12 +33,17 @@ export default function Home(): JSX.Element {
 	async function onKeyDown(event: KeyboardEvent) {
 		if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
+			// try {
 			await navigator.clipboard.writeText("cargo add ngyn");
 			toast.success("Copied to clipboard successfully");
+			// } catch {
+			// 	/* empty */
+			// }
 		}
 	}
 
-	window.addEventListener("keydown", onKeyDown);
+	useEvent("onKeyDown", onKeyDown);
+
 	return (
 		<Layout
 			title={siteConfig.title}
