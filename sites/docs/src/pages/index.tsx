@@ -28,6 +28,16 @@ async fn main() {
 
 export default function Home(): JSX.Element {
 	const { siteConfig } = useDocusaurusContext();
+
+	async function onKeyDown(event: KeyboardEvent) {
+		if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
+			event.preventDefault();
+			await navigator.clipboard.writeText("cargo add ngyn");
+			toast.success("Copied to clipboard successfully");
+		}
+	}
+
+	window.addEventListener("keydown", onKeyDown);
 	return (
 		<Layout
 			title={siteConfig.title}
@@ -90,9 +100,9 @@ export default function Home(): JSX.Element {
 									}}
 								>
 									cargo add ngyn
-									<span className="pl-1 flex-none text-xs font-semibold">
+									<kbd className="pl-1 flex-none text-xs font-semibold font-sans">
 										⌘C
-									</span>
+									</kbd>
 								</Button>
 							</div>
 						</div>
