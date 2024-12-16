@@ -6,10 +6,16 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Features
 
+#### Miscellaneous Chores
+
+## 0.2.0 - 2024-12-16
+#### Features
+- [#217](../../../../pull/217) **core**: update ngyn version to v0.5
+
 ## 0.1.1 - 2024-09-07
 #### Bug Fixes
 
 
 ## 0.1.0 - 2024-07-05
 #### Features
-- [#105](../../pull/105) **(platform)**: add support for `hyper` platform
+- [#105](../../../../pull/105) **(platform)**: add support for `hyper` platform

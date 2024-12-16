@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ngyn = { version = "0.4.4", path = "../../crates/core" }
-ngyn-websocket = { version = "0.1.0", path = "../../crates/ws" }
+ngyn = { version = "0", path = "../../crates/core" }
+ngyn-websocket = { version = "0", path = "../../crates/ws" }
 tokio = { version = "1", features = ["full"] }

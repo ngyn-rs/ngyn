@@ -1,8 +1,28 @@
 # Changelog
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-- - -
-## ngyn_macros-0.3.0 - 2023-12-27
+## Unreleased
+#### Bug Fixes
+
+#### Features
+
+#### Miscellaneous Chores
+
+
+## 0.5.0 - 2024-12-16
+#### Bug Fixes
+- invalid values returned from params
+
+#### Features
+- [#197](../../../../pull/197) **core**: add support for async middleware and gates
+- [#205](../../../../pull/205) **routing**: drop support for controlled routing
+- [#209](../../../../pull/209) **core**: new ngyn router
+
+#### Miscellaneous Chores
+- [#207](../../../../pull/207) **core**: cleanup interpreter and async traits
+
+
+## 0.3.0 - 2023-12-27
 #### Bug Fixes
 - re-export common modules into prelude (#75) - (e653403) - elcharitas
 - improve response body peeking and conversion (#74) - (0322480) - elcharitas
