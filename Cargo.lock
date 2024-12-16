@@ -589,7 +589,7 @@ name = "chip_search"
 version = "0.1.0"
 dependencies = [
  "dotenv",
- "ngyn 0.5.0",
+ "ngyn 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest",
  "serde",
  "serde_json",
@@ -2086,6 +2086,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ngyn"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fbdc68b9413c31b1b6f430fae9835287d98f9afba74932f8b7c26ad2146485e"
+dependencies = [
+ "http 1.2.0",
+ "ngyn-hyper 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_macros 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ngyn_shared 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "ngyn-hyper"
 version = "0.1.1"
 source = "git+https://github.com/ngyn-rs/ngyn?branch=dev#d4d6fa35746c08cb181b7468e28224ffa967cb20"
@@ -2105,6 +2117,19 @@ dependencies = [
  "hyper 1.4.0",
  "hyper-util",
  "ngyn_shared 0.5.0",
+ "tokio",
+]
+
+[[package]]
+name = "ngyn-hyper"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c14bfd3aa720daf57fdb227a4dd5ed681ef3143886c522bfd6ae47c90e86516"
+dependencies = [
+ "http-body-util",
+ "hyper 1.4.0",
+ "hyper-util",
+ "ngyn_shared 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
 ]
 
@@ -2188,6 +2213,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ngyn_macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08584013858683a172326ff1c2f4ca1a940552efeabaab0495f6476631d3a714"
+dependencies = [
+ "http 1.2.0",
+ "ngyn_shared 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote",
+ "syn 2.0.77",
+]
+
+[[package]]
 name = "ngyn_shared"
 version = "0.4.5"
 source = "git+https://github.com/ngyn-rs/ngyn?branch=dev#d4d6fa35746c08cb181b7468e28224ffa967cb20"
@@ -2216,6 +2253,24 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "url 2.5.2",
+]
+
+[[package]]
+name = "ngyn_shared"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fce1976f8291ed6f85b1ff64f0a9973931f6c71767d5ad7f3568846f5f61bb53"
+dependencies = [
+ "bytes 1.9.0",
+ "futures-util",
+ "http 1.2.0",
+ "http-body-util",
+ "matchit 0.8.5",
+ "multer",
+ "regex",
+ "serde",
+ "serde_json",
  "url 2.5.2",
 ]
 
