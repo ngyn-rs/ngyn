@@ -589,7 +589,7 @@ name = "chip_search"
 version = "0.1.0"
 dependencies = [
  "dotenv",
- "ngyn 0.4.5",
+ "ngyn 0.5.0",
  "reqwest",
  "serde",
  "serde_json",
