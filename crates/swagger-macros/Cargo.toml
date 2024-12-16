@@ -12,11 +12,11 @@ rust-version = "1.75"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ngyn-hyper = { version = "^0.1.0", path = "../../crates/hyper" }
+ngyn-hyper = { version = "0", path = "../../crates/hyper" }
 quote = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-syn = { version="2.0", features=["full"] }
+syn = { version = "2.0", features = ["full"] }
 
 [lib]
 path = "src/lib.rs"
