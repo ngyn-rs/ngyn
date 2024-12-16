@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Features
 
+
+## 0.2.0 - 2024-12-16
+#### Features
+- [#217](../../../../pull/217) **core**: update ngyn version to v0.5
+
 ## 0.1.1 - 2024-09-07
 #### Features
 - [#186](../../pull/186) **(chore)**: add support for bytes reading

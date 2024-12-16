@@ -1,6 +1,6 @@
 [package]
 name = "ngyn-shuttle"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "Shuttle Runtime Platform for ngyn web framework"
 license = "MIT"
@@ -8,9 +8,10 @@ documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
 rust-version = "1.75"
+keywords = ["ngyn", "run-time", "platform", "shuttle", "framework"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ngyn-hyper = { version = "0.1", path = "../../crates/hyper" }
+ngyn-hyper = { version = "0.2", path = "../../crates/hyper" }
 shuttle-runtime = "0"

@@ -1,8 +1,38 @@
 # Changelog
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
-- - -
-## ngyn_shared-0.3.0 - 2023-12-27
+## Unreleased
+#### Bug Fixes
+
+#### Features
+
+#### Miscellaneous Chores
+
+## 0.5.0 - 2024-12-16
+#### Bug Fixes
+- [#212](../../../../pull/212) **core**: static routes rendering as plain u8 text
+- invalid values returned from params
+- [#216](../../../../pull/216) **routing**: unwrap grouped routes
+- [#208](../../../../pull/208) **core**: param and query transforms
+
+#### Features
+- [#192](../../../../pull/192) **routing**: add support for async handlers
+- [#197](../../../../pull/197) **core**: add support for async middleware and gates
+- [#202](../../../../pull/202) **routing**: add redirect handlers
+- [#205](../../../../pull/205) **routing**: drop support for controlled routing
+- [#206](../../../../pull/206) **routing**: add support for multipart formdata
+- [#209](../../../../pull/209) **core**: new ngyn router
+- [#214](../../../../pull/214) **platforms**: websockets implementation
+- [#215](../../../../pull/215) **routing**: grouped routes and router
+
+#### Miscellaneous Chores
+- [#195](../../../../pull/195) **core**: add info to explain how arc to box works
+- [#203](../../../../pull/203) **routing**: add reexports for handlers
+- [#204](../../../../pull/204) **routing**: remove is_valid_route function
+- [#213](../../../../pull/213) **core**: `ToBytes` implementation + Crates keywords
+- [#207](../../../../pull/207) **core**: cleanup interpreter and async traits
+
+## 0.3.0 - 2023-12-27
 #### Bug Fixes
 - re-export common modules into prelude (#75) - (e653403) - elcharitas
 - broken test case in body - (d3885de) - elcharitas

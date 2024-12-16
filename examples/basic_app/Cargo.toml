@@ -6,7 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-std = { version = "1.6.0", features = ["attributes"] }
-ngyn = { version = "0.4.4", path = "../../crates/core" }
-ngyn-hyper = { version = "0.1.0" }
+ngyn = { version = "0", path = "../../crates/core" }
 tokio = { version = "1", features = ["full"] }

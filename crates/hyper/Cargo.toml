@@ -1,6 +1,6 @@
 [package]
 name = "ngyn-hyper"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "Hyper Platform for ngyn web framework"
 license = "MIT"
@@ -8,10 +8,11 @@ documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
 rust-version = "1.75"
+keywords = ["ngyn", "run-time", "platform", "hyper", "framework"]
 
 [dependencies]
 http-body-util = { workspace = true }
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
-ngyn_shared = { version = "0.4", path = "../shared" }
+ngyn_shared = { version = "0.5", path = "../shared" }
 tokio = { version = "1", features = ["full"] }

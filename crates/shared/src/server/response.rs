@@ -37,22 +37,16 @@ use crate::server::{NgynContext, NgynResponse, Transformer};
 ///
 /// ### How to create a json response?
 /// Ngyn provides an implementation on [`JsonResult`] to convert it to a json response.
-/// This means anytime you make use of a `JsonResult` in your controlled routes, it will be converted to a json response.
+/// This means anytime you make use of a `JsonResult` in your handlers, it will be converted to a json response.
 ///
 /// #### Example
 /// ```rust ignore
+/// use serde_json::json;
 /// use ngyn::prelude::*;
 ///
-/// #[controller]
-/// struct MyController;
-///
-/// #[routes]
-/// impl MyController {
-///    #[get("/")]
-///   async fn get(&self, cx: &mut NgynContext) -> Result<Vec<u8>, ()> {
-///    let data = vec![1, 2, 3];
-///    Ok(data)
-///   }
+/// #[handler]
+/// fn handle_json_response() -> JsonResult {
+///     Ok(json!({ "key": "value" }))
 /// }
 /// ```
 pub struct JsonResponse<D: Serialize, E: Serialize> {
@@ -85,31 +79,26 @@ impl<D: Serialize, E: Serialize> JsonResponse<D, E> {
 /// ### Example
 ///
 /// ```rust ignore
+/// use serde_json::json;
 /// use ngyn::prelude::*;
 ///
-/// #[controller]
-/// struct MyController;
-///
-/// #[routes]
-/// impl MyController {
-///    #[get("/")]
-///   async fn get(&self, cx: &mut NgynContext) -> JsonResult {
+/// #[handler]
+/// async fn get_values() -> JsonResult {
 ///     let data = json!({ "key": "value" });
 ///     Ok(data)
-///   }
 /// }
 /// ```
 pub type JsonResult = Result<Value, Value>;
 
 impl<'a> Transformer<'a> for &'a NgynResponse {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response()
     }
 }
 
 impl<'a> Transformer<'a> for &'a mut NgynResponse {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response()
     }
 }
 
@@ -117,8 +106,8 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
 ///
 /// This is useful when you need to access the headers of a response.
 impl<'a> Transformer<'a> for &'a HeaderMap {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res.headers()
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response().headers()
     }
 }
 
@@ -126,8 +115,8 @@ impl<'a> Transformer<'a> for &'a HeaderMap {
 ///
 /// This is useful when you want to add or remove headers from a response.
 impl<'a> Transformer<'a> for &'a mut HeaderMap {
-    fn transform(_cx: &'a mut NgynContext, res: &'a mut NgynResponse) -> Self {
-        res.headers_mut()
+    fn transform(cx: &'a mut NgynContext) -> Self {
+        cx.response().headers_mut()
     }
 }
 
@@ -147,7 +136,7 @@ impl ReadBytes for NgynResponse {
                 return Ok(bytes);
             }
         }
-        Err("Failed to read bytes".into())
+        Err("No response bytes has been set".into())
     }
 }
 
@@ -161,13 +150,10 @@ pub trait PeekBytes {
 
 impl PeekBytes for NgynResponse {
     async fn peek_bytes(&mut self, mut f: impl FnMut(&Bytes)) {
-        let frame = self.frame().await;
-        if let Some(Ok(frame)) = frame {
-            if let Ok(bytes) = frame.into_data() {
-                f(&bytes);
-                // body has been read, so we need to set it back
-                *self.body_mut() = bytes.into();
-            }
+        if let Ok(bytes) = self.read_bytes().await {
+            f(&bytes);
+            // body has been read, so we need to set it back
+            *self.body_mut() = bytes.into();
         }
     }
 }
@@ -205,11 +191,20 @@ mod tests {
 
         let mut bytes = Vec::new();
         let peek_fn = |data: &Bytes| {
-            bytes.extend_from_slice(&data);
+            bytes.extend_from_slice(data);
         };
 
         response.peek_bytes(peek_fn).await;
+        assert_eq!(bytes, body);
+    }
 
+    #[tokio::test]
+    async fn test_read_bytes() {
+        let mut response = NgynResponse::default();
+        let body = Bytes::from("Hello, world!");
+        *response.body_mut() = body.clone().into();
+
+        let bytes = response.read_bytes().await.unwrap();
         assert_eq!(bytes, body);
     }
 }

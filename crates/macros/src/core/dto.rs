@@ -9,9 +9,8 @@ pub(crate) fn dto_macro(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #impl_generics ngyn::shared::server::Transformer<'_> for #ident #ty_generics #where_clause {
-            fn transform(cx: &mut ngyn::prelude::NgynContext, res: &mut ngyn::prelude::NgynResponse) -> Self {
-                let dto = ngyn::prelude::Body::transform(cx, res);
-                dto.parse::<#ident>().unwrap()
+            fn transform(cx: &mut ngyn::prelude::NgynContext<'_>) -> Self {
+                ngyn::prelude::Body::transform(cx).json::<#ident>().unwrap()
             }
         }
 

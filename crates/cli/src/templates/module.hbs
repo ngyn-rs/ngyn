@@ -1,0 +1,9 @@
+use ngyn::prelude::*;
+
+{{#mods}}
+use super::{{name}}::{{suffix}};
+{{/mods}}
+
+#[module(controllers = [{{#mods}}{{suffix}},{{/mods}}])]
+/// Module `{{name}}`
+pub struct {{name}} {}

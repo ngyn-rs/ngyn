@@ -1,6 +1,6 @@
 [package]
 name = "ngyn_shared"
-version = "0.4.5"
+version = "0.5.0"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
@@ -8,14 +8,17 @@ documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
 rust-version = "1.75"
+keywords = ["ngyn", "shared", "platform", "framework"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-trait = { workspace = true }
 bytes = { workspace = true }
+futures-util = { version = "0.3", default-features = false }
 http-body-util = { workspace = true }
 http = { workspace = true }
+matchit = "0.8.5"
+multer = "3.1.0"
 regex = "1.10"
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -40,17 +40,19 @@ pkg-fmt = "txz"
 
 [dependencies]
 
-clap = { version = "3.2.25", features = ["cargo"], optional = true }
+clap = { version = "4.5", features = ["cargo"], optional = true }
+convert_case = "0.6"
+dialoguer = "0.10"
 serde = "1.0"
-serde_json = "1"
-serde_derive = "1"
-serde_yaml = "^0.9.0"
 anyhow = "1"
 console = "^0.15.0"
+lazy_static = "1"
+ramhorns = "1"
 exitcode = "^1.1.2"
 tracing = "^0.1.34"
 tracing-tree = { version = "0.2.1" }
 tracing-subscriber = { version = "0.3.1", features = ["env-filter"] }
+include_dir = "0.7.4"
 
 
 [features]

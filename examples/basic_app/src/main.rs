@@ -1,16 +1,17 @@
-mod modules;
+use std::path::PathBuf;
 
-use modules::sample::sample_module::SampleModule;
 use ngyn::prelude::*;
 
 #[tokio::main]
 async fn main() {
-    let mut app = NgynFactory::<HyperApplication>::create::<SampleModule>();
+    let mut app = HyperApplication::default();
 
     app.get(
         "/author",
-        handler(|_cx: &mut NgynContext| "Ngyn is created by @elcharitas."),
+        handler(|_| Ok::<&str, ()>("Ngyn is created by @elcharitas.")),
     );
+
+    let _ = app.use_static(PathBuf::from("public"));
 
     println!("Starting server at http://127.0.0.1:8080");
 

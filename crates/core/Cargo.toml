@@ -1,6 +1,6 @@
 [package]
 name = "ngyn"
-version = "0.4.5"
+version = "0.5.0"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
@@ -8,14 +8,13 @@ rust-version = "1.75"
 documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
+keywords = ["web-apps", "web-server", "web-framework", "back-end", "applications"]
 
 [lib]
 path = "src/lib.rs"
 
 [dependencies]
-async-std = { workspace = true }
-async-trait = { workspace = true }
 http = { workspace = true }
-ngyn_macros = { version = "0.4", path = "../macros" }
-ngyn_shared = { version = "0.4", path = "../shared" }
-ngyn-hyper = { version = "0.1", path = "../hyper" }
+ngyn_macros = { version = "0.5", path = "../macros" }
+ngyn_shared = { version = "0.5", path = "../shared" }
+ngyn-hyper = { version = "0.2", path = "../hyper" }

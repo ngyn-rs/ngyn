@@ -1,0 +1,8 @@
+[package]
+name = "with-basic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ngyn = { git = "https://github.com/ngyn-rs/ngyn", branch = "dev" }
+tokio = { version = "1", features = ["full"] }

@@ -1,21 +1,18 @@
 use ngyn::{prelude::*, shared::server::ToBytes};
 use serde_json::json;
 
-#[injectable]
 pub struct NotFoundMiddleware;
 
 impl NgynMiddleware for NotFoundMiddleware {
-    fn handle(&self, cx: &mut NgynContext, res: &mut NgynResponse) {
-        if cx.is_valid_route() {
-            return;
+    async fn handle(cx: &mut NgynContext<'_>) {
+        if cx.params().is_none() {
+            let body = json!({
+                "error": {
+                    "status": 404, // this will be interpreted by the ResponseInterpreter, and set as the status code
+                    "message": "Route not found",
+                }
+            });
+            *cx.response().body_mut() = body.to_bytes().into();
         }
-        *res.body_mut() = json!({
-            "error": {
-                "status": 404, // this will be interpreted by the ResponseInterpreter, and set as the status code
-                "message": "Route not found",
-            }
-        })
-        .to_bytes()
-        .into();
     }
 }

@@ -6,12 +6,8 @@ struct User {
     name: String,
 }
 impl ngyn::shared::server::Transformer<'_> for User {
-    fn transform(
-        cx: &mut ngyn::prelude::NgynContext,
-        res: &mut ngyn::prelude::NgynResponse,
-    ) -> Self {
-        let dto = ngyn::prelude::Body::transform(cx, res);
-        dto.parse::<User>().unwrap()
+    fn transform(cx: &mut ngyn::prelude::NgynContext<'_>) -> Self {
+        ngyn::prelude::Body::transform(cx).json::<User>().unwrap()
     }
 }
 impl ngyn::shared::server::ToBytes for User {

@@ -1,3 +1,4 @@
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -7,6 +8,7 @@
     --ifm-navbar-background-color: var(--ifm-background-color);
     --ifm-navbar-link-hover-color: theme("colors.white");
     --docusaurus-highlighted-code-line-bg: theme("colors.zinc.700");
+    --ifm-code-border-radius: 0;
 
     --ifm-code-font-size: 95%;
     --ifm-font-size-base: 95%;
@@ -22,13 +24,11 @@
 }
 
 .navbar__link--active {
-    color: theme("colors.white");
-    background-color: theme("colors.orange.500");
+    color: theme("colors.orange.500");
 }
 
 .navbar__link:hover:not(.navbar__icon) {
-    color: theme("colors.white");
-    background-color: theme("colors.orange.500");
+    color: theme("colors.orange.600");
 }
 
 .navbar__icon {
@@ -39,6 +39,35 @@
 
 .navbar__icon:hover {
     color: theme("colors.gray.500");
+}
+
+a[href="/docs/next/intro"] {
+    display: none;
+}
+
+.menu__list-item {
+    margin-top: theme("spacing.3");
+    margin-bottom: theme("spacing.3");
+}
+
+.breadcrumbs, .breadcrumbs__item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+@media (min-width: 800px){
+    .navbar__item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+kbd {
+    background: none;
+    border: none;
+    box-shadow: none;
 }
 
 @layer components {
@@ -55,7 +84,7 @@
 
         &:hover {
             color: theme("colors.gray.100") !important;
-            background-color: theme("colors.orange.400");
+            background-color: theme("colors.orange.600");
         }
 
         &:focus {
