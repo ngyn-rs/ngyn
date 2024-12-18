@@ -454,7 +454,7 @@ dependencies = [
 name = "basic_app"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.0",
+ "ngyn 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
 ]
 
