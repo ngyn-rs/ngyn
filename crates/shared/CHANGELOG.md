@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. See [conven
 #### Features
 
 #### Miscellaneous Chores
+- [#221](../../../../pull/221) **core**: improve str to Bytes transform performance
 
 ## 0.5.0 - 2024-12-16
 #### Bug Fixes
