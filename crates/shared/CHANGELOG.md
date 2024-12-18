@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
+- [#220](../../../../pull/220) **core**: static files don't show up on release binary
 
 #### Features
 
