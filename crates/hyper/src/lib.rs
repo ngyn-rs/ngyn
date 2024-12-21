@@ -86,14 +86,9 @@ async fn hyper_service(
     let body = {
         let mut buf = Vec::new();
         // TODO: change this approach. It's not efficient.
-        loop {
-            if let Some(frame) = body.frame().await {
-                let chunk = frame?.into_data();
-                if let Ok(bytes) = chunk {
-                    buf.extend_from_slice(&bytes);
-                } else {
-                    break;
-                }
+        while let Some(frame) = body.frame().await {
+            if let Ok(bytes) = frame?.into_data() {
+                buf.extend_from_slice(&bytes);
             } else {
                 break;
             }
