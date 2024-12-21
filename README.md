@@ -7,7 +7,7 @@
 [![Crates.io](https://img.shields.io/crates/v/ngyn.svg)](https://crates.io/crates/ngyn)
 [![Docs.rs](https://docs.rs/ngyn/badge.svg)](https://ngyn.rs)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-![MSRV](https://img.shields.io/badge/MSRV-1.75-blue)
+![MSRV](https://img.shields.io/badge/MSRV-1.80-blue)
 [![Made in Nigeria](https://img.shields.io/badge/made%20in-nigeria-008751.svg?style=flat-square)](https://github.com/acekyd/made-in-nigeria)
 
 A progressive framework in [Rust](https://www.rust-lang.org/) for building scalable web servers.
