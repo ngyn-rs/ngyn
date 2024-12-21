@@ -3,11 +3,14 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
-- [#223](../../../../pull/223) **core**: implement graceful shutdown on `hyper` platform
 
 #### Features
 
 #### Miscellaneous Chores
+
+## 0.2.1 - 2024-12-21
+#### Bug Fixes
+- [#223](../../../../pull/223) **core**: implement graceful shutdown on `hyper` platform
 
 ## 0.2.0 - 2024-12-16
 #### Features

@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Features
 
+#### Miscellaneous Chores
+
+
+## 0.1.1 - 2024-12-21
+
 
 ## 0.1.0 - 2024-12-16
 #### Features

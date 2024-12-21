@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file. See [conven
 #### Miscellaneous Chores
 
 
+## 0.5.1 - 2024-12-21
+
+
 ## 0.5.0 - 2024-12-16
 #### Bug Fixes
 - invalid values returned from params

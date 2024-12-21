@@ -3,9 +3,15 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
-- [#220](../../../../pull/220) **core**: static files don't show up on release binary
 
 #### Features
+
+#### Miscellaneous Chores
+
+
+## 0.5.1 - 2024-12-21
+#### Bug Fixes
+- [#220](../../../../pull/220) **core**: static files don't show up on release binary
 
 #### Miscellaneous Chores
 - [#221](../../../../pull/221) **core**: improve str to Bytes transform performance
