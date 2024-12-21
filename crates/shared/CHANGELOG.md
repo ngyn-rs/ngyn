@@ -8,6 +8,14 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Miscellaneous Chores
 
+
+## 0.5.1 - 2024-12-21
+#### Bug Fixes
+- [#220](../../../../pull/220) **core**: static files don't show up on release binary
+
+#### Miscellaneous Chores
+- [#221](../../../../pull/221) **core**: improve str to Bytes transform performance
+
 ## 0.5.0 - 2024-12-16
 #### Bug Fixes
 - [#212](../../../../pull/212) **core**: static routes rendering as plain u8 text

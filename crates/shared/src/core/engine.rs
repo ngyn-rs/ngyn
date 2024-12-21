@@ -184,6 +184,7 @@ pub trait NgynHttpEngine: NgynPlatform {
     fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
+
     /// Sets up static file routes.
     ///
     /// This is great for apps tha would want to output files in a specific folder.
@@ -191,23 +192,19 @@ pub trait NgynHttpEngine: NgynPlatform {
     ///
     /// The behavior of `use_static` in ngyn is different from other frameworks.
     /// 1. You can call it multiple times, each call registers a new set of routes
-    /// 2. The directory used as static folder is prefixed to all routes.
-    ///     This means: project_root/static/logo.png -> https://example.com/static/logo.png
+    /// 2. The files in `path_buf` folder aren't embedded into your binary and must be copied to the location of your binary
+    ///
+    /// ### Arguments
+    ///
+    /// - `path_buf` - static folder, relative to Cargo.toml in dev, and the binary in release
+    ///
     fn use_static(&mut self, path_buf: std::path::PathBuf) -> std::io::Result<()> {
-        for entry in std::fs::read_dir(path_buf)? {
-            let path = entry?.path();
+        let assets = include!("statics.rs");
 
-            if path.is_file() {
-                let file_path = path
-                    .to_str()
-                    .expect("file name contains invalid unicode characters");
-
-                let file = std::fs::read(file_path).unwrap(); // Infallible, the file should always exist at this point
-                self.get(file_path, handler(move |_| Bytes::from(file.clone())));
-            } else if path.is_dir() {
-                self.use_static(path)?;
-            }
+        for (file_path, content) in assets {
+            self.get(&file_path, handler(move |_| Bytes::from(content)));
         }
+
         Ok(())
     }
 }

@@ -11,7 +11,7 @@ async fn main() {
         handler(|_| Ok::<&str, ()>("Ngyn is created by @elcharitas.")),
     );
 
-    let _ = app.use_static(PathBuf::from("public"));
+    let _ = app.use_static(PathBuf::from("static"));
 
     println!("Starting server at http://127.0.0.1:8080");
 

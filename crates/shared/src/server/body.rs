@@ -34,9 +34,9 @@ impl ToBytes for () {
     }
 }
 
-impl ToBytes for &str {
+impl ToBytes for &'static str {
     fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
+        Bytes::from(self.as_bytes())
     }
 }
 
@@ -46,15 +46,21 @@ impl ToBytes for String {
     }
 }
 
-impl ToBytes for &String {
+impl ToBytes for Bytes {
+    fn to_bytes(self) -> Bytes {
+        self
+    }
+}
+
+impl ToBytes for i8 {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl ToBytes for Bytes {
+impl ToBytes for i16 {
     fn to_bytes(self) -> Bytes {
-        self
+        Bytes::from(self.to_string())
     }
 }
 
@@ -65,6 +71,12 @@ impl ToBytes for i32 {
 }
 
 impl ToBytes for i64 {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for i128 {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
@@ -82,6 +94,18 @@ impl ToBytes for f64 {
     }
 }
 
+impl ToBytes for u8 {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for u16 {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
 impl ToBytes for u32 {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
@@ -89,6 +113,12 @@ impl ToBytes for u32 {
 }
 
 impl ToBytes for u64 {
+    fn to_bytes(self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for u128 {
     fn to_bytes(self) -> Bytes {
         Bytes::from(self.to_string())
     }
