@@ -5,7 +5,6 @@ use hyper::{service::service_fn, Request};
 use hyper_util::rt::TokioIo;
 use ngyn_shared::core::engine::{NgynHttpPlatform, PlatformData};
 use ngyn_shared::server::NgynResponse;
-use std::future::Future;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -79,34 +78,32 @@ impl HyperApplication {
     }
 }
 
-fn hyper_service(
+async fn hyper_service(
     data: Arc<PlatformData>,
     req: Request<Incoming>,
-) -> impl Future<Output = Result<NgynResponse, hyper::Error>> {
-    async move {
-        let (parts, mut body) = req.into_parts();
-        let body = {
-            let mut buf = Vec::new();
-            // TODO: change this approach. It's not efficient.
-            loop {
-                if let Some(frame) = body.frame().await {
-                    let chunk = frame?.into_data();
-                    if let Ok(bytes) = chunk {
-                        buf.extend_from_slice(&bytes);
-                    } else {
-                        break;
-                    }
+) -> Result<NgynResponse, hyper::Error> {
+    let (parts, mut body) = req.into_parts();
+    let body = {
+        let mut buf = Vec::new();
+        // TODO: change this approach. It's not efficient.
+        loop {
+            if let Some(frame) = body.frame().await {
+                let chunk = frame?.into_data();
+                if let Ok(bytes) = chunk {
+                    buf.extend_from_slice(&bytes);
                 } else {
                     break;
                 }
+            } else {
+                break;
             }
-            buf
-        };
-        let req = Request::from_parts(parts, body);
-        let res = data.respond(req).await;
+        }
+        buf
+    };
+    let req = Request::from_parts(parts, body);
+    let res = data.respond(req).await;
 
-        Ok::<_, hyper::Error>(res)
-    }
+    Ok::<_, hyper::Error>(res)
 }
 
 async fn shutdown_signal() {
