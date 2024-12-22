@@ -18,55 +18,8 @@ use common::handler::handler_macro;
 use common::service::service_macro;
 use proc_macro::TokenStream;
 
-/// Attribute macro to define a route handler function with optional gates and middlewares.
-///
-/// # Usage
-///
-/// The `#[handler]` macro is used to mark a function as a handler. You can optionally specify
-/// `gates` and `middlewares` as attributes to an async function to configure behavior.
-///
-/// ```
-/// #[handler(gates = [Gate1, Gate2], middlewares = [Middleware1, Middleware2])]
-/// async fn my_handler() {
-///     // Your handler logic here
-/// }
-/// ```
-///
-/// # Parameters
-///
-/// - `gates`: A list of gate types to be checked before executing the handler. Each gate must implement
-///   the `NgynGate` trait and provide the `can_activate` method.
-///
-/// - `middlewares`: A list of middleware types to be applied to the context. Each middleware must
-///   implement the `NgynMiddleware` trait and provide the `handle` method.
-///
-/// # Notes
-///
-/// - Gates are executed in the order provided in the `gates` list. If any gate fails or `can_activate` returns false,
-///   the handler will not execute.
-/// - Middlewares are executed sequentially in the order provided in the `middlewares` list.
-/// - `#[handler]` generates the necessary boilerplate code to invoke gates and middlewares as part of
-///   the handler's execution.
-/// - It also provides arguments to the handler function that are automatically transformed from the context.
-///
-/// # Example
-///
-/// ```
-/// #[handler(gates = [AuthGate], middlewares = [LoggerMiddleware])]
-/// async fn protected_handler() {
-///     // Handler logic for authorized requests
-/// }
-/// ```
-///
-/// # Errors
-///
-/// - Compilation will fail if a specified gate or middleware does not implement the required traits.
-/// - Ensure that all gate and middleware types used are properly imported and available in the scope.
-///
-/// # See Also
-///
-/// - [`NgynGate`](https://docs.rs/ngyn/latest/ngyn/prelude/trait.NgynGate.html)
-/// - [`NgynMiddleware`](https://docs.rs/ngyn/latest/ngyn/prelude/trait.NgynMiddleware.html)
+/// Attribute macro to define a route handler function with optional gates and middlewares
+/// options in async functions.
 #[proc_macro_attribute]
 pub fn handler(args: TokenStream, input: TokenStream) -> TokenStream {
     handler_macro(args, input)
