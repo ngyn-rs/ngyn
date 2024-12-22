@@ -23,7 +23,7 @@ use proc_macro::TokenStream;
 /// # Usage
 ///
 /// The `#[handler]` macro is used to mark a function as a handler. You can optionally specify
-/// `gates` and `middlewares` as attributes to configure behavior.
+/// `gates` and `middlewares` as attributes to an async function to configure behavior.
 ///
 /// ```
 /// #[handler(gates = [Gate1, Gate2], middlewares = [Middleware1, Middleware2])]
