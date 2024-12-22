@@ -85,12 +85,11 @@ impl<'a> NgynContext<'a> {
         &self.request
     }
 
-    #[deprecated(since="0.5.2", note="use `response_mut()` instead")]
+    #[deprecated(since = "0.5.2", note = "use `response_mut()` instead")]
     pub fn response(&mut self) -> &mut NgynResponse {
         &mut self.response
     }
-    
-    
+
     /// Retrieves the response associated with the context.
     ///
     /// ### Returns
