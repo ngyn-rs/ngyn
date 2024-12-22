@@ -19,7 +19,6 @@ http-body-util = { workspace = true }
 http = { workspace = true }
 matchit = "0.8.5"
 multer = "3.1.0"
-regex = "1.10"
 serde = { workspace = true }
 serde_json = { workspace = true }
 url = "2.5.0"

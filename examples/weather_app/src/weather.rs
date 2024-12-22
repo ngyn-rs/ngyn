@@ -13,8 +13,8 @@ impl NgynGate for WeatherGate {
         if query.get::<String>("location").is_some() {
             return true;
         }
-        *cx.response().status_mut() = StatusCode::BAD_REQUEST;
-        *cx.response().body_mut() = "Bad Request: location query parameter is required".into();
+        *cx.response_mut().status_mut() = StatusCode::BAD_REQUEST;
+        *cx.response_mut().body_mut() = "Bad Request: location query parameter is required".into();
         // prevent activation of the next components
         false
     }

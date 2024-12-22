@@ -92,13 +92,13 @@ pub type JsonResult = Result<Value, Value>;
 
 impl<'a> Transformer<'a> for &'a NgynResponse {
     fn transform(cx: &'a mut NgynContext) -> Self {
-        cx.response()
+        cx.response_mut()
     }
 }
 
 impl<'a> Transformer<'a> for &'a mut NgynResponse {
     fn transform(cx: &'a mut NgynContext) -> Self {
-        cx.response()
+        cx.response_mut()
     }
 }
 
@@ -107,7 +107,7 @@ impl<'a> Transformer<'a> for &'a mut NgynResponse {
 /// This is useful when you need to access the headers of a response.
 impl<'a> Transformer<'a> for &'a HeaderMap {
     fn transform(cx: &'a mut NgynContext) -> Self {
-        cx.response().headers()
+        cx.response_mut().headers()
     }
 }
 
@@ -116,7 +116,7 @@ impl<'a> Transformer<'a> for &'a HeaderMap {
 /// This is useful when you want to add or remove headers from a response.
 impl<'a> Transformer<'a> for &'a mut HeaderMap {
     fn transform(cx: &'a mut NgynContext) -> Self {
-        cx.response().headers_mut()
+        cx.response_mut().headers_mut()
     }
 }
 

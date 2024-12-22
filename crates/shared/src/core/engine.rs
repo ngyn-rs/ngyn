@@ -58,7 +58,7 @@ impl PlatformData {
             route_handler = Some(value);
         } else {
             // if no route is found, we should return a 404 response
-            *cx.response().status_mut() = http::StatusCode::NOT_FOUND;
+            *cx.response_mut().status_mut() = http::StatusCode::NOT_FOUND;
         }
 
         // trigger global middlewares
@@ -77,7 +77,7 @@ impl PlatformData {
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
-                *cx.response().body_mut() = Bytes::default().into();
+                *cx.response_mut().body_mut() = Bytes::default().into();
             }
         }
 
@@ -282,7 +282,7 @@ mod tests {
 
     impl NgynMiddleware for MockMiddleware {
         async fn handle(cx: &mut NgynContext<'_>) {
-            *cx.response().status_mut() = StatusCode::OK;
+            *cx.response_mut().status_mut() = StatusCode::OK;
         }
     }
 

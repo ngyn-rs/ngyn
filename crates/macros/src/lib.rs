@@ -18,6 +18,8 @@ use common::handler::handler_macro;
 use common::service::service_macro;
 use proc_macro::TokenStream;
 
+/// Attribute macro to define a route handler function with optional gates and middlewares
+/// options in async functions.
 #[proc_macro_attribute]
 pub fn handler(args: TokenStream, input: TokenStream) -> TokenStream {
     handler_macro(args, input)
