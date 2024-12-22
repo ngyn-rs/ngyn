@@ -12,7 +12,7 @@ impl NgynMiddleware for NotFoundMiddleware {
                     "message": "Route not found",
                 }
             });
-            *cx.response().body_mut() = body.to_bytes().into();
+            *cx.response_mut().body_mut() = body.to_bytes().into();
         }
     }
 }

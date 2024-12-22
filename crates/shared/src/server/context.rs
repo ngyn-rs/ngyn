@@ -85,7 +85,30 @@ impl<'a> NgynContext<'a> {
         &self.request
     }
 
+    #[deprecated(since="0.5.1", note="use `response_mut()` instead")]
     pub fn response(&mut self) -> &mut NgynResponse {
+        &mut self.response
+    }
+    
+    
+    /// Retrieves the request associated with the context.
+    ///
+    /// ### Returns
+    ///
+    /// A reference to the request associated with the context.
+    ///
+    /// ### Examples
+    ///
+    /// ```rust ignore
+    /// use ngyn_shared::core::context::NgynContext;
+    /// use hyper::Request;
+    ///
+    /// let request = Request::new(Vec::new());
+    /// let context = NgynContext::from_request(request);
+    ///
+    /// let request_ref = context.request();
+    /// ```
+    pub fn response_mut(&mut self) -> &mut NgynResponse {
         &mut self.response
     }
 
