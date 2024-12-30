@@ -6,8 +6,43 @@ use std::{future::Future, pin::Pin};
 use server::context::NgynContext;
 
 /// Trait to configure a gate, middleware or related service.
+///
+/// It is useful when you need to pass configuration to a gate, middleware or related service.
+///
+/// ### Example
+///
+/// ```rust
+/// # use ngyn_shared::WithConfig;
+/// # use ngyn_shared::server::NgynContext;
+/// # use ngyn_shared::NgynGate;
+///
+/// struct AuthGateConfig {
+///    pub secret: String,
+/// }
+///
+/// impl Default for AuthGateConfig {
+///   fn default() -> Self {
+///    Self {
+///     secret: "my_secret".to_string(),
+///    }
+///   }
+/// }
+///
+/// struct AuthGate;
+/// 
+/// impl WithConfig<AuthGateConfig> for AuthGate {}
+///
+/// impl NgynGate for AuthGate {
+///   async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
+///    let config = Self::config();
+///    config.secret == "my_secret"
+///   }
+/// }
+/// ```
 pub trait WithConfig<C: Default> {
-    fn config() -> C;
+    fn config() -> C {
+        Default::default()
+    }
 }
 
 /// Trait for implementing a gate.
