@@ -29,7 +29,7 @@ use server::context::NgynContext;
 /// }
 ///
 /// struct AuthGate;
-/// 
+///
 /// impl WithConfig<AuthGateConfig> for AuthGate {}
 ///
 /// impl NgynGate for AuthGate {
