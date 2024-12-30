@@ -40,7 +40,7 @@ tokio = { version = "1", features = ["full"] }
 
 Create a basic web server:
 
-```rust
+```rust ignore
 use ngyn::prelude::*;
 
 #[handler]
