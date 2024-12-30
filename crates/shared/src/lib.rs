@@ -5,6 +5,46 @@ use std::{future::Future, pin::Pin};
 
 use server::context::NgynContext;
 
+/// Trait to configure a gate, middleware or related service.
+///
+/// It is useful when you need to pass configuration to a gate, middleware or related service.
+///
+/// ### Example
+///
+/// ```rust
+/// # use ngyn_shared::WithConfig;
+/// # use ngyn_shared::server::NgynContext;
+/// # use ngyn_shared::NgynGate;
+///
+/// struct AuthGateConfig {
+///    pub secret: String,
+/// }
+///
+/// impl Default for AuthGateConfig {
+///   fn default() -> Self {
+///    Self {
+///     secret: "my_secret".to_string(),
+///    }
+///   }
+/// }
+///
+/// struct AuthGate;
+///
+/// impl WithConfig<AuthGateConfig> for AuthGate {}
+///
+/// impl NgynGate for AuthGate {
+///   async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
+///    let config = Self::config();
+///    config.secret == "my_secret"
+///   }
+/// }
+/// ```
+pub trait WithConfig<C: Default> {
+    fn config() -> C {
+        Default::default()
+    }
+}
+
 /// Trait for implementing a gate.
 ///
 /// Gates are how Ngyn determines if a route can activate.
@@ -18,7 +58,7 @@ use server::context::NgynContext;
 /// # use ngyn_shared::NgynGate;
 /// # use ngyn_shared::server::NgynContext;
 ///
-/// pub struct AuthGate {}
+/// struct AuthGate;
 ///
 /// impl NgynGate for AuthGate {
 ///    async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
@@ -29,7 +69,7 @@ use server::context::NgynContext;
 ///     }
 /// }
 /// ```
-pub trait NgynGate: Send + Sync {
+pub trait NgynGate {
     /// Determines if the gate can activate for the given request.
     ///
     /// ### Arguments

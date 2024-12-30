@@ -45,7 +45,7 @@ pub fn handler<S: ToBytes + 'static>(
 ) -> Box<Handler> {
     Box::new(move |ctx: &mut NgynContext| {
         let body = f(ctx).to_bytes();
-        *ctx.response().body_mut() = body.into();
+        *ctx.response_mut().body_mut() = body.into();
     })
 }
 
@@ -66,7 +66,7 @@ pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'sta
         let fut = f(ctx);
         Box::pin(async move {
             let body = fut.await.to_bytes();
-            *ctx.response().body_mut() = body.into();
+            *ctx.response_mut().body_mut() = body.into();
         })
     })
 }
@@ -85,46 +85,46 @@ pub fn async_wrap(
 /// This is very similar to unimplemented! macro in Rust.
 pub fn not_implemented() -> Box<Handler> {
     Box::new(|ctx: &mut NgynContext| {
-        *ctx.response().status_mut() = StatusCode::NOT_IMPLEMENTED;
+        *ctx.response_mut().status_mut() = StatusCode::NOT_IMPLEMENTED;
     })
 }
 
 /// Redirects to a specified location with a `303 See Other` status code.
 pub fn redirect_to(location: &'static str) -> Box<Handler> {
     Box::new(|ctx: &mut NgynContext| {
-        ctx.response()
+        ctx.response_mut()
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *ctx.response().status_mut() = StatusCode::SEE_OTHER;
+        *ctx.response_mut().status_mut() = StatusCode::SEE_OTHER;
     })
 }
 
 /// Redirects to a specified location with a `307 Temporary Redirect` status code.
 pub fn redirect_temporary(location: &'static str) -> Box<Handler> {
     Box::new(|ctx: &mut NgynContext| {
-        ctx.response()
+        ctx.response_mut()
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *ctx.response().status_mut() = StatusCode::TEMPORARY_REDIRECT;
+        *ctx.response_mut().status_mut() = StatusCode::TEMPORARY_REDIRECT;
     })
 }
 
 /// Redirects to a specified location with a `301 Moved Permanently` status code.
 pub fn redirect_permanent(location: &'static str) -> Box<Handler> {
     Box::new(|ctx: &mut NgynContext| {
-        ctx.response()
+        ctx.response_mut()
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *ctx.response().status_mut() = StatusCode::MOVED_PERMANENTLY;
+        *ctx.response_mut().status_mut() = StatusCode::MOVED_PERMANENTLY;
     })
 }
 
 /// Redirects to a specified location with a `302 Found` status code.
 pub fn redirect_found(location: &'static str) -> Box<Handler> {
     Box::new(|ctx: &mut NgynContext| {
-        ctx.response()
+        ctx.response_mut()
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
-        *ctx.response().status_mut() = StatusCode::FOUND;
+        *ctx.response_mut().status_mut() = StatusCode::FOUND;
     })
 }
