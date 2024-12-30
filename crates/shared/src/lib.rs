@@ -5,6 +5,11 @@ use std::{future::Future, pin::Pin};
 
 use server::context::NgynContext;
 
+/// Trait to configure a gate, middleware or related service.
+pub trait WithConfig<C: Default> {
+    fn config() -> C;
+}
+
 /// Trait for implementing a gate.
 ///
 /// Gates are how Ngyn determines if a route can activate.
@@ -18,7 +23,7 @@ use server::context::NgynContext;
 /// # use ngyn_shared::NgynGate;
 /// # use ngyn_shared::server::NgynContext;
 ///
-/// pub struct AuthGate {}
+/// struct AuthGate;
 ///
 /// impl NgynGate for AuthGate {
 ///    async fn can_activate(cx: &mut NgynContext<'_>) -> bool {
@@ -29,7 +34,7 @@ use server::context::NgynContext;
 ///     }
 /// }
 /// ```
-pub trait NgynGate: Send + Sync {
+pub trait NgynGate {
     /// Determines if the gate can activate for the given request.
     ///
     /// ### Arguments
