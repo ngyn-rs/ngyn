@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
+
+#### Features
+
+#### Miscellaneous Chores
+
+## 0.5.2 - 2024-12-30
+#### Bug Fixes
 - [#229](../../../../pull/229) **core**: route handlers improvements
 
 #### Features

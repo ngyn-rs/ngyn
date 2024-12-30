@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file. See [conven
 #### Features
 
 #### Miscellaneous Chores
+
+## 0.5.2 - 2024-12-30
+#### Miscellaneous Chores
 - [#229](../../../../pull/229) **core**: deprecate `NgynContext::response`
 
 
