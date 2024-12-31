@@ -1575,7 +1575,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "http 1.2.0",
  "ngyn-hyper",
@@ -1643,7 +1643,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "http 1.2.0",
  "macrotest",
@@ -1654,7 +1654,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "bytes 1.9.0",
  "futures-util",

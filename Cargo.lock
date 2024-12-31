@@ -1202,7 +1202,7 @@ dependencies = [
  "hyper 1.4.0",
  "juniper",
  "juniper_hyper",
- "ngyn 0.5.1",
+ "ngyn 0.5.2",
  "ngyn-hyper 0.2.1",
  "serde",
  "serde_json",
@@ -2089,12 +2089,12 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "http 1.2.0",
  "ngyn-hyper 0.2.1",
- "ngyn_macros 0.5.1",
- "ngyn_shared 0.5.1",
+ "ngyn_macros 0.5.2",
+ "ngyn_shared 0.5.2",
 ]
 
 [[package]]
@@ -2129,7 +2129,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.4.0",
  "hyper-util",
- "ngyn_shared 0.5.1",
+ "ngyn_shared 0.5.2",
  "tokio",
 ]
 
@@ -2145,7 +2145,7 @@ dependencies = [
 name = "ngyn-swagger"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.1",
+ "ngyn 0.5.2",
  "ngyn-swagger-macros",
  "serde",
  "serde_json",
@@ -2176,7 +2176,7 @@ dependencies = [
 name = "ngyn-vercel"
 version = "0.2.1"
 dependencies = [
- "ngyn_shared 0.5.1",
+ "ngyn_shared 0.5.2",
  "tokio",
  "vercel_runtime",
 ]
@@ -2185,7 +2185,7 @@ dependencies = [
 name = "ngyn-websocket"
 version = "0.1.1"
 dependencies = [
- "ngyn_shared 0.5.1",
+ "ngyn_shared 0.5.2",
  "tokio",
  "websocket 0.27.1",
 ]
@@ -2215,11 +2215,11 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "http 1.2.0",
  "macrotest",
- "ngyn_shared 0.5.1",
+ "ngyn_shared 0.5.2",
  "quote",
  "syn 2.0.77",
 ]
@@ -2259,7 +2259,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "bytes 1.9.0",
  "futures-util",
@@ -4170,7 +4170,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.5.1",
+ "ngyn 0.5.2",
  "ngyn-swagger",
  "ngyn-vercel 0.2.1",
  "serde",
@@ -4337,7 +4337,7 @@ name = "weather_api"
 version = "0.2.0"
 dependencies = [
  "dotenv",
- "ngyn 0.5.1",
+ "ngyn 0.5.2",
  "ngyn-shuttle",
  "serde",
  "serde_json",
@@ -4379,7 +4379,7 @@ dependencies = [
 name = "websocket"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.1",
+ "ngyn 0.5.2",
  "ngyn-websocket",
  "tokio",
 ]
