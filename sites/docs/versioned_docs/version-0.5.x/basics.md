@@ -57,11 +57,11 @@ For more complex route handlers, these functions take any valid Transduceable Da
 - `impl Serialize` and `impl Deserialize` (json based data)
 - `JsonResult` (`Result<Value, Value>` dynamic json based data with error handling)
 
-Here's an example of a more complex route handler that returns a JSON response:
+Here's an example of a more complex route handler that returns a JSON response using the `json!` macro from the `serde_json` crate:
 
 ```rust
 #[handler]
-fn hello() -> JsonResult {
+fn hello() -> Value {
     json!({
         "message": "Hello World!"
     })
@@ -73,7 +73,7 @@ fn hello() -> JsonResult {
 Route handlers can also accept URL parameters as arguments. There are two ways of accessing parameters in route handlers:
 
 1. Using the `Params` struct:
-2. Deriving the `Params` trait (recommended)
+2. Deriving the `Params` derive macro (recommended)
 
 
 #### Using the `Params` struct
@@ -90,7 +90,7 @@ fn hello(params: Params) -> JsonResult {
 }
 ```
 
-#### Deriving the `Params` trait
+#### Deriving the `Params` derive macro (recommended)
 
 Here's an example of a route handler that accepts a parameter by deriving the `Params` trait:
 
@@ -113,7 +113,7 @@ fn hello(params: HelloParams) -> JsonResult {
 Route handlers can also accept query parameters as arguments. There are two ways of accessing query parameters in route handlers:
 
 1. Using the `Query` struct:
-2. Deriving the `Query` trait (recommended)
+2. Deriving the `Query` derive macro (recommended)
 
 #### Using the `Query` struct
 
@@ -129,7 +129,7 @@ fn hello(query: Query) -> JsonResult {
 }
 ```
 
-#### Deriving the `Query` trait
+#### Deriving the `Query` derive macro (recommended)
 
 Here's an example of a route handler that accepts query parameters by deriving the `Query` trait:
 
@@ -158,14 +158,12 @@ To register routes in your Ngyn application, you can use the `app` instance crea
 | `app.put` | Register a route that responds to `PUT` requests | `app.put("/hello", hello_handler);` |
 | `app.delete` | Register a route that responds to `DELETE` requests | `app.delete("/hello", hello_handler);` |
 | `app.patch` | Register a route that responds to `PATCH` requests | `app.patch("/hello", hello_handler);` |
-| `app.options` | Register a route that responds to `OPTIONS` requests | `app.options("/hello", hello_handler);` |
 | `app.head` | Register a route that responds to `HEAD` requests | `app.head("/hello", hello_handler);` |
-| `app.connect` | Register a route that responds to `CONNECT` requests | `app.connect("/hello", hello_handler);` |
 
 You can also use the `app.any` method to register a route that responds to all HTTP methods:
 
 ```rust
-app.any("/hello", hello_handler);
+app.any("/hello", hello_handler); // handle all HTTP methods for /hello
 ```
 
 ## Route Parameters
@@ -184,4 +182,4 @@ fn user_profile(params: Params) -> JsonResult {
 app.get("/users/{user_id}", user_profile);
 ```
 
-In the example above, the `user_id` parameter is captured from the URL and passed to the `user_profile` route handler.
+In the example above, the `user_id` parameter is captured from the URL and passed to the `user_profile` route handler. This will match URLs like `/users/123`, `/users/456`, etc.
