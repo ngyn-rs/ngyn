@@ -1,4 +1,8 @@
-use ngyn::{http::StatusCode, prelude::*, shared::server::Transformer};
+use ngyn::{
+    http::StatusCode,
+    prelude::*,
+    shared::server::{transformer::ParseField, Transformer},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use validator::Validate;
@@ -94,5 +98,17 @@ pub async fn post_location(
     match weather_service.get_weather(&location).await {
         Ok(r) => Ok(r),
         Err(e) => Err(json!({ "status": 501, "message": e.to_string() })),
+    }
+}
+
+#[handler]
+async fn handle_form(fields: FormFields<'_cx_lifetime>) -> JsonResult {
+    let mut fields = fields.await.unwrap();
+
+    if let Some(name) = fields.remove("name") {
+        let name: String = name.parse().await.unwrap();
+        Ok(json!({ "name": name }))
+    } else {
+        Err("Name field is required".into())
     }
 }

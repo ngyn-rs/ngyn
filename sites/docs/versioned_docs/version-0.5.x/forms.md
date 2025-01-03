@@ -8,7 +8,7 @@ Ngyn provides a simple way to handle form data in your applications. This guide 
 
 ## Parsing Form Data
 
-To parse form data in your route handlers, you can use the `Body` struct. The `Body` struct provides methods to access form data sent in the request body.
+To parse form data in your route handlers, you can use the `FormFields` struct. The `FormFields` struct provides methods to access form data sent in the request body.
 
 Here's an example of a route handler that parses form data:
 
@@ -16,25 +16,13 @@ Here's an example of a route handler that parses form data:
 use ngyn::prelude::*;
 
 #[handler]
-async fn handle_form(body: Body) -> JsonResult {
-    let mut name = None
-    let mut email = None;
-    let mut data = body.form_data().unwrap();
-
-    while let Ok(Some(field)) = data.next_field().await {
-        let key = field.name().unwrap();
-        let value = field.text().await.unwrap();
-        
-        if key == "name" {
-            name = Some(value);
-        } else if key == "email" {
-            email = Some(value);
-        }
-    }
+async fn handle_form(fields: FormFields<'_cx_lifetime>) -> JsonResult {
+    let mut fields = fields.await;
     
-    Ok(json!({
-        "name": name,
-        "email": email,
-    }))
+    if let Some(name) = fields.remove("name") {
+        Ok(json!({ "name": name }))
+    } else {
+        Err("Name field is required".into())
+    }
 }
 ```

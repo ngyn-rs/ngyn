@@ -1,10 +1,16 @@
-use std::{borrow::Cow, str::FromStr};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    future::Future,
+    pin::Pin,
+    str::{FromStr, ParseBoolError},
+};
 
 use bytes::Bytes;
 use futures_util::StreamExt;
 use http::{header::CONTENT_TYPE, HeaderValue};
 use http_body_util::{BodyStream, Full};
-use multer::Multipart;
+use multer::{Field, Multipart};
 use serde::Deserialize;
 
 use crate::server::NgynContext;
@@ -304,6 +310,154 @@ impl<'b> Body<'b> {
         } else {
             Err(multer::Error::NoBoundary)
         }
+    }
+
+    /// Parses the data into a `multipart/form-data` stream and returns a HashMap of form fields.
+    ///
+    /// ### Returns
+    ///
+    /// * `HashMap<String, Field<'b>>` - The form fields as a HashMap.
+    pub async fn form_fields(self) -> Option<HashMap<String, Field<'b>>> {
+        if let Ok(mut stream) = self.form_data() {
+            let mut fields = HashMap::new();
+            while let Ok(Some(field)) = stream.next_field().await {
+                if let Some(name) = field.name() {
+                    // Clone the name to store it as the key in the HashMap
+                    fields.insert(name.to_string(), field);
+                }
+            }
+            return Some(fields);
+        }
+        None
+    }
+}
+
+pub struct FormFields<'b>(
+    Pin<Box<dyn Future<Output = Option<HashMap<String, Field<'b>>>> + Send + 'b>>,
+);
+
+impl<'b> Transformer<'b> for FormFields<'b> {
+    fn transform(cx: &'b mut NgynContext) -> Self {
+        let body = Body::transform(cx);
+        let fields = body.form_fields();
+        FormFields::<'b>(Box::pin(fields))
+    }
+}
+
+impl<'b> Future for FormFields<'b> {
+    type Output = Option<HashMap<String, Field<'b>>>;
+
+    fn poll(
+        self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        self.get_mut().0.as_mut().poll(cx)
+    }
+}
+
+pub trait FromField {
+    #[allow(async_fn_in_trait)]
+    async fn from_field(field: Field<'_>) -> Result<Self, multer::Error>
+    where
+        Self: Sized;
+}
+
+pub trait ParseField {
+    #[allow(async_fn_in_trait)]
+    async fn parse<T>(self) -> Result<T, multer::Error>
+    where
+        T: FromField,
+        Self: Sized;
+}
+
+impl ParseField for Field<'_> {
+    async fn parse<T>(self) -> Result<T, multer::Error>
+    where
+        T: FromField,
+    {
+        T::from_field(self).await
+    }
+}
+
+impl FromField for String {
+    async fn from_field(field: Field<'_>) -> Result<String, multer::Error> {
+        field.text().await
+    }
+}
+
+impl FromField for f32 {
+    async fn from_field(field: Field<'_>) -> Result<f32, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: std::num::ParseFloatError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for f64 {
+    async fn from_field(field: Field<'_>) -> Result<f64, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: std::num::ParseFloatError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for i32 {
+    async fn from_field(field: Field<'_>) -> Result<i32, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: std::num::ParseIntError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for i64 {
+    async fn from_field(field: Field<'_>) -> Result<i64, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: std::num::ParseIntError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for u32 {
+    async fn from_field(field: Field<'_>) -> Result<u32, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: std::num::ParseIntError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for u64 {
+    async fn from_field(field: Field<'_>) -> Result<u64, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: std::num::ParseIntError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for bool {
+    async fn from_field(field: Field<'_>) -> Result<bool, multer::Error> {
+        field
+            .text()
+            .await?
+            .parse()
+            .map_err(|e: ParseBoolError| multer::Error::StreamReadFailed(e.into()))
+    }
+}
+
+impl FromField for Bytes {
+    async fn from_field(field: Field<'_>) -> Result<Bytes, multer::Error> {
+        field.bytes().await
     }
 }
 

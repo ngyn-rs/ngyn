@@ -141,7 +141,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     });
 
     quote! {
-        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext) #output {
+        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext<'_>) #output {
             #body
         }
     }
