@@ -43,7 +43,7 @@ jobs:
             }
 
       - name: Install msrv toolchain
-        uses: dtolnay/rust-toolchain@1.75.0
+        uses: dtolnay/rust-toolchain@1.80.0
 
       - name: Bump workspace version
         run: |
