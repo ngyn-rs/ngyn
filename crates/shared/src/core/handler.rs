@@ -18,20 +18,6 @@ pub enum RouteHandler {
     Async(Box<AsyncHandler>),
 }
 
-impl RouteHandler {
-    pub fn from_async(
-        f: impl for<'a, 'b> Fn(
-                &'a mut NgynContext,
-            )
-                -> Pin<Box<dyn Future<Output = Box<dyn ToBytes>> + Send + 'a>>
-            + Send
-            + Sync
-            + 'static,
-    ) -> Self {
-        RouteHandler::Async(Box::new(f))
-    }
-}
-
 impl From<Box<AsyncHandler>> for RouteHandler {
     fn from(f: Box<AsyncHandler>) -> Self {
         RouteHandler::Async(f)
