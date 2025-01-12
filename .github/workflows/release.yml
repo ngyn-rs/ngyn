@@ -27,7 +27,7 @@ jobs:
           path: ~/.cargo/bin/cargo-release
           key: ${{ runner.os }}-cargo-release
 
-      - run: cargo install cargo-release cargo-expand
+      - run: cargo install cargo-release cargo-expand --locked
         if: steps.cargo_release_cache.outputs.cache-hit != 'true'
 
       - name: cargo login

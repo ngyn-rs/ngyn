@@ -51,7 +51,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       
       - name: Install cargo-expand
-        run: cargo install cargo-expand
+        run: cargo install cargo-expand --locked
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
