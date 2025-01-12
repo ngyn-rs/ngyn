@@ -1,11 +1,11 @@
 use bytes::Bytes;
 use http::Request;
 use matchit::{Match, Router};
-use std::sync::Arc;
+use std::{mem::ManuallyDrop, sync::Arc};
 
 use super::handler::{handler, RouteHandler};
 use crate::{
-    server::{context::AppState, Method, NgynContext, NgynResponse},
+    server::{context::AppState, Method, NgynContext, NgynResponse, ToBytes},
     Middleware, NgynMiddleware,
 };
 
@@ -47,7 +47,7 @@ impl PlatformData {
         let mut cx = NgynContext::from_request(req);
 
         if let Some(state) = &self.state {
-            cx.state = Some(state.into());
+            cx.state = Some(ManuallyDrop::new(state.into()));
         }
 
         let mut route_handler = None;
@@ -68,12 +68,12 @@ impl PlatformData {
 
         // run the route handler
         if let Some(route_handler) = route_handler {
-            match route_handler {
+            *cx.response_mut().body_mut() = match route_handler {
                 RouteHandler::Sync(handler) => handler(&mut cx),
-                RouteHandler::Async(async_handler) => {
-                    async_handler(&mut cx).await;
-                }
+                RouteHandler::Async(async_handler) => async_handler(&mut cx).await,
             }
+            .to_bytes()
+            .into();
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
@@ -349,7 +349,7 @@ mod tests {
     #[tokio::test]
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
+        let handler: Box<Handler> = Box::new(|_| Box::new(()) as Box<dyn ToBytes>);
         engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         let req = Request::builder()
@@ -400,7 +400,7 @@ mod tests {
     #[tokio::test]
     async fn test_add_route() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
+        let handler: Box<Handler> = Box::new(|_| Box::new(()) as Box<dyn ToBytes>);
         engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         assert!(engine.data.router.at("GET/test").is_ok());
