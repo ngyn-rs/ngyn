@@ -11,7 +11,7 @@ impl ngyn::shared::server::Transformer<'_> for User {
     }
 }
 impl ngyn::shared::server::ToBytes for User {
-    fn to_bytes(self) -> ngyn::shared::server::Bytes {
+    fn to_bytes(&self) -> ngyn::shared::server::Bytes {
         ngyn::shared::server::Bytes::from(serde_json::to_string(&self).unwrap())
     }
 }
