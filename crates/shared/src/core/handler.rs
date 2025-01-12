@@ -7,7 +7,7 @@ use crate::server::{NgynContext, ToBytes};
 /// Represents a handler function that takes in a mutable reference to `NgynContext` and `NgynResponse`.
 pub(crate) type Handler = dyn Fn(&mut NgynContext) -> Box<dyn ToBytes> + Send + Sync + 'static;
 
-pub type AsyncHandler = dyn for<'a, 'b> Fn(
+pub(crate) type AsyncHandler = dyn for<'a, 'b> Fn(
         &'a mut NgynContext,
     ) -> Pin<Box<dyn Future<Output = Box<dyn ToBytes>> + Send + 'a>>
     + Send
@@ -16,6 +16,20 @@ pub type AsyncHandler = dyn for<'a, 'b> Fn(
 pub enum RouteHandler {
     Sync(Box<Handler>),
     Async(Box<AsyncHandler>),
+}
+
+impl RouteHandler {
+    pub fn from_async(
+        f: impl for<'a, 'b> Fn(
+                &'a mut NgynContext,
+            )
+                -> Pin<Box<dyn Future<Output = Box<dyn ToBytes>> + Send + 'a>>
+            + Send
+            + Sync
+            + 'static,
+    ) -> Self {
+        RouteHandler::Async(Box::new(f))
+    }
 }
 
 impl From<Box<AsyncHandler>> for RouteHandler {
@@ -66,11 +80,7 @@ pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'sta
 ) -> Box<AsyncHandler> {
     Box::new(move |ctx: &mut NgynContext| {
         let fut = f(ctx);
-        Box::pin(async move {
-            let body = fut.await.to_bytes();
-            *ctx.response_mut().body_mut() = body.into();
-            Box::new(()) as Box<dyn ToBytes>
-        })
+        Box::pin(async move { Box::new(fut.await) as Box<dyn ToBytes> })
     })
 }
 

@@ -116,14 +116,14 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
         },
         false => quote! {
             let output = (|#inputs| #block)(#args);
-            *cx.response_mut().body_mut() = output.to_bytes().into();
+            Box::new(output) as Box<dyn ngyn::prelude::ToBytes>
         },
     };
 
     let output = asyncness.map(|_| {
         let r_arrow = RArrow::default();
         quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = Box<dyn ngyn::prelude::ToBytes>> + Send + '_cx_lifetime>> }
-    });
+    }).unwrap_or_else(|| quote! { -> Box<dyn ngyn::prelude::ToBytes> });
 
     quote! {
         #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext) #output {
