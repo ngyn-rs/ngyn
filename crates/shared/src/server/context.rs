@@ -1,7 +1,7 @@
 use http::Request;
 use matchit::Params;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{any::Any, collections::HashMap, mem::ManuallyDrop, sync::Arc};
 
 use crate::server::{NgynRequest, NgynResponse, Transformer};
 
@@ -60,7 +60,7 @@ pub struct NgynContext<'a> {
     pub(crate) response: NgynResponse,
     pub(crate) params: Option<Params<'a, 'a>>,
     store: HashMap<&'a str, String>,
-    pub(crate) state: Option<Box<dyn AppState>>,
+    pub(crate) state: Option<ManuallyDrop<Box<dyn AppState>>>,
 }
 
 impl<'a> NgynContext<'a> {
@@ -441,7 +441,7 @@ mod tests {
         let state_ref = context.state::<TestAppState>();
         assert!(state_ref.is_none());
 
-        context.state = Some(Box::new(TestAppState { value: 1 }));
+        context.state = Some(ManuallyDrop::new(Box::new(TestAppState { value: 1 })));
 
         let state_ref = context.state::<TestAppState>();
         assert!(state_ref.is_some());
@@ -451,7 +451,7 @@ mod tests {
     fn test_state_mut() {
         let request = Request::new(Vec::new());
         let mut context = NgynContext::from_request(request);
-        context.state = Some(Box::new(TestAppState { value: 1 }));
+        context.state = Some(ManuallyDrop::new(Box::new(TestAppState { value: 1 })));
 
         let state_ref = context.state_mut::<TestAppState>();
         assert!(state_ref.is_some());

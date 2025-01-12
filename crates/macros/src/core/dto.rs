@@ -15,7 +15,7 @@ pub(crate) fn dto_macro(input: TokenStream) -> TokenStream {
         }
 
         impl #impl_generics ngyn::shared::server::ToBytes for #ident #ty_generics #where_clause {
-            fn to_bytes(self) -> ngyn::shared::server::Bytes {
+            fn to_bytes(&self) -> ngyn::shared::server::Bytes {
                 ngyn::shared::server::Bytes::from(serde_json::to_string(&self).unwrap())
             }
         }

@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
+- [#243](../../../../pull/243) **routing**: `#[handler]` macro compile time + arguments reduction fixes
 
 #### Features
 
