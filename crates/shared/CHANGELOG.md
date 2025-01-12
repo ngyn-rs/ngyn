@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
+- [#243](../../../../pull/243) **routing**: manually drop app state to prevent poisoning
 
 #### Features
 
