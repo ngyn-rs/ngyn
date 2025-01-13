@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. See [conven
 #### Bug Fixes
 
 #### Features
+- [#247](../../../../pull/247) **core**: http1 application configuration
 
 #### Miscellaneous Chores
 

@@ -8,10 +8,23 @@ use ngyn_shared::server::NgynResponse;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
+#[derive(Default)]
+/// Configure an [`HyperApplication`]
+pub struct HyperConfig {
+    h1_half_close: bool,
+    h1_keep_alive: bool,
+    h1_title_case_headers: bool,
+    h1_preserve_header_case: bool,
+    h1_max_headers: Option<usize>,
+    max_buf_size: Option<usize>,
+    pipeline_flush: bool,
+}
+
 /// Represents a Hyper-based application.
 #[derive(Default)]
 pub struct HyperApplication {
     data: PlatformData,
+    config: HyperConfig,
 }
 
 impl NgynHttpPlatform for HyperApplication {
@@ -21,6 +34,12 @@ impl NgynHttpPlatform for HyperApplication {
 }
 
 impl HyperApplication {
+    pub fn with_config(config: HyperConfig) -> Self {
+        Self {
+            data: PlatformData::default(),
+            config,
+        }
+    }
     /// Listens for incoming connections and serves the application.
     ///
     /// ### Arguments
@@ -37,7 +56,23 @@ impl HyperApplication {
         let server = TcpListener::bind(address).await?;
         let data = Arc::new(self.data);
 
-        let http = http1::Builder::new();
+        let mut http1 = http1::Builder::new();
+
+        http1
+            .half_close(self.config.h1_half_close)
+            .keep_alive(self.config.h1_keep_alive)
+            .title_case_headers(self.config.h1_title_case_headers)
+            .preserve_header_case(self.config.h1_preserve_header_case)
+            .pipeline_flush(self.config.pipeline_flush);
+
+        if let Some(buff_size) = self.config.max_buf_size {
+            http1.max_buf_size(buff_size);
+        }
+
+        if let Some(max_headers) = self.config.h1_max_headers {
+            http1.max_headers(max_headers);
+        }
+
         let graceful = hyper_util::server::graceful::GracefulShutdown::new();
         // when this signal completes, start shutdown
         let mut signal = std::pin::pin!(shutdown_signal());
@@ -47,7 +82,7 @@ impl HyperApplication {
             tokio::select! {
                 Ok((stream, _)) = server.accept() => {
                     let io = TokioIo::new(stream);
-                    let conn = http.serve_connection(io, service_fn(move |req| hyper_service(data.clone(), req)));
+                    let conn = http1.serve_connection(io, service_fn(move |req| hyper_service(data.clone(), req)));
                     let handle = graceful.watch(conn);
 
                     tokio::task::spawn(async move {
