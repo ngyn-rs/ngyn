@@ -1,6 +1,6 @@
 [package]
 name = "ngyn_shared"
-version = "0.5.0"
+version = "0.5.2"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
@@ -19,7 +19,6 @@ http-body-util = { workspace = true }
 http = { workspace = true }
 matchit = "0.8.5"
 multer = "3.1.0"
-regex = "1.10"
 serde = { workspace = true }
 serde_json = { workspace = true }
 url = "2.5.0"

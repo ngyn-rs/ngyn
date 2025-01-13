@@ -220,7 +220,7 @@ function Feature({ feature }: { feature: Feature }) {
 			<div className="relative rounded-2xl px-4 pb-4 pt-16">
 				<FeatureIcon icon={feature.icon} />
 				<h3 className="mt-4 text-sm font-semibold leading-7 light:text-zinc-900 text-white">
-					<Link href={feature.href}>
+					<Link href={`/docs${feature.href}`}>
 						<span className="absolute inset-0 rounded-2xl" />
 						{feature.name}
 					</Link>

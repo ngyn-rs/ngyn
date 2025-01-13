@@ -4,15 +4,17 @@ sidebar_position: 1
 
 # Introduction
 
-Ngyn(/nɪn/) is a simple, fast, and lightweight web framework for building web applications in [Rust](https://rust-lang.org). It is designed to be easy to use and easy to learn. Ngyn is built on top of the popular [Hyper](https://hyper.rs/) library and provides a simple and easy-to-use API for building web applications.
+Ngyn(/nɪn/) is a modern, async-first web framework for [Rust](https://rust-lang.org) that prioritizes developer ergonomics while maintaining Rust's performance and safety guarantees.
+It is designed to be easy to use and easy to learn and built on top of the popular [Hyper](https://hyper.rs/) library.
 
 ## Features
 
-- Battle tested Ergonomic API. (You'll love writing routes in ngyn)
-- Performance-balanced approaches
-- Optional Macro API for enhancing route handlers
-- Asynchronous access gates and middleware for handling requests and responses
-- Optional Asynchronous routing support for defining routes
+- **Intuitive Routing**: Simple, declarative routing patterns `(app.get(), /users/{id})` familiar to web developers
+- **Flexible Middleware**: Asynchronous middleware system for request/response processing
+- **Performance Focused**: Optimized for both development experience and runtime performance
+- **Modern Rust**: Takes advantage of Rust's type system and async features
+- **Optional Macros**: Enhance your route handlers with minimal boilerplate
+- **Platform Agnostic**: Built to work with various HTTP servers (currently supports Hyper)
 
 > Please note that Ngyn is still in its early stages of development, and the API is subject to change.
 
@@ -32,8 +34,8 @@ And here's the code:
 use ngyn::prelude::*;
 
 #[handler]
-fn echo_hello() -> String {
-    "Hello World!".to_string()
+fn echo_hello() -> &'static str {
+    "Hello World!"
 }
 
 #[tokio::main]

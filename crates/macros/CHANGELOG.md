@@ -3,10 +3,18 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
+- [#243](../../../../pull/243) **routing**: `#[handler]` macro compile time + arguments reduction fixes
 
 #### Features
 
 #### Miscellaneous Chores
+
+## 0.5.2 - 2024-12-30
+#### Miscellaneous Chores
+- [#229](../../../../pull/229) **core**: deprecate `NgynContext::response`
+
+
+## 0.5.1 - 2024-12-21
 
 
 ## 0.5.0 - 2024-12-16

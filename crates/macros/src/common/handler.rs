@@ -9,8 +9,8 @@ pub(super) struct HandlerArgs {
 
 impl syn::parse::Parse for HandlerArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let mut gates = vec![];
-        let mut middlewares = vec![];
+        let mut gates = Vec::new();
+        let mut middlewares = Vec::new();
 
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
@@ -74,100 +74,60 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     let mut generics_stream = generics.to_token_stream();
     generics_stream.extend(quote! { '_cx_lifetime });
 
-    let args = inputs.iter().fold(None, |args, input| {
-        if let syn::FnArg::Typed(pat) = input {
-            let ty = &pat.ty;
-            let (path, and_token, mutability) = {
-                if let syn::Type::Reference(path_ref) = *ty.clone() {
-                    if let syn::Type::Path(path) = *path_ref.elem.clone() {
-                        (
-                            path.path,
-                            Some(path_ref.and_token),
-                            path_ref.mutability,
-                        )
-                    } else {
-                        panic!("Expected a reference or a path");
-                    }
-                } else if let syn::Type::Path(path) = *ty.clone() {
-                    (path.path, None, None)
-                } else {
-                    panic!("Expected a reference or a path");
-                }
-            };
-            let arg = quote! {
-                #and_token #mutability ngyn::prelude::Transducer::reduce::<#and_token #mutability #path>(cx)
-            };
-            if args.is_none() {
-                Some(quote! { #arg })
+    let args = inputs
+        .iter()
+        .map(|input| {
+            if let syn::FnArg::Typed(_) = input {
+                quote! { ngyn::prelude::Transducer::reduce(cx) }
             } else {
-                Some(quote! { #args, #arg })
+                panic!("Only associated functions are supported");
             }
-        } else {
-            args
-        }
-    });
+        })
+        .reduce(|args, arg| quote! { #args, #arg });
 
-    let gate_handlers = gates.iter().fold(quote! {}, |gates, path| {
+    let gate_handlers = gates.iter().map(|path| {
         quote! {
-            #gates
             if !#path::can_activate(cx).await {
-                return;
+                return Box::new(()) as Box<dyn ngyn::prelude::ToBytes>;
             }
         }
     });
 
-    let middlewares_stream = middlewares.iter().fold(quote! {}, |middlewares, path| {
+    let middlewares_stream = middlewares.iter().map(|path| {
         quote! {
-            #middlewares
             #path::handle(cx).await;
         }
     });
 
     let exe_block = quote! {
-        use ngyn::prelude::NgynMiddleware;
-        use ngyn::prelude::NgynGate;
-        #middlewares_stream
-        #gate_handlers
+        use ngyn::prelude::{NgynMiddleware, NgynGate, ToBytes};
+        #(#middlewares_stream)*
+        #(#gate_handlers)*
     };
 
-    let handle_body = if asyncness.is_some() {
-        match output {
-            syn::ReturnType::Type(_, ty) => quote! {
-                let fn_body = (|#inputs| #asyncness move #block);
-                Box::pin(#asyncness move {
-                    #exe_block;
-                    let output: #ty = fn_body(#args).await;
-                    *cx.response().body_mut() = output.to_bytes().into();
-                })
-            },
-            _ => quote! {
-                let fn_body = (|#inputs| #asyncness move #block);
-                Box::pin(#asyncness move {
-                    #exe_block
-                    fn_body(#args).await;
-                })
-            },
-        }
-    } else {
-        match output {
-            syn::ReturnType::Type(_, ty) => quote! {
-                let output: #ty = (|#inputs| #block)(#args);
-                *cx.response().body_mut() = output.to_bytes().into();
-            },
-            _ => quote! {
-                (|#inputs| #block)(#args)
-            },
-        }
+    let body = match asyncness.is_some() {
+        true => quote! {
+            async fn handle(#inputs) #output #block
+            let body = handle(#args);
+            Box::pin(#asyncness move {
+                #exe_block;
+                Box::new(body.await) as Box<dyn ngyn::prelude::ToBytes>
+            })
+        },
+        false => quote! {
+            let output = (|#inputs| #block)(#args);
+            Box::new(output) as Box<dyn ngyn::prelude::ToBytes>
+        },
     };
 
-    let output = asyncness.map(|_t| {
+    let output = asyncness.map(|_| {
         let r_arrow = RArrow::default();
-        quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_cx_lifetime>> }
-    });
+        quote! { #r_arrow std::pin::Pin<Box<dyn std::future::Future<Output = Box<dyn ngyn::prelude::ToBytes>> + Send + '_cx_lifetime>> }
+    }).unwrap_or_else(|| quote! { -> Box<dyn ngyn::prelude::ToBytes> });
 
     quote! {
         #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext) #output {
-            #handle_body
+            #body
         }
     }
     .into()

@@ -3,10 +3,28 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
+- [#243](../../../../pull/243) **routing**: manually drop app state to prevent poisoning
 
 #### Features
 
 #### Miscellaneous Chores
+
+## 0.5.2 - 2024-12-30
+#### Bug Fixes
+- [#229](../../../../pull/229) **core**: route handlers improvements
+
+#### Features
+
+#### Miscellaneous Chores
+- [#229](../../../../pull/229) **core**: deprecate `NgynContext::response`
+
+
+## 0.5.1 - 2024-12-21
+#### Bug Fixes
+- [#220](../../../../pull/220) **core**: static files don't show up on release binary
+
+#### Miscellaneous Chores
+- [#221](../../../../pull/221) **core**: improve str to Bytes transform performance
 
 ## 0.5.0 - 2024-12-16
 #### Bug Fixes

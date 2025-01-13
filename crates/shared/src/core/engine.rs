@@ -1,11 +1,11 @@
 use bytes::Bytes;
 use http::Request;
 use matchit::{Match, Router};
-use std::sync::Arc;
+use std::{mem::ManuallyDrop, sync::Arc};
 
 use super::handler::{handler, RouteHandler};
 use crate::{
-    server::{context::AppState, Method, NgynContext, NgynResponse},
+    server::{context::AppState, Method, NgynContext, NgynResponse, ToBytes},
     Middleware, NgynMiddleware,
 };
 
@@ -47,7 +47,7 @@ impl PlatformData {
         let mut cx = NgynContext::from_request(req);
 
         if let Some(state) = &self.state {
-            cx.state = Some(state.into());
+            cx.state = Some(ManuallyDrop::new(state.into()));
         }
 
         let mut route_handler = None;
@@ -58,7 +58,7 @@ impl PlatformData {
             route_handler = Some(value);
         } else {
             // if no route is found, we should return a 404 response
-            *cx.response().status_mut() = http::StatusCode::NOT_FOUND;
+            *cx.response_mut().status_mut() = http::StatusCode::NOT_FOUND;
         }
 
         // trigger global middlewares
@@ -68,16 +68,16 @@ impl PlatformData {
 
         // run the route handler
         if let Some(route_handler) = route_handler {
-            match route_handler {
+            *cx.response_mut().body_mut() = match route_handler {
                 RouteHandler::Sync(handler) => handler(&mut cx),
-                RouteHandler::Async(async_handler) => {
-                    async_handler(&mut cx).await;
-                }
+                RouteHandler::Async(async_handler) => async_handler(&mut cx).await,
             }
+            .to_bytes()
+            .into();
             // if the request method is HEAD, we should not return a body
             // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
-                *cx.response().body_mut() = Bytes::default().into();
+                *cx.response_mut().body_mut() = Bytes::default().into();
             }
         }
 
@@ -184,6 +184,7 @@ pub trait NgynHttpEngine: NgynPlatform {
     fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
+
     /// Sets up static file routes.
     ///
     /// This is great for apps tha would want to output files in a specific folder.
@@ -191,23 +192,19 @@ pub trait NgynHttpEngine: NgynPlatform {
     ///
     /// The behavior of `use_static` in ngyn is different from other frameworks.
     /// 1. You can call it multiple times, each call registers a new set of routes
-    /// 2. The directory used as static folder is prefixed to all routes.
-    ///     This means: project_root/static/logo.png -> https://example.com/static/logo.png
+    /// 2. The files in `path_buf` folder aren't embedded into your binary and must be copied to the location of your binary
+    ///
+    /// ### Arguments
+    ///
+    /// - `path_buf` - static folder, relative to Cargo.toml in dev, and the binary in release
+    ///
     fn use_static(&mut self, path_buf: std::path::PathBuf) -> std::io::Result<()> {
-        for entry in std::fs::read_dir(path_buf)? {
-            let path = entry?.path();
+        let assets = include!("statics.rs");
 
-            if path.is_file() {
-                let file_path = path
-                    .to_str()
-                    .expect("file name contains invalid unicode characters");
-
-                let file = std::fs::read(file_path).unwrap(); // Infallible, the file should always exist at this point
-                self.get(file_path, handler(move |_| Bytes::from(file.clone())));
-            } else if path.is_dir() {
-                self.use_static(path)?;
-            }
+        for (file_path, content) in assets {
+            self.get(&file_path, handler(move |_| Bytes::from(content)));
         }
+
         Ok(())
     }
 }
@@ -285,7 +282,7 @@ mod tests {
 
     impl NgynMiddleware for MockMiddleware {
         async fn handle(cx: &mut NgynContext<'_>) {
-            *cx.response().status_mut() = StatusCode::OK;
+            *cx.response_mut().status_mut() = StatusCode::OK;
         }
     }
 
@@ -352,7 +349,7 @@ mod tests {
     #[tokio::test]
     async fn test_respond_with_route_handler() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
+        let handler: Box<Handler> = Box::new(|_| Box::new(()) as Box<dyn ToBytes>);
         engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         let req = Request::builder()
@@ -403,7 +400,7 @@ mod tests {
     #[tokio::test]
     async fn test_add_route() {
         let mut engine = MockEngine::default();
-        let handler: Box<Handler> = Box::new(|_| {});
+        let handler: Box<Handler> = Box::new(|_| Box::new(()) as Box<dyn ToBytes>);
         engine.add_route("/test", Some(Method::GET), RouteHandler::Sync(handler));
 
         assert!(engine.data.router.at("GET/test").is_ok());

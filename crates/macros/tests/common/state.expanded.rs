@@ -12,3 +12,13 @@ impl ngyn::shared::server::context::AppState for TestState {
         self
     }
 }
+impl<'a> ngyn::shared::server::Transformer<'a> for &'a TestState {
+    fn transform(cx: &'a mut ngyn::prelude::NgynContext<'_>) -> Self {
+        cx.state::<TestState>().unwrap()
+    }
+}
+impl<'a> ngyn::shared::server::Transformer<'a> for &'a mut TestState {
+    fn transform(cx: &'a mut ngyn::prelude::NgynContext<'_>) -> Self {
+        cx.state_mut::<TestState>().unwrap()
+    }
+}

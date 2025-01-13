@@ -25,96 +25,132 @@ pub trait ToBytes {
     /// let bytes: Bytes = Bytes::from("Hello, world!");
     /// let parsed_bytes: Bytes = bytes.to_bytes();
     /// ```
-    fn to_bytes(self) -> Bytes;
+    fn to_bytes(&self) -> Bytes;
 }
 
 impl ToBytes for () {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         Bytes::default()
     }
 }
 
-impl ToBytes for &str {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
+impl ToBytes for Box<dyn ToBytes> {
+    fn to_bytes(&self) -> Bytes {
+        self.as_ref().to_bytes()
+    }
+}
+
+impl ToBytes for &'static str {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.as_bytes())
     }
 }
 
 impl ToBytes for String {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self)
-    }
-}
-
-impl ToBytes for &String {
-    fn to_bytes(self) -> Bytes {
-        Bytes::from(self.to_string())
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_owned())
     }
 }
 
 impl ToBytes for Bytes {
-    fn to_bytes(self) -> Bytes {
-        self
+    fn to_bytes(&self) -> Bytes {
+        self.clone()
+    }
+}
+
+impl ToBytes for i8 {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for i16 {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for i32 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for i64 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for i128 {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for f32 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for f64 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for u8 {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for u16 {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for u32 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for u64 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
+        Bytes::from(self.to_string())
+    }
+}
+
+impl ToBytes for u128 {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for bool {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
 impl ToBytes for Value {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         Bytes::from(self.to_string())
     }
 }
 
-impl<T: Serialize> ToBytes for Vec<T> {
-    fn to_bytes(self) -> Bytes {
+impl<T: Serialize + 'static> ToBytes for Vec<T> {
+    fn to_bytes(&self) -> Bytes {
         let json = json!(self);
         json.to_bytes()
     }
 }
 
-impl<D: Serialize, E: Serialize> ToBytes for JsonResponse<D, E> {
-    fn to_bytes(self) -> Bytes {
+impl<D: Serialize + 'static, E: Serialize + 'static> ToBytes for JsonResponse<D, E> {
+    fn to_bytes(&self) -> Bytes {
         if let Some(data) = self.data() {
             return json!({ "data": data }).to_bytes();
         }
@@ -130,7 +166,7 @@ where
     T: ToBytes + Serialize + Any,
     E: ToBytes + Serialize + Any,
 {
-    fn to_bytes(self) -> Bytes {
+    fn to_bytes(&self) -> Bytes {
         if TypeId::of::<E>() == TypeId::of::<Value>() && TypeId::of::<T>() == TypeId::of::<Value>()
         {
             // This is likely a JsonResult

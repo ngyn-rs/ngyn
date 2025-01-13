@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Miscellaneous Chores
 
+## 0.5.2 - 2024-12-30
+
+## 0.5.1 - 2024-12-21
+
 ## 0.5.0 - 2024-12-16
 #### Bug Fixes
 - [#216](../../../../pull/216) **routing**: unwrap grouped routes
