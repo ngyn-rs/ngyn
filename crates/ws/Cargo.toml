@@ -1,6 +1,6 @@
 [package]
 name = "ngyn-websocket"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Websocket Runtime Platform for ngyn web framework"
 license = "MIT"
@@ -13,6 +13,6 @@ keywords = ["ngyn", "run-time", "platform", "websockets", "framework"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ngyn_shared = { version = "0.5", path = "../shared" }
+ngyn_shared = { version = "0.5.3", path = "../shared" }
 tokio = { version = "1", features = ["full"] }
 websocket = "0.27.1"

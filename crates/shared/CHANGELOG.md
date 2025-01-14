@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Miscellaneous Chores
 
+## 0.5.3 - 2025-01-14
+#### Bug Fixes
+- [#243](../../../../pull/243) **routing**: manually drop app state to prevent poisoning
+
 ## 0.5.2 - 2024-12-30
 #### Bug Fixes
 - [#229](../../../../pull/229) **core**: route handlers improvements

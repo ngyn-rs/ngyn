@@ -70,6 +70,18 @@ kbd {
     box-shadow: none;
 }
 
+ol {
+    list-style-type: decimal;
+}
+
+ul {
+    list-style-type: disc;
+}
+
+ol, ul {
+    margin-left: theme("spacing.4");
+}
+
 @layer components {
     .btn {
         border-radius: theme("borderRadius.lg");

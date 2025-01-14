@@ -12,8 +12,8 @@ import { useEvent } from "react-use";
 const homePageCode = `use ngyn::prelude::*;
 
 #[handler]
-fn echo_hello() -> String {
-    "Hello World, Ngyn!".to_string()
+fn echo_hello() -> &'static str {
+    "Hello World, Ngyn!"
 }
 
 #[tokio::main]

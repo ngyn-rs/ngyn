@@ -15,6 +15,17 @@ pub(crate) fn derive_app_state_macro(input: TokenStream) -> TokenStream {
                 self
             }
         }
+
+        impl<'a> #impl_generics ngyn::shared::server::Transformer<'a> for &'a #ident #ty_generics #where_clause {
+            fn transform(cx: &'a mut ngyn::prelude::NgynContext<'_>) -> Self {
+                cx.state::<#ident>().unwrap()
+            }
+        }
+        impl<'a> #impl_generics ngyn::shared::server::Transformer<'a> for &'a mut #ident #ty_generics #where_clause {
+            fn transform(cx: &'a mut ngyn::prelude::NgynContext<'_>) -> Self {
+                cx.state_mut::<#ident>().unwrap()
+            }
+        }
     };
     TokenStream::from(expanded)
 }

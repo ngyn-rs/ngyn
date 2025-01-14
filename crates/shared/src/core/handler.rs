@@ -5,9 +5,11 @@ use http::{HeaderValue, StatusCode};
 use crate::server::{NgynContext, ToBytes};
 
 /// Represents a handler function that takes in a mutable reference to `NgynContext` and `NgynResponse`.
-pub(crate) type Handler = dyn Fn(&mut NgynContext) + Send + Sync + 'static;
+pub(crate) type Handler = dyn Fn(&mut NgynContext) -> Box<dyn ToBytes> + Send + Sync + 'static;
 
-pub(crate) type AsyncHandler = dyn for<'a, 'b> Fn(&'a mut NgynContext) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>
+pub(crate) type AsyncHandler = dyn for<'a, 'b> Fn(
+        &'a mut NgynContext,
+    ) -> Pin<Box<dyn Future<Output = Box<dyn ToBytes>> + Send + 'a>>
     + Send
     + Sync;
 
@@ -16,15 +18,15 @@ pub enum RouteHandler {
     Async(Box<AsyncHandler>),
 }
 
-impl<F: Fn(&mut NgynContext) + Send + Sync + 'static> From<F> for RouteHandler {
-    fn from(f: F) -> Self {
-        RouteHandler::Sync(Box::new(f))
-    }
-}
-
 impl From<Box<AsyncHandler>> for RouteHandler {
     fn from(f: Box<AsyncHandler>) -> Self {
         RouteHandler::Async(f)
+    }
+}
+
+impl<F: Fn(&mut NgynContext) -> Box<dyn ToBytes> + Send + Sync + 'static> From<F> for RouteHandler {
+    fn from(f: F) -> Self {
+        RouteHandler::Sync(Box::new(f))
     }
 }
 
@@ -44,8 +46,8 @@ pub fn handler<S: ToBytes + 'static>(
     f: impl Fn(&mut NgynContext) -> S + Send + Sync + 'static,
 ) -> Box<Handler> {
     Box::new(move |ctx: &mut NgynContext| {
-        let body = f(ctx).to_bytes();
-        *ctx.response_mut().body_mut() = body.into();
+        let body = f(ctx);
+        Box::new(body) as Box<dyn ToBytes>
     })
 }
 
@@ -64,15 +66,14 @@ pub fn async_handler<S: ToBytes + 'static, Fut: Future<Output = S> + Send + 'sta
 ) -> Box<AsyncHandler> {
     Box::new(move |ctx: &mut NgynContext| {
         let fut = f(ctx);
-        Box::pin(async move {
-            let body = fut.await.to_bytes();
-            *ctx.response_mut().body_mut() = body.into();
-        })
+        Box::pin(async move { Box::new(fut.await) as Box<dyn ToBytes> })
     })
 }
 
 pub fn async_wrap(
-    f: impl for<'a, 'b> Fn(&'a mut NgynContext) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>
+    f: impl for<'a, 'b> Fn(
+            &'a mut NgynContext,
+        ) -> Pin<Box<dyn Future<Output = Box<dyn ToBytes>> + Send + 'a>>
         + Send
         + Sync
         + 'static,
@@ -86,6 +87,7 @@ pub fn async_wrap(
 pub fn not_implemented() -> Box<Handler> {
     Box::new(|ctx: &mut NgynContext| {
         *ctx.response_mut().status_mut() = StatusCode::NOT_IMPLEMENTED;
+        Box::new(()) as Box<dyn ToBytes>
     })
 }
 
@@ -96,6 +98,7 @@ pub fn redirect_to(location: &'static str) -> Box<Handler> {
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
         *ctx.response_mut().status_mut() = StatusCode::SEE_OTHER;
+        Box::new(()) as Box<dyn ToBytes>
     })
 }
 
@@ -106,6 +109,7 @@ pub fn redirect_temporary(location: &'static str) -> Box<Handler> {
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
         *ctx.response_mut().status_mut() = StatusCode::TEMPORARY_REDIRECT;
+        Box::new(()) as Box<dyn ToBytes>
     })
 }
 
@@ -116,6 +120,7 @@ pub fn redirect_permanent(location: &'static str) -> Box<Handler> {
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
         *ctx.response_mut().status_mut() = StatusCode::MOVED_PERMANENTLY;
+        Box::new(()) as Box<dyn ToBytes>
     })
 }
 
@@ -126,5 +131,6 @@ pub fn redirect_found(location: &'static str) -> Box<Handler> {
             .headers_mut()
             .insert("Location", HeaderValue::from_str(location).unwrap());
         *ctx.response_mut().status_mut() = StatusCode::FOUND;
+        Box::new(()) as Box<dyn ToBytes>
     })
 }

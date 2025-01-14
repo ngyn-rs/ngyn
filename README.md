@@ -68,17 +68,16 @@ Check out our examples directory for more use cases:
 - Authentication
 - JSON APIs
 - WebSocket handling
-- Database integration
 
 ## Core Crates
 
-- `ngyn`: The main framework, reexports all other crates
-- `ngyn-macros`: Procedural macros for route handlers
-- `ngyn-shared`: Core traits and types
-- `ngyn-hyper`: Hyper server integration
-- `ngyn-ws`: WebSocket support
-- `ngyn-shuttle`: Shuttle.rs deployment service integration
-- `ngyn-vercel`: Vercel deployment service integration
+- [`ngyn`][1]: The main framework, reexports all other crates
+- [`ngyn_macros`][2]: Procedural macros for route handlers
+- [`ngyn_shared`][3]: Core traits and types
+- [`ngyn-hyper`][4]: Hyper server integration
+- [`ngyn-websocket`][5]: WebSocket support
+- [`ngyn-shuttle`][6]: Shuttle.rs deployment service integration
+- [`ngyn-vercel`][7]: Vercel deployment service integration
 
 ## Roadmap
 
@@ -86,18 +85,19 @@ Ngyn is under active development, with the following features planned for future
 - [x] Request and response body handling
 - [ ] Form parsing and validation
 - [ ] Cookies and sessions management
-- [ ] Form Handling
-- [ ] File uploads
-- [ ] Custom response types
+- [x] Form Handling
+- [x] File uploads
+- [ ] Response Streaming
 - [x] WebSockets
-- [ ] Middlewares for common tasks
+- [x] Async Middlewares
+- [x] Async Gates
 - [x] Static file serving
 - [ ] Internationalization and localization
 - [ ] Caching and compression
-- [ ] Testing utilities
 - [ ] CLI tooling for project generation (In progress)
-- [ ] Rate limiting and security features
-- [ ] Deployment service integrations
+- [ ] Rate limiting and security features (In progress)
+- [ ] Deployment service integrations (In progress)
+    - [x] Bare metal (Hyper)
     - [x] Shuttle.rs
     - [x] Vercel
     - [ ] Netlify
@@ -105,7 +105,8 @@ Ngyn is under active development, with the following features planned for future
 - [ ] Improved documentation and examples (In progress)
     - [x] GraphQL support
     - [ ] Authentication and authorization
-    - [ ] Error handling and logging
+- [ ] Error handling and logging
+- [ ] Testing utilities
 
 ## Performance
 
@@ -143,3 +144,11 @@ Ngyn is licensed under the [MIT License](LICENSE.md). This allows you to use, mo
 ---
 
 We can’t wait to see what you build with Ngyn! 🚀
+
+[1]:./crates/core
+[2]:./crates/macros
+[3]:./crates/shared
+[4]:./crates/hyper
+[5]:./crates/websocket
+[6]:./crates/shuttle
+[7]:./crates/vercel
