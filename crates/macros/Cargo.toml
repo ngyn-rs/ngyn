@@ -1,6 +1,6 @@
 [package]
 name = "ngyn_macros"
-version = "0.5.2"
+version = "0.5.3"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
@@ -13,7 +13,7 @@ rust-version = "1.75"
 http = { workspace = true }
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0"
-ngyn_shared = { version = "0.5", path = "../shared" }
+ngyn_shared = { version = "0.5.3", path = "../shared" }
 
 [dev-dependencies]
 macrotest = "1"

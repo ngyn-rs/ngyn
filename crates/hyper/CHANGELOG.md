@@ -5,9 +5,12 @@ All notable changes to this project will be documented in this file. See [conven
 #### Bug Fixes
 
 #### Features
-- [#247](../../../../pull/247) **core**: http1 application configuration
 
 #### Miscellaneous Chores
+
+## 0.2.2 - 2025-01-14
+#### Features
+- [#247](../../../../pull/247) **core**: http1 application configuration
 
 ## 0.2.1 - 2024-12-21
 #### Bug Fixes
