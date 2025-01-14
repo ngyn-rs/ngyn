@@ -1,6 +1,6 @@
 [package]
 name = "ngyn-vercel"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 description = "Vercel Runtime Platform for ngyn web framework"
 license = "MIT"
@@ -13,6 +13,6 @@ keywords = ["ngyn", "run-time", "platform", "vercel", "framework"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ngyn_shared = { version = "0.5", path = "../shared" }
+ngyn_shared = { version = "0.5.3", path = "../shared" }
 tokio = { version = "1", features = ["full"] }
 vercel_runtime = { version = "1.1.4" }
