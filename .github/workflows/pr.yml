@@ -11,7 +11,7 @@ on:
       rustc_version:
         description: "Rustc version"
         required: true
-        default: "1.80.0"
+        default: "1.81.0"
 
 jobs:
   check:
@@ -24,7 +24,7 @@ jobs:
       - name: Install msrv toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ github.event.inputs.rustc_version || '1.80.0' }}
+          toolchain: ${{ github.event.inputs.rustc_version || '1.0' }}
 
       - uses: Swatinem/rust-cache@v1
 
@@ -46,7 +46,7 @@ jobs:
       - name: Install msrv toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ github.event.inputs.rustc_version || '1.80.0' }}
+          toolchain: ${{ github.event.inputs.rustc_version || '1.81.0' }}
 
       - uses: Swatinem/rust-cache@v1
 
@@ -71,7 +71,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           components: rustfmt, clippy
-          toolchain: ${{ github.event.inputs.rustc_version || '1.80.0' }}
+          toolchain: ${{ github.event.inputs.rustc_version || '1.81.0' }}
 
       - uses: Swatinem/rust-cache@v1
 

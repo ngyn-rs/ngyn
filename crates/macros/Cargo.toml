@@ -7,7 +7,7 @@ license = "MIT"
 documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
-rust-version = "1.80"
+rust-version = "1.81.0"
 
 [dependencies]
 http = { workspace = true }
