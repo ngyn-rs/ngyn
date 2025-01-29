@@ -3,6 +3,7 @@ use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::{service::service_fn, Request};
 use hyper_util::rt::TokioIo;
+use hyper_util::server::graceful::GracefulShutdown;
 use ngyn_shared::core::engine::{NgynHttpPlatform, PlatformData};
 use ngyn_shared::server::NgynResponse;
 use std::sync::Arc;
@@ -73,7 +74,7 @@ impl HyperApplication {
             http1.max_headers(max_headers);
         }
 
-        let graceful = hyper_util::server::graceful::GracefulShutdown::new();
+        let graceful = GracefulShutdown::new();
         // when this signal completes, start shutdown
         let mut signal = std::pin::pin!(shutdown_signal());
 
