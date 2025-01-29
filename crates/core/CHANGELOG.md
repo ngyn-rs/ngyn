@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Miscellaneous Chores
 
+## 0.5.4 - 2025-01-29
+#### Bug Fixes
+- [#252](../../../../pull/252) **platform**: broken hyper graceful shutdown
+
 ## 0.5.3 - 2025-01-14
 
 ## 0.5.2 - 2024-12-30

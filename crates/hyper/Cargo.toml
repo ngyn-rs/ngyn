@@ -1,6 +1,6 @@
 [package]
 name = "ngyn-hyper"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 description = "Hyper Platform for ngyn web framework"
 license = "MIT"
@@ -13,6 +13,6 @@ keywords = ["ngyn", "run-time", "platform", "hyper", "framework"]
 [dependencies]
 http-body-util = { workspace = true }
 hyper = { version = "1", features = ["full"] }
-hyper-util = { version = "0.1", features = ["full"] }
+hyper-util = { version = "0.1.10", features = ["full"] }
 ngyn_shared = { version = "0.5", path = "../shared" }
 tokio = { version = "1", features = ["full"] }
