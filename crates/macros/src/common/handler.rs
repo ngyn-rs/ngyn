@@ -126,7 +126,7 @@ pub fn handler_macro(args: TokenStream, raw_input: TokenStream) -> TokenStream {
     }).unwrap_or_else(|| quote! { -> Box<dyn ngyn::prelude::ToBytes> });
 
     quote! {
-        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext) #output {
+        #vis #constness #unsafety #fn_token #ident <#generics_stream>(cx: &'_cx_lifetime mut ngyn::prelude::NgynContext<'_>) #output {
             #body
         }
     }

@@ -18,8 +18,8 @@ pub mod prelude {
             handler::*,
         },
         server::{
-            Body, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse, Param, Query,
-            ToBytes, Transducer,
+            Body, FormFields, JsonResponse, JsonResult, NgynContext, NgynRequest, NgynResponse,
+            Param, Query, ToBytes, Transducer,
         },
         NgynGate, NgynMiddleware,
     };
