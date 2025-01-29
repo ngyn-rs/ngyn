@@ -1202,8 +1202,8 @@ dependencies = [
  "hyper 1.4.0",
  "juniper",
  "juniper_hyper",
- "ngyn 0.5.3",
- "ngyn-hyper 0.2.2",
+ "ngyn 0.5.4",
+ "ngyn-hyper 0.2.3",
  "serde",
  "serde_json",
  "tokio",
@@ -2088,10 +2088,10 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "http 1.2.0",
- "ngyn-hyper 0.2.2",
+ "ngyn-hyper 0.2.3",
  "ngyn_macros 0.5.3",
  "ngyn_shared 0.5.3",
 ]
@@ -2123,7 +2123,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn-hyper"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "http-body-util",
  "hyper 1.4.0",
@@ -2134,9 +2134,9 @@ dependencies = [
 
 [[package]]
 name = "ngyn-shuttle"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
- "ngyn-hyper 0.2.2",
+ "ngyn-hyper 0.2.3",
  "shuttle-runtime",
 ]
 
@@ -2144,7 +2144,7 @@ dependencies = [
 name = "ngyn-swagger"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.3",
+ "ngyn 0.5.4",
  "ngyn-swagger-macros",
  "serde",
  "serde_json",
@@ -2154,7 +2154,7 @@ dependencies = [
 name = "ngyn-swagger-macros"
 version = "0.1.0"
 dependencies = [
- "ngyn-hyper 0.2.2",
+ "ngyn-hyper 0.2.3",
  "quote",
  "serde",
  "serde_json",
@@ -4169,7 +4169,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.5.3",
+ "ngyn 0.5.4",
  "ngyn-swagger",
  "ngyn-vercel 0.2.2",
  "serde",
@@ -4336,7 +4336,7 @@ name = "weather_api"
 version = "0.2.0"
 dependencies = [
  "dotenv",
- "ngyn 0.5.3",
+ "ngyn 0.5.4",
  "ngyn-shuttle",
  "serde",
  "serde_json",
@@ -4378,7 +4378,7 @@ dependencies = [
 name = "websocket"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.3",
+ "ngyn 0.5.4",
  "ngyn-websocket",
  "tokio",
 ]
