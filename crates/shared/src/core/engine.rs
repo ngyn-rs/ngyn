@@ -132,7 +132,7 @@ pub trait NgynHttpPlatform: Default {
     fn data_mut(&mut self) -> &mut PlatformData;
 }
 
-pub trait NgynHttpEngine: NgynPlatform {
+pub trait NgynHttpEngine: RouteInstance {
     /// Adds a route to the application.
     ///
     /// ### Arguments
