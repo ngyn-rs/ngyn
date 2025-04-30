@@ -4,17 +4,30 @@ sidebar_position: 1
 
 # Introduction
 
-Ngyn(/nɪn/) is a modern, async-first web framework for [Rust](https://rust-lang.org) that prioritizes developer ergonomics while maintaining Rust's performance and safety guarantees.
-It is designed to be easy to use and easy to learn and built on top of the popular [Hyper](https://hyper.rs/) library.
+Ngyn(/nɪn/) is a modern, async-first web framework for [Rust](https://rust-lang.org) that prioritizes developer ergonomics while maintaining Rust's performance and safety guarantees. It is designed to be easy to use and learn, built on top of the popular [Hyper](https://hyper.rs/) library.
+
+## Philosophy
+
+Ngyn was created with a few core principles in mind:
+
+-   **Developer Experience**: Writing web applications should be intuitive and enjoyable
+-   **Performance**: Leverage Rust's speed without compromising on usability
+-   **Type Safety**: Utilize Rust's powerful type system to catch errors at compile time
+-   **Modularity**: Components should be easy to compose and extend
+-   **Minimal Boilerplate**: Focus on business logic, not repetitive code
 
 ## Features
 
-- **Intuitive Routing**: Simple, declarative routing patterns `(app.get(), /users/{id})` familiar to web developers
-- **Flexible Middleware**: Asynchronous middleware system for request/response processing
-- **Performance Focused**: Optimized for both development experience and runtime performance
-- **Modern Rust**: Takes advantage of Rust's type system and async features
-- **Optional Macros**: Enhance your route handlers with minimal boilerplate
-- **Platform Agnostic**: Built to work with various HTTP servers (currently supports Hyper)
+-   **Intuitive Routing**: Simple, declarative routing patterns `(app.get(), /users/{id})` familiar to web developers
+-   **Flexible Middleware**: Asynchronous middleware system for request/response processing
+-   **Performance Focused**: Optimized for both development experience and runtime performance
+-   **Modern Rust**: Takes advantage of Rust's type system and async features
+-   **Optional Macros**: Enhance your route handlers with minimal boilerplate
+-   **Platform Agnostic**: Built to work with various HTTP servers (currently supports Hyper)
+-   **Database Integration**: Easy connection with popular databases
+-   **WebSocket Support**: Built-in support for real-time communication
+-   **Form Handling**: Simplified processing of form submissions
+-   **Testing Utilities**: Tools to make testing your application straightforward
 
 > Please note that Ngyn is still in its early stages of development, and the API is subject to change.
 
@@ -45,6 +58,16 @@ async fn main() {
     let _ = app.listen("127.0.0.1:8080").await;
 }
 ```
+
+## When to Use Ngyn
+
+Ngyn is an excellent choice for:
+
+-   **Web APIs**: Building RESTful or GraphQL APIs
+-   **Microservices**: Creating lightweight, focused services
+-   **Full-stack Applications**: When combined with a frontend framework
+-   **Real-time Applications**: Using WebSockets for live updates
+-   **Projects Requiring Performance**: When you need Rust's speed with ergonomic APIs
 
 ## Contribution
 

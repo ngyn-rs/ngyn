@@ -1381,8 +1381,8 @@ dependencies = [
  "hyper 1.4.0",
  "juniper",
  "juniper_hyper",
- "ngyn 0.5.2",
- "ngyn-hyper 0.2.1",
+ "ngyn 0.5.4",
+ "ngyn-hyper 0.2.3",
  "serde",
  "serde_json",
  "tokio",
@@ -1709,9 +1709,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-util"
-version = "0.1.6"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ab92f4f49ee4fb4f997c784b7a2e0fa70050211e0b6a287f898c3c9785ca956"
+checksum = "df2dcfbe0677734ab2f3ffa7fa7bfd4706bfdc1ef393f2ee30184aed67e631b4"
 dependencies = [
  "bytes 1.9.0",
  "futures-channel",
@@ -1722,7 +1722,6 @@ dependencies = [
  "pin-project-lite",
  "socket2 0.5.7",
  "tokio",
- "tower",
  "tower-service",
  "tracing",
 ]
@@ -2353,12 +2352,12 @@ dependencies = [
 
 [[package]]
 name = "ngyn"
-version = "0.5.2"
+version = "0.5.4"
 dependencies = [
  "http 1.2.0",
- "ngyn-hyper 0.2.1",
- "ngyn_macros 0.5.2",
- "ngyn_shared 0.5.2",
+ "ngyn-hyper 0.2.3",
+ "ngyn_macros 0.5.3",
+ "ngyn_shared 0.5.3",
 ]
 
 [[package]]
@@ -2388,20 +2387,20 @@ dependencies = [
 
 [[package]]
 name = "ngyn-hyper"
-version = "0.2.1"
+version = "0.2.3"
 dependencies = [
  "http-body-util",
  "hyper 1.4.0",
  "hyper-util",
- "ngyn_shared 0.5.2",
+ "ngyn_shared 0.5.3",
  "tokio",
 ]
 
 [[package]]
 name = "ngyn-shuttle"
-version = "0.2.1"
+version = "0.2.3"
 dependencies = [
- "ngyn-hyper 0.2.1",
+ "ngyn-hyper 0.2.3",
  "shuttle-runtime",
 ]
 
@@ -2409,7 +2408,7 @@ dependencies = [
 name = "ngyn-swagger"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.2",
+ "ngyn 0.5.4",
  "ngyn-swagger-macros",
  "serde",
  "serde_json",
@@ -2419,7 +2418,7 @@ dependencies = [
 name = "ngyn-swagger-macros"
 version = "0.1.0"
 dependencies = [
- "ngyn-hyper 0.2.1",
+ "ngyn-hyper 0.2.3",
  "quote",
  "serde",
  "serde_json",
@@ -2438,18 +2437,18 @@ dependencies = [
 
 [[package]]
 name = "ngyn-vercel"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
- "ngyn_shared 0.5.2",
+ "ngyn_shared 0.5.3",
  "tokio",
  "vercel_runtime",
 ]
 
 [[package]]
 name = "ngyn-websocket"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
- "ngyn_shared 0.5.2",
+ "ngyn_shared 0.5.3",
  "tokio",
  "websocket 0.27.1",
 ]
@@ -2479,11 +2478,11 @@ dependencies = [
 
 [[package]]
 name = "ngyn_macros"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "http 1.2.0",
  "macrotest",
- "ngyn_shared 0.5.2",
+ "ngyn_shared 0.5.3",
  "quote",
  "syn 2.0.96",
 ]
@@ -2523,7 +2522,7 @@ dependencies = [
 
 [[package]]
 name = "ngyn_shared"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "bytes 1.9.0",
  "futures-util",
@@ -4867,9 +4866,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vercel_app"
 version = "0.2.8"
 dependencies = [
- "ngyn 0.5.2",
+ "ngyn 0.5.4",
  "ngyn-swagger",
- "ngyn-vercel 0.2.1",
+ "ngyn-vercel 0.2.2",
  "serde",
  "serde_json",
  "tokio",
@@ -5040,7 +5039,7 @@ name = "weather_api"
 version = "0.2.0"
 dependencies = [
  "dotenv",
- "ngyn 0.5.2",
+ "ngyn 0.5.4",
  "ngyn-shuttle",
  "serde",
  "serde_json",
@@ -5082,7 +5081,7 @@ dependencies = [
 name = "websocket"
 version = "0.1.0"
 dependencies = [
- "ngyn 0.5.2",
+ "ngyn 0.5.4",
  "ngyn-websocket",
  "tokio",
 ]

@@ -3,11 +3,14 @@ All notable changes to this project will be documented in this file. See [conven
 
 ## Unreleased
 #### Bug Fixes
-- [#243](../../../../pull/243) **routing**: `#[handler]` macro compile time + arguments reduction fixes
 
 #### Features
 
 #### Miscellaneous Chores
+
+## 0.5.3 - 2025-01-14
+#### Bug Fixes
+- [#243](../../../../pull/243) **routing**: `#[handler]` macro compile time + arguments reduction fixes
 
 ## 0.5.2 - 2024-12-30
 #### Miscellaneous Chores

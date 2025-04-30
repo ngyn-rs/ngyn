@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Miscellaneous Chores
 
+## 0.2.2 - 2025-01-14
 
 ## 0.2.1 - 2024-12-21
 

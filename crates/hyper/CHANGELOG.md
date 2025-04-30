@@ -8,6 +8,14 @@ All notable changes to this project will be documented in this file. See [conven
 
 #### Miscellaneous Chores
 
+## 0.2.3 - 2025-01-29
+#### Bug Fixes
+- [#252](../../../../pull/252) **platform**: broken hyper graceful shutdown
+
+## 0.2.2 - 2025-01-14
+#### Features
+- [#247](../../../../pull/247) **core**: http1 application configuration
+
 ## 0.2.1 - 2024-12-21
 #### Bug Fixes
 - [#223](../../../../pull/223) **core**: implement graceful shutdown on `hyper` platform

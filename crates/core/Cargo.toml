@@ -1,20 +1,26 @@
 [package]
 name = "ngyn"
-version = "0.5.2"
+version = "0.5.4"
 edition = "2021"
 description = "Modular backend framework for web applications"
 license = "MIT"
-rust-version = "1.75"
+rust-version = "1.81.0"
 documentation = "https://ngyn.rs/docs"
 repository = "https://github.com/ngyn-rs/ngyn"
 homepage = "https://ngyn.rs"
-keywords = ["web-apps", "web-server", "web-framework", "back-end", "applications"]
+keywords = [
+    "web-apps",
+    "web-server",
+    "web-framework",
+    "back-end",
+    "applications",
+]
 
 [lib]
 path = "src/lib.rs"
 
 [dependencies]
 http = { workspace = true }
-ngyn_macros = { version = "0.5", path = "../macros" }
-ngyn_shared = { version = "0.5", path = "../shared" }
-ngyn-hyper = { version = "0.2", path = "../hyper" }
+ngyn_macros = { version = "0.5.3", path = "../macros" }
+ngyn_shared = { version = "0.5.3", path = "../shared" }
+ngyn-hyper = { version = "0.2.3", path = "../hyper" }
