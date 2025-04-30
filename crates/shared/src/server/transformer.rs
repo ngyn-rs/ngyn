@@ -73,7 +73,7 @@ pub struct Param<'a> {
     data: Vec<(&'a str, &'a str)>,
 }
 
-impl<'a> Param<'a> {
+impl Param<'_> {
     /// Retrieves the value associated with the specified `id` from the parameter data.
     ///
     /// ### Arguments
@@ -145,7 +145,7 @@ pub struct Query<'q> {
     uri: &'q http::uri::Uri,
 }
 
-impl<'q> Query<'q> {
+impl Query<'_> {
     /// Retrieves the value associated with the specified `id` from the query parameters.
     ///
     /// ### Arguments
