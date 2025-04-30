@@ -9,23 +9,20 @@ use crate::{
     Middleware, NgynMiddleware,
 };
 
-pub struct GroupRouter<'b> {
-    base_path: &'b str,
-    router: Router<RouteHandler>,
+#[derive(Default)]
+pub struct GroupRouter {
+    data: PlatformData,
 }
 
-impl RouteInstance for GroupRouter<'_> {
-    fn router_mut(&mut self) -> &mut Router<RouteHandler> {
-        &mut self.router
-    }
-
-    fn mount(&self) -> &str {
-        self.base_path
+impl NgynPlatform for GroupRouter {
+    fn data_mut(&mut self) -> &mut PlatformData {
+        &mut self.data
     }
 }
 
 #[derive(Default)]
 pub struct PlatformData {
+    base_path: &'static str,
     router: Router<RouteHandler>,
     middlewares: Vec<Box<dyn crate::Middleware>>,
     state: Option<Arc<Box<dyn AppState>>>,
@@ -102,7 +99,7 @@ pub trait RouteInstance {
     fn router_mut(&mut self) -> &mut Router<RouteHandler>;
 
     /// Mounts the route on a path, defaults to "/"
-    fn mount(&self) -> &str {
+    fn mount(&mut self) -> &str {
         "/"
     }
 
@@ -215,13 +212,15 @@ pub trait NgynEngine: NgynPlatform {
     }
 
     /// Groups related routes
-    fn group(&mut self, base_path: &str, registry: impl Fn(&mut GroupRouter)) {
+    fn group(&mut self, base_path: &'static str, registry: impl Fn(&mut GroupRouter)) {
         let mut group = GroupRouter {
-            base_path,
-            router: Router::<RouteHandler>::new(),
+            data: PlatformData {
+                base_path,
+                ..Default::default()
+            },
         };
         registry(&mut group);
-        self.data_mut().router.merge(group.router).unwrap();
+        self.data_mut().router.merge(group.data.router).unwrap();
     }
 
     /// Adds a middleware to the application.
@@ -253,6 +252,10 @@ impl<T: NgynPlatform> NgynEngine for T {}
 impl<T: NgynPlatform> RouteInstance for T {
     fn router_mut(&mut self) -> &mut Router<RouteHandler> {
         &mut self.data_mut().router
+    }
+
+    fn mount(&mut self) -> &str {
+        self.data_mut().base_path
     }
 }
 impl<T: NgynHttpPlatform> NgynHttpEngine for T {}
