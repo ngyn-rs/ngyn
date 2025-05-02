@@ -4,258 +4,251 @@ sidebar_position: 10
 
 # Advanced Features
 
-Ngyn provides several advanced features that allow you to build complex, high-performance web applications. This guide explores these features and shows you how to leverage them in your projects.
+Ngyn provides a number of advanced features that can help you build more complex applications. This guide covers some of these features and how to use them effectively.
 
 ## Dependency Injection
 
-Ngyn supports a simple form of dependency injection through its handler system, allowing you to inject services and other dependencies into your route handlers.
+Dependency injection is a design pattern that allows you to inject dependencies into your handlers rather than creating them inside the handler. This makes your code more modular, testable, and maintainable.
 
-### Creating Services
+Ngyn supports dependency injection through the `State` type, which allows you to access application state from your handlers.
 
-You can create services that encapsulate business logic and inject them into your handlers:
+### Basic Dependency Injection
+
+Here's a simple example of dependency injection using the `State` type:
 
 ```rust
 use ngyn::prelude::*;
 
 // Define a service
 struct UserService {
-    // You might have a database connection or other dependencies here
+    // Service fields and methods
 }
 
 impl UserService {
     fn new() -> Self {
         Self {}
     }
-    
-    fn get_user(&self, id: &str) -> Result<String, String> {
-        // In a real application, you would fetch from a database
-        if id == "1" {
-            Ok("John Doe".to_string())
+
+    fn get_user(&self, id: u32) -> Option<String> {
+        // In a real application, this would fetch from a database
+        if id == 1 {
+            Some("John Doe".to_string())
         } else {
-            Err(format!("User with ID {} not found", id))
+            None
         }
     }
 }
 
-// Use the service in a handler
+// Define our application state
+#[derive(AppState)]
+struct State {
+    user_service: UserService,
+}
+
+// Handler that uses the service
 #[handler]
-fn get_user(param: Param, service: UserService) -> Result<String, String> {
-    let user_id = param.get("id").unwrap_or("0");
-    service.get_user(user_id)
+fn get_user(param: Param, state: State) -> Result<JsonResult, String> {
+    let id = param.get("id")
+        .unwrap_or("0")
+        .parse::<u32>()
+        .map_err(|_| "Invalid ID".to_string())?;
+
+    match state.user_service.get_user(id) {
+        Some(user) => Ok(Ok(json!({ "user": user }))),
+        None => Err(format!("User with ID {} not found", id)),
+    }
 }
 
 #[tokio::main]
 async fn main() {
-    let mut app = HyperApplication::default();
-    
     // Create the service
     let user_service = UserService::new();
-    
-    // Register the route with the service
-    app.get("/users/{id}", get_user.with(user_service));
-    
+
+    // Create our application state
+    let app_state = State { user_service };
+
+    let mut app = HyperApplication::default();
+
+    // Set the application state
+    app.set_state(app_state);
+
+    // Register the route
+    app.get("/users/{id}", get_user);
+
     let _ = app.listen("127.0.0.1:3000").await;
 }
 ```
 
-## Custom Transducers
+### Multiple Dependencies
 
-Transducers in Ngyn convert between different data types. You can create custom transducers to handle specific data conversion needs:
+You can inject multiple dependencies by adding them to your application state:
 
 ```rust
 use ngyn::prelude::*;
+
+#[derive(AppState)]
+struct State {
+    user_service: UserService,
+    post_service: PostService,
+    config: AppConfig,
+}
+
+#[handler]
+fn get_user_posts(param: Param, state: State) -> Result<JsonResult, String> {
+    let user_id = param.get("id")
+        .unwrap_or("0")
+        .parse::<u32>()
+        .map_err(|_| "Invalid ID".to_string())?;
+
+    // Use both services
+    let user = state.user_service.get_user(user_id)
+        .ok_or_else(|| format!("User with ID {} not found", user_id))?;
+
+    let posts = state.post_service.get_posts_by_user(user_id);
+
+    Ok(Ok(json!({
+        "user": user,
+        "posts": posts,
+        "max_posts": state.config.max_posts_per_user
+    })))
+}
+```
+
+## Middleware
+
+Middleware allows you to execute code before and after your handlers. This is useful for tasks like logging, authentication, and error handling.
+
+### Creating Middleware
+
+To create middleware, implement the `NgynMiddleware` trait:
+
+```rust
+use ngyn::prelude::*;
+use std::time::Instant;
+
+struct TimingMiddleware;
+
+impl NgynMiddleware for TimingMiddleware {
+    async fn handle(ctx: NgynContext) {
+        let start = Instant::now();
+
+        let duration = start.elapsed();
+        println!("Request to {} took {:?}", ctx.request().uri(), duration);
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    let mut app = HyperApplication::default();
+
+    // Apply middleware to all routes
+    app.use_middleware(TimingMiddleware {});
+
+    // Define routes
+    app.get("/", handler(|_| "Hello, World!"));
+
+    let _ = app.listen("127.0.0.1:3000").await;
+}
+```
+
+### Middleware for Specific Routes
+
+You can also apply middleware to specific routes or groups of routes:
+
+```rust
+// Apply middleware to a specific route
+app.get("/admin", handler(|_| "Admin Area"));
+
+// Apply middleware to a group of routes
+app.group("/api", |group| {
+    group.use_middleware(ApiKeyMiddleware {});
+
+    group.get("/users", get_users);
+    group.post("/users", create_user);
+});
+```
+
+## Gates
+
+Gates are similar to middleware but are specifically designed for authorization. They determine whether a request should proceed to the handler.
+
+### Creating a Gate
+
+To create a gate, implement the `NgynGate` trait:
+
+```rust
+use ngyn::prelude::*;
+
+struct AdminGate;
+
+impl NgynGate for AdminGate {
+    async fn can_activate(ctx: NgynContext) -> bool {
+        // Check if the user is an admin
+        // In a real application, this would check a JWT token or session
+        let is_admin = ctx.request()
+            .headers()
+            .get("X-User-Role")
+            .and_then(|v| v.to_str().ok())
+            .map(|role| role == "admin")
+            .unwrap_or(false);
+
+        if !is_admin {
+            // Set a 403 Forbidden status
+            *ctx.response_mut().status_mut() = http::StatusCode::FORBIDDEN;
+        }
+
+        is_admin
+    }
+}
+```
+
+### Using Gates
+
+You can apply gates to handlers using the `gates` attribute:
+
+```rust
+#[handler(gates = [AdminGate])]
+fn admin_dashboard() -> &'static str {
+    "Welcome to the Admin Dashboard"
+}
+
+// You can also apply multiple gates
+#[handler(gates = [AuthenticatedGate, AdminGate])]
+fn super_admin_dashboard() -> &'static str {
+    "Welcome to the Super Admin Dashboard"
+}
+```
+
+## Database Integration
+
+Ngyn works well with various database libraries. Here's an example using SQLx with PostgreSQL:
+
+```rust
+use ngyn::prelude::*;
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
 struct User {
     id: i32,
     name: String,
     email: String,
 }
 
-// Implement the Transducer trait for your custom type
-impl Transducer for User {
-    fn transduce(self) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
-        // Convert the User to JSON bytes
-        let json = serde_json::to_vec(&self)?;
-        Ok(json)
-    }
+// Define our application state
+#[derive(AppState)]
+struct State {
+    pool: Pool<Postgres>,
 }
 
 #[handler]
-fn get_user() -> User {
-    User {
-        id: 1,
-        name: "John Doe".to_string(),
-        email: "john@example.com".to_string(),
-    }
-}
-```
-
-## Custom Middleware Chains
-
-You can create complex middleware chains to process requests in a specific order:
-
-```rust
-use ngyn::prelude::*;
-
-struct LoggerMiddleware;
-struct AuthMiddleware;
-struct RateLimiterMiddleware;
-
-impl NgynMiddleware for LoggerMiddleware {
-    async fn handle(ctx: NgynContext) {
-        println!("Request: {} {}", ctx.request().method(), ctx.request().uri());
-    }
-}
-
-impl NgynMiddleware for AuthMiddleware {
-    async fn handle(ctx: NgynContext) {
-        let auth_header = ctx.request().headers().get("Authorization");
-        if auth_header.is_none() {
-            *ctx.response_mut().status_mut() = http::StatusCode::UNAUTHORIZED;
-        }
-    }
-}
-
-impl NgynMiddleware for RateLimiterMiddleware {
-    async fn handle(ctx: NgynContext) {
-        // Implement rate limiting logic here
-        // For example, check if the client has exceeded the request limit
-        // If so, set the response status to 429 Too Many Requests
-    }
-}
-
-#[tokio::main]
-async fn main() {
-    let mut app = HyperApplication::default();
-    
-    // Add global middleware (applied to all routes)
-    app.use_middleware(LoggerMiddleware {});
-    
-    // Create a group with specific middleware
-    app.group("/api", |group| {
-        // Add middleware specific to this group
-        group.use_middleware(AuthMiddleware {});
-        group.use_middleware(RateLimiterMiddleware {});
-        
-        // Define routes within this group
-        group.get("/users", get_users);
-        group.post("/users", create_user);
-    });
-    
-    let _ = app.listen("127.0.0.1:3000").await;
-}
-```
-
-## Static File Serving
-
-Ngyn can serve static files from a directory:
-
-```rust
-use std::path::PathBuf;
-use ngyn::prelude::*;
-
-#[tokio::main]
-async fn main() {
-    let mut app = HyperApplication::default();
-    
-    // Serve static files from the "public" directory
-    let _ = app.use_static(PathBuf::from("public"));
-    
-    // Your other routes
-    app.get("/api/hello", handler(|_| "Hello, World!"));
-    
-    let _ = app.listen("127.0.0.1:3000").await;
-}
-```
-
-## Custom Error Handling
-
-You can implement custom error handling to provide better error responses:
-
-```rust
-use ngyn::prelude::*;
-use std::fmt;
-
-// Define a custom error type
-#[derive(Debug)]
-enum AppError {
-    NotFound(String),
-    Unauthorized,
-    InternalError(String),
-}
-
-impl fmt::Display for AppError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            AppError::NotFound(resource) => write!(f, "{} not found", resource),
-            AppError::Unauthorized => write!(f, "Unauthorized"),
-            AppError::InternalError(msg) => write!(f, "Internal error: {}", msg),
-        }
-    }
-}
-
-// Implement conversion from AppError to NgynResponse
-impl From<AppError> for NgynResponse {
-    fn from(error: AppError) -> Self {
-        let (status, message) = match error {
-            AppError::NotFound(_) => (http::StatusCode::NOT_FOUND, error.to_string()),
-            AppError::Unauthorized => (http::StatusCode::UNAUTHORIZED, error.to_string()),
-            AppError::InternalError(_) => (http::StatusCode::INTERNAL_SERVER_ERROR, error.to_string()),
-        };
-        
-        let mut response = NgynResponse::new(Body::from(message));
-        *response.status_mut() = status;
-        response
-    }
-}
-
-// Use the custom error in a handler
-#[handler]
-fn get_user(param: Param) -> Result<String, AppError> {
-    let user_id = param.get("id").unwrap_or("0");
-    
-    if user_id == "0" {
-        return Err(AppError::NotFound("User".to_string()));
-    }
-    
-    if !is_authorized() {
-        return Err(AppError::Unauthorized);
-    }
-    
-    match get_user_from_database(user_id) {
-        Ok(user) => Ok(user),
-        Err(e) => Err(AppError::InternalError(e.to_string())),
-    }
-}
-```
-
-## Async Database Connections
-
-Ngyn works well with async database libraries like `sqlx`:
-
-```rust
-use ngyn::prelude::*;
-use sqlx::{Pool, Postgres};
-use sqlx::postgres::PgPoolOptions;
-
-#[derive(sqlx::FromRow, serde::Serialize)]
-struct User {
-    id: i32,
-    name: String,
-    email: String,
-}
-
-#[handler]
-async fn get_users(db: Pool<Postgres>) -> Result<JsonResult, String> {
-    match sqlx::query_as::<_, User>("SELECT id, name, email FROM users")
-        .fetch_all(&db)
+async fn get_users(state: State) -> Result<JsonResult, String> {
+    let users = sqlx::query_as::<_, User>("SELECT id, name, email FROM users")
+        .fetch_all(&state.pool)
         .await
-    {
-        Ok(users) => Ok(Ok(json!({ "users": users }))),
-        Err(e) => Err(format!("Database error: {}", e)),
-    }
+        .map_err(|e| format!("Database error: {}", e))?;
+
+    Ok(Ok(json!({ "users": users })))
 }
 
 #[tokio::main]
@@ -263,184 +256,181 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up the database connection pool
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://username:password@localhost/database")
-        .await?
-    
+        .connect("postgres://postgres:password@localhost/mydb")
+        .await?;
+
+    // Create our application state
+    let app_state = State { pool };
+
     let mut app = HyperApplication::default();
-    
-    // Register the route with the database pool
-    app.get("/users", get_users.with(pool.clone()));
-    
+
+    // Set the application state
+    app.set_state(app_state);
+
+    // Register the route
+    app.get("/users", get_users);
+
     let _ = app.listen("127.0.0.1:3000").await;
-    
+
     Ok(())
 }
 ```
 
 ## GraphQL Integration
 
-Ngyn can be integrated with GraphQL libraries like `async-graphql`:
+Ngyn can be integrated with GraphQL libraries like Juniper:
 
 ```rust
 use ngyn::prelude::*;
-use async_graphql::{Schema, EmptyMutation, EmptySubscription, Object, SimpleObject};
-use async_graphql_hyper::GraphQLRequest;
+use juniper::{graphql_object, EmptyMutation, EmptySubscription, RootNode};
 
-#[derive(SimpleObject)]
-struct User {
-    id: i32,
-    name: String,
-    email: String,
-}
-
+// Define your GraphQL schema
 struct Query;
 
-#[Object]
+#[graphql_object]
 impl Query {
-    async fn users(&self) -> Vec<User> {
-        // In a real application, you would fetch from a database
-        vec![User {
-            id: 1,
-            name: "John Doe".to_string(),
-            email: "john@example.com".to_string(),
-        }]
-    }
-    
-    async fn user(&self, id: i32) -> Option<User> {
-        if id == 1 {
-            Some(User {
-                id: 1,
-                name: "John Doe".to_string(),
-                email: "john@example.com".to_string(),
-            })
-        } else {
-            None
-        }
+    fn hello() -> &'static str {
+        "Hello, GraphQL!"
     }
 }
 
-type MySchema = Schema<Query, EmptyMutation, EmptySubscription>;
+type Schema = RootNode<'static, Query, EmptyMutation<()>, EmptySubscription<()>>;
+
+// Define our application state
+#[derive(AppState)]
+struct State {
+    schema: Schema,
+}
 
 #[handler]
-async fn graphql_handler(schema: MySchema, req: NgynRequest, body: Body) -> Result<JsonResult, String> {
-    let query = match body.json::<GraphQLRequest>().await {
-        Ok(query) => query,
+async fn graphql_handler(body: Body, state: State) -> Result<JsonResult, String> {
+    let request = match body.json::<juniper::http::GraphQLRequest>().await {
+        Ok(req) => req,
         Err(e) => return Err(format!("Invalid GraphQL request: {}", e)),
     };
-    
-    let response = query.execute(&schema).await;
-    Ok(Ok(serde_json::to_value(response)?))
+
+    let response = request.execute(&state.schema, &());
+    Ok(Ok(json!(response)))
 }
 
 #[tokio::main]
 async fn main() {
-    let schema = Schema::build(Query, EmptyMutation, EmptySubscription).finish();
-    
+    // Create the schema
+    let schema = Schema::new(Query, EmptyMutation::new(), EmptySubscription::new());
+
+    // Create our application state
+    let app_state = State { schema };
+
     let mut app = HyperApplication::default();
-    
+
+    // Set the application state
+    app.set_state(app_state);
+
     // Register the GraphQL endpoint
-    app.post("/graphql", graphql_handler.with(schema.clone()));
-    
+    app.post("/graphql", graphql_handler);
+
     let _ = app.listen("127.0.0.1:3000").await;
 }
 ```
 
-## Performance Optimization
+## WebSockets
 
-Here are some tips for optimizing the performance of your Ngyn application:
-
-### Connection Pooling
-
-Use connection pooling for database connections to avoid the overhead of creating new connections for each request:
+Ngyn supports WebSockets for real-time communication:
 
 ```rust
-let pool = PgPoolOptions::new()
-    .max_connections(5)
-    .connect("postgres://username:password@localhost/database")
-    .await?
-```
+use ngyn::prelude::*;
+use futures::{SinkExt, StreamExt};
+use tokio::sync::broadcast;
 
-### Response Caching
-
-Implement response caching for frequently accessed resources:
-
-```rust
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
-
-struct CacheEntry {
-    data: Vec<u8>,
-    expires_at: Instant,
-}
-
-struct CacheMiddleware {
-    cache: Arc<Mutex<HashMap<String, CacheEntry>>>,
-    ttl: Duration,
-}
-
-impl CacheMiddleware {
-    fn new(ttl: Duration) -> Self {
-        Self {
-            cache: Arc::new(Mutex::new(HashMap::new())),
-            ttl,
-        }
-    }
-}
-
-impl NgynMiddleware for CacheMiddleware {
-    async fn handle(ctx: NgynContext) {
-        let path = ctx.request().uri().path().to_string();
-        
-        // Check if the response is cached
-        let cached_response = {
-            let cache = self.cache.lock().unwrap();
-            cache.get(&path).and_then(|entry| {
-                if entry.expires_at > Instant::now() {
-                    Some(entry.data.clone())
-                } else {
-                    None
-                }
-            })
-        };
-        
-        if let Some(data) = cached_response {
-            // Return the cached response
-            *ctx.response_mut() = NgynResponse::new(Body::from(data));
-        } else {
-            // Process the request normally
-            // After the response is generated, cache it
-            let response_data = ctx.response().body().to_bytes().await.unwrap().to_vec();
-            
-            let mut cache = self.cache.lock().unwrap();
-            cache.insert(path, CacheEntry {
-                data: response_data,
-                expires_at: Instant::now() + self.ttl,
-            });
-        }
-    }
-}
-```
-
-### Asynchronous Processing
-
-Use asynchronous processing for CPU-intensive tasks to avoid blocking the event loop:
-
-```rust
 #[handler]
-async fn process_data(body: Body) -> Result<String, String> {
-    let data = body.text().await?;
-    
-    // Spawn a blocking task for CPU-intensive processing
-    let result = tokio::task::spawn_blocking(move || {
-        // Perform CPU-intensive processing here
-        // For example, parsing a large JSON file or performing complex calculations
-        process_data_intensively(&data)
-    }).await.map_err(|e| format!("Task failed: {}", e))??;
-    
-    Ok(result)
+async fn websocket_handler(ws: WebSocket) -> Result<(), String> {
+    // Accept the WebSocket connection
+    let (mut sender, mut receiver) = ws.accept().await.map_err(|e| e.to_string())?;
+
+    // Create a channel for broadcasting messages
+    let (tx, _rx) = broadcast::channel::<String>(100);
+    let tx2 = tx.clone();
+
+    // Spawn a task to handle incoming messages
+    tokio::spawn(async move {
+        while let Some(Ok(message)) = receiver.next().await {
+            if let Ok(text) = message.to_text() {
+                println!("Received message: {}", text);
+                let _ = tx.send(text.to_string());
+            }
+        }
+    });
+
+    // Spawn a task to send messages to this client
+    tokio::spawn(async move {
+        let mut rx = tx2.subscribe();
+        while let Ok(message) = rx.recv().await {
+            let _ = sender.send(ngyn::ws::Message::text(message)).await;
+        }
+    });
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() {
+    let mut app = HyperApplication::default();
+
+    app.get("/ws", websocket_handler);
+
+    let _ = app.listen("127.0.0.1:3000").await;
 }
 ```
 
+## File Uploads
 
-For more advanced examples, check out the [examples](https://github.com/ngyn-rs/ngyn/tree/main/examples) in the Ngyn repository.
+Ngyn supports file uploads using multipart form data:
+
+```rust
+use ngyn::prelude::*;
+use futures::TryStreamExt;
+use std::io::Write;
+
+#[handler]
+async fn upload_handler(multipart: Multipart) -> Result<JsonResult, String> {
+    let mut uploaded_files = Vec::new();
+
+    let mut multipart = multipart.into_inner();
+
+    while let Ok(Some(field)) = multipart.try_next().await {
+        let content_disposition = field.content_disposition().unwrap();
+        let filename = content_disposition.get_filename().unwrap_or("unknown");
+
+        let data = field.bytes().await.map_err(|e| e.to_string())?;
+
+        // In a real application, you would save this to disk or cloud storage
+        let path = format!("uploads/{}", filename);
+        std::fs::create_dir_all("uploads").map_err(|e| e.to_string())?;
+
+        let mut file = std::fs::File::create(&path).map_err(|e| e.to_string())?;
+        file.write_all(&data).map_err(|e| e.to_string())?;
+
+        uploaded_files.push(path);
+    }
+
+    Ok(Ok(json!({
+        "message": "Files uploaded successfully",
+        "files": uploaded_files
+    })))
+}
+
+#[tokio::main]
+async fn main() {
+    let mut app = HyperApplication::default();
+
+    app.post("/upload", upload_handler);
+
+    let _ = app.listen("127.0.0.1:3000").await;
+}
+```
+
+## Conclusion
+
+These advanced features allow you to build complex, production-ready applications with Ngyn. By leveraging dependency injection, middleware, gates, and integrations with databases and other services, you can create robust and maintainable web applications.
+
+For more examples and detailed documentation, check out the [Ngyn repository](https://github.com/ngyn-rs/ngyn).
