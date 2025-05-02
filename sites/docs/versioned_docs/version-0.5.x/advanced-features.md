@@ -333,55 +333,6 @@ async fn main() {
 }
 ```
 
-## WebSockets
-
-Ngyn supports WebSockets for real-time communication:
-
-```rust
-use ngyn::prelude::*;
-use futures::{SinkExt, StreamExt};
-use tokio::sync::broadcast;
-
-#[handler]
-async fn websocket_handler(ws: WebSocket) -> Result<(), String> {
-    // Accept the WebSocket connection
-    let (mut sender, mut receiver) = ws.accept().await.map_err(|e| e.to_string())?;
-
-    // Create a channel for broadcasting messages
-    let (tx, _rx) = broadcast::channel::<String>(100);
-    let tx2 = tx.clone();
-
-    // Spawn a task to handle incoming messages
-    tokio::spawn(async move {
-        while let Some(Ok(message)) = receiver.next().await {
-            if let Ok(text) = message.to_text() {
-                println!("Received message: {}", text);
-                let _ = tx.send(text.to_string());
-            }
-        }
-    });
-
-    // Spawn a task to send messages to this client
-    tokio::spawn(async move {
-        let mut rx = tx2.subscribe();
-        while let Ok(message) = rx.recv().await {
-            let _ = sender.send(ngyn::ws::Message::text(message)).await;
-        }
-    });
-
-    Ok(())
-}
-
-#[tokio::main]
-async fn main() {
-    let mut app = HyperApplication::default();
-
-    app.get("/ws", websocket_handler);
-
-    let _ = app.listen("127.0.0.1:3000").await;
-}
-```
-
 ## File Uploads
 
 Ngyn supports file uploads using multipart form data:
@@ -392,8 +343,10 @@ use futures::TryStreamExt;
 use std::io::Write;
 
 #[handler]
-async fn upload_handler(multipart: Multipart) -> Result<JsonResult, String> {
+async fn upload_handler(body: Body) -> Result<JsonResult, String> {
     let mut uploaded_files = Vec::new();
+    let multipart = body.to_multipart()
+       .map_err(|e| e.to_string())?;
 
     let mut multipart = multipart.into_inner();
 
@@ -428,9 +381,5 @@ async fn main() {
     let _ = app.listen("127.0.0.1:3000").await;
 }
 ```
-
-## Conclusion
-
-These advanced features allow you to build complex, production-ready applications with Ngyn. By leveraging dependency injection, middleware, gates, and integrations with databases and other services, you can create robust and maintainable web applications.
 
 For more examples and detailed documentation, check out the [Ngyn repository](https://github.com/ngyn-rs/ngyn).
