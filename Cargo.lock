@@ -4059,7 +4059,7 @@ name = "sqlx_app"
 version = "0.1.0"
 dependencies = [
  "dotenv",
- "ngyn 0.5.2",
+ "ngyn 0.5.4",
  "sqlx",
  "tokio",
 ]
