@@ -10,15 +10,15 @@ Integrating a database with your Ngyn application is essential for building appl
 
 Ngyn works well with various Rust database libraries. Here are some popular options:
 
-- **SQLx**: Type-safe SQL for Rust with compile-time checked queries
-- **Diesel**: A safe, extensible ORM and query builder
-- **Tokio Postgres**: An async PostgreSQL client
-- **MongoDB**: Official MongoDB driver for Rust
-- **Redis**: Redis client for Rust
+-   **SQLx**: Type-safe SQL for Rust with compile-time checked queries
+-   **Diesel**: A safe, extensible ORM and query builder
+-   **Tokio Postgres**: An async PostgreSQL client
+-   **MongoDB**: Official MongoDB driver for Rust
+-   **Redis**: Redis client for Rust
 
 ## Setting Up SQLx with PostgreSQL
 
-SQLx is a popular choice for Rust applications due to its async support and compile-time query checking. Here's how to set it up with Ngyn:
+SQLx is a popular choice for Rust applications due to its async support and compile-time query checking. Here's how to set it up with Ngyn, based on the official example in the Ngyn repository:
 
 ### 1. Add Dependencies
 
@@ -28,39 +28,80 @@ Add the following to your `Cargo.toml`:
 [dependencies]
 ngyn = "0.5"
 tokio = { version = "1", features = ["full"] }
-sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "macros", "json"] }
-serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "time"] }
+dotenv = "0.15.0"
 ```
 
 ### 2. Set Up the Database Connection
 
+Ngyn makes it easy to integrate database connections using the `AppState` pattern. Here's how to set up a simple SQLx connection with PostgreSQL:
+
 ```rust
 use ngyn::prelude::*;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{Connection, PgConnection};
+
+// Define your application state to hold the database connection
+#[derive(AppState)]
+struct State {
+    conn: PgConnection,
+}
+
+// Define a parameter struct for route parameters
+#[derive(Param)]
+struct HandleParam {
+    id: i32,
+}
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Set up the database connection pool
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect("postgres://username:password@localhost/database")
-        .await?
-    
+async fn main() {
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    // Create the application
     let mut app = HyperApplication::default();
-    
-    // Register routes with the database pool
-    app.get("/users", get_users.with(pool.clone()));
-    app.get("/users/{id}", get_user.with(pool.clone()));
-    app.post("/users", create_user.with(pool.clone()));
-    
-    println!("Server running at http://127.0.0.1:3000");
-    let _ = app.listen("127.0.0.1:3000").await;
-    
-    Ok(())
+
+    // Connect to the database
+    let conn = PgConnection::connect(&database_url).await.unwrap();
+
+    // Set the application state with the database connection
+    app.set_state(State { conn });
+
+    // Register routes
+    app.get("/{id}", async_wrap(handle_get));
+
+    println!("Starting server at http://127.0.0.1:8080");
+    let _ = app.listen("0.0.0.0:8080").await;
 }
 ```
 
-### 3. Define Data Models
+### 3. Implement Route Handlers
+
+With the state and parameter structs defined, you can now implement your route handlers. Here's a simple example that queries a PostgreSQL database:
+
+```rust
+#[handler]
+async fn handle_get(param: HandleParam, state: &mut State) -> String {
+    match sqlx::query!("SELECT * FROM users WHERE id = $1", param.id)
+        .fetch_one(&mut state.conn)
+        .await
+    {
+        Ok(record) => record.name.unwrap(),
+        Err(_) => "Not found".to_string(),
+    }
+}
+```
+
+This handler:
+
+1. Receives the route parameter (`id`) through the `HandleParam` struct
+2. Accesses the database connection from the application state
+3. Executes a SQL query with the `sqlx::query!` macro, which provides compile-time checking
+4. Returns the user's name as a string if found, or "Not found" otherwise
+
+### 4. More Advanced Query Examples
+
+For more complex scenarios, you might want to use structured data models:
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -71,69 +112,17 @@ struct User {
     id: i32,
     name: String,
     email: String,
-    created_at: chrono::DateTime<chrono::Utc>,
-}
-
-#[derive(Deserialize)]
-struct CreateUserRequest {
-    name: String,
-    email: String,
-}
-```
-
-### 4. Implement Route Handlers
-
-```rust
-#[handler]
-async fn get_users(db: Pool<Postgres>) -> Result<JsonResult, String> {
-    match sqlx::query_as::<_, User>("SELECT * FROM users ORDER BY created_at DESC")
-        .fetch_all(&db)
-        .await
-    {
-        Ok(users) => Ok(Ok(json!({ "users": users }))),
-        Err(e) => Err(format!("Database error: {}", e)),
-    }
 }
 
 #[handler]
-async fn get_user(param: Param, db: Pool<Postgres>) -> Result<JsonResult, String> {
-    let user_id = param.get("id")
-        .unwrap_or("0")
-        .parse::<i32>()
-        .map_err(|_| "Invalid user ID".to_string())?;
-    
-    match sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_optional(&db)
+async fn get_user(param: HandleParam, state: &mut State) -> Result<JsonResult, String> {
+    match sqlx::query_as!(User, "SELECT id, name, email FROM users WHERE id = $1", param.id)
+        .fetch_optional(&mut state.conn)
         .await
     {
         Ok(Some(user)) => Ok(Ok(json!(user))),
-        Ok(None) => Err(format!("User with ID {} not found", user_id)),
+        Ok(None) => Err(format!("User with ID {} not found", param.id)),
         Err(e) => Err(format!("Database error: {}", e)),
-    }
-}
-
-#[handler]
-async fn create_user(body: Body, db: Pool<Postgres>) -> Result<JsonResult, String> {
-    let user_req = match body.json::<CreateUserRequest>().await {
-        Ok(req) => req,
-        Err(e) => return Err(format!("Invalid request body: {}", e)),
-    };
-    
-    match sqlx::query_as::<_, User>(
-        "INSERT INTO users (name, email, created_at) VALUES ($1, $2, $3) RETURNING *"
-    )
-    .bind(&user_req.name)
-    .bind(&user_req.email)
-    .bind(chrono::Utc::now())
-    .fetch_one(&db)
-    .await
-    {
-        Ok(user) => Ok(Ok(json!({
-            "message": "User created successfully",
-            "user": user
-        }))),
-        Err(e) => Err(format!("Failed to create user: {}", e)),
     }
 }
 ```
@@ -162,24 +151,33 @@ use ngyn::prelude::*;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
+// Define your application state to hold the database connection pool
+#[derive(AppState)]
+struct State {
+    pool: DbPool,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up the database connection pool
     let manager = ConnectionManager::<PgConnection>::new("postgres://username:password@localhost/database");
     let pool = r2d2::Pool::builder()
         .max_size(5)
-        .build(manager)?
-    
+        .build(manager)?;
+
     let mut app = HyperApplication::default();
-    
-    // Register routes with the database pool
-    app.get("/users", get_users.with(pool.clone()));
-    app.get("/users/{id}", get_user.with(pool.clone()));
-    app.post("/users", create_user.with(pool.clone()));
-    
+
+    // Set the application state with the database connection pool
+    app.set_state(State { pool });
+
+    // Register routes
+    app.get("/users", async_wrap(get_users));
+    app.get("/users/{id}", async_wrap(get_user));
+    app.post("/users", async_wrap(create_user));
+
     println!("Server running at http://127.0.0.1:3000");
     let _ = app.listen("127.0.0.1:3000").await;
-    
+
     Ok(())
 }
 ```
@@ -222,10 +220,11 @@ struct NewUser {
 use diesel::RunQueryDsl;
 
 #[handler]
-async fn get_users(db: DbPool) -> Result<JsonResult, String> {
+async fn get_users(state: &mut State) -> Result<JsonResult, String> {
     // Use tokio::task::spawn_blocking for database operations
+    let pool = state.pool.clone();
     let users = tokio::task::spawn_blocking(move || {
-        let conn = db.get().map_err(|e| format!("Connection error: {}", e))?;
+        let conn = pool.get().map_err(|e| format!("Connection error: {}", e))?;
         users::table
             .order_by(users::created_at.desc())
             .load::<User>(&conn)
@@ -233,19 +232,20 @@ async fn get_users(db: DbPool) -> Result<JsonResult, String> {
     })
     .await
     .map_err(|e| format!("Task error: {}", e))??;
-    
+
     Ok(Ok(json!({ "users": users })))
 }
 
 #[handler]
-async fn get_user(param: Param, db: DbPool) -> Result<JsonResult, String> {
+async fn get_user(param: Param, state: &mut State) -> Result<JsonResult, String> {
     let user_id = param.get("id")
         .unwrap_or("0")
         .parse::<i32>()
         .map_err(|_| "Invalid user ID".to_string())?;
-    
+
+    let pool = state.pool.clone();
     let user = tokio::task::spawn_blocking(move || {
-        let conn = db.get().map_err(|e| format!("Connection error: {}", e))?;
+        let conn = pool.get().map_err(|e| format!("Connection error: {}", e))?;
         users::table
             .find(user_id)
             .first::<User>(&conn)
@@ -254,7 +254,7 @@ async fn get_user(param: Param, db: DbPool) -> Result<JsonResult, String> {
     })
     .await
     .map_err(|e| format!("Task error: {}", e))??;
-    
+
     match user {
         Some(user) => Ok(Ok(json!(user))),
         None => Err(format!("User with ID {} not found", user_id)),
@@ -262,7 +262,7 @@ async fn get_user(param: Param, db: DbPool) -> Result<JsonResult, String> {
 }
 
 #[handler]
-async fn create_user(body: Body, db: DbPool) -> Result<JsonResult, String> {
+async fn create_user(body: Body, state: &mut State) -> Result<JsonResult, String> {
     let user_req = match body.json::<NewUser>().await {
         Ok(mut req) => {
             req.created_at = chrono::Utc::now().naive_utc();
@@ -270,9 +270,10 @@ async fn create_user(body: Body, db: DbPool) -> Result<JsonResult, String> {
         },
         Err(e) => return Err(format!("Invalid request body: {}", e)),
     };
-    
+
+    let pool = state.pool.clone();
     let user = tokio::task::spawn_blocking(move || {
-        let conn = db.get().map_err(|e| format!("Connection error: {}", e))?;
+        let conn = pool.get().map_err(|e| format!("Connection error: {}", e))?;
         diesel::insert_into(users::table)
             .values(&user_req)
             .get_result::<User>(&conn)
@@ -280,7 +281,7 @@ async fn create_user(body: Body, db: DbPool) -> Result<JsonResult, String> {
     })
     .await
     .map_err(|e| format!("Task error: {}", e))??;
-    
+
     Ok(Ok(json!({
         "message": "User created successfully",
         "user": user
@@ -306,27 +307,36 @@ futures = "0.3"
 ### 2. Set Up the MongoDB Connection
 
 ```rust
-use mongodb::{Client, options::ClientOptions};
+use mongodb::{Client, options::ClientOptions, Collection};
 use ngyn::prelude::*;
+
+// Define your application state to hold the MongoDB collection
+#[derive(AppState)]
+struct State {
+    users_collection: Collection<User>,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up MongoDB client
-    let client_options = ClientOptions::parse("mongodb://localhost:27017").await?
-    let client = Client::with_options(client_options)?
+    let client_options = ClientOptions::parse("mongodb://localhost:27017").await?;
+    let client = Client::with_options(client_options)?;
     let db = client.database("mydb");
     let users_collection = db.collection::<User>("users");
-    
+
     let mut app = HyperApplication::default();
-    
-    // Register routes with the MongoDB collection
-    app.get("/users", get_users.with(users_collection.clone()));
-    app.get("/users/{id}", get_user.with(users_collection.clone()));
-    app.post("/users", create_user.with(users_collection.clone()));
-    
+
+    // Set the application state with the MongoDB collection
+    app.set_state(State { users_collection });
+
+    // Register routes
+    app.get("/users", async_wrap(get_users));
+    app.get("/users/{id}", async_wrap(get_user));
+    app.post("/users", async_wrap(create_user));
+
     println!("Server running at http://127.0.0.1:3000");
     let _ = app.listen("127.0.0.1:3000").await;
-    
+
     Ok(())
 }
 ```
@@ -360,29 +370,29 @@ use futures::stream::TryStreamExt;
 use mongodb::{bson::{doc, oid::ObjectId}, Collection};
 
 #[handler]
-async fn get_users(collection: Collection<User>) -> Result<JsonResult, String> {
-    let mut cursor = collection.find(None, None)
+async fn get_users(state: &mut State) -> Result<JsonResult, String> {
+    let mut cursor = state.users_collection.find(None, None)
         .await
         .map_err(|e| format!("Database error: {}", e))?;
-    
+
     let mut users = Vec::new();
     while let Some(user) = cursor.try_next().await.map_err(|e| format!("Cursor error: {}", e))? {
         users.push(user);
     }
-    
+
     Ok(Ok(json!({ "users": users })))
 }
 
 #[handler]
-async fn get_user(param: Param, collection: Collection<User>) -> Result<JsonResult, String> {
+async fn get_user(param: Param, state: &mut State) -> Result<JsonResult, String> {
     let id = param.get("id").unwrap_or("");
     let object_id = ObjectId::parse_str(id).map_err(|_| "Invalid ID format".to_string())?;
-    
+
     let filter = doc! { "_id": object_id };
-    let user = collection.find_one(filter, None)
+    let user = state.users_collection.find_one(filter, None)
         .await
         .map_err(|e| format!("Database error: {}", e))?;
-    
+
     match user {
         Some(user) => Ok(Ok(json!(user))),
         None => Err(format!("User with ID {} not found", id)),
@@ -390,31 +400,31 @@ async fn get_user(param: Param, collection: Collection<User>) -> Result<JsonResu
 }
 
 #[handler]
-async fn create_user(body: Body, collection: Collection<User>) -> Result<JsonResult, String> {
+async fn create_user(body: Body, state: &mut State) -> Result<JsonResult, String> {
     let user_req = match body.json::<CreateUserRequest>().await {
         Ok(req) => req,
         Err(e) => return Err(format!("Invalid request body: {}", e)),
     };
-    
+
     let user = User {
         id: None,
         name: user_req.name,
         email: user_req.email,
         created_at: mongodb::bson::DateTime::now(),
     };
-    
-    let result = collection.insert_one(user, None)
+
+    let result = state.users_collection.insert_one(user, None)
         .await
         .map_err(|e| format!("Failed to create user: {}", e))?;
-    
+
     let inserted_id = result.inserted_id.as_object_id()
         .ok_or_else(|| "Failed to get inserted ID".to_string())?;
-    
+
     let filter = doc! { "_id": inserted_id };
-    let created_user = collection.find_one(filter, None)
+    let created_user = state.users_collection.find_one(filter, None)
         .await
         .map_err(|e| format!("Failed to fetch created user: {}", e))?;
-    
+
     Ok(Ok(json!({
         "message": "User created successfully",
         "user": created_user
@@ -443,20 +453,29 @@ serde_json = "1.0"
 use ngyn::prelude::*;
 use redis::{Client, AsyncCommands};
 
+// Define your application state to hold the Redis client
+#[derive(AppState)]
+struct State {
+    client: redis::Client,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up Redis client
     let client = redis::Client::open("redis://127.0.0.1/")?;
-    
+
     let mut app = HyperApplication::default();
-    
-    // Register routes with the Redis client
-    app.get("/cache/{key}", get_cached_value.with(client.clone()));
-    app.post("/cache/{key}", set_cached_value.with(client.clone()));
-    
+
+    // Set the application state with the Redis client
+    app.set_state(State { client });
+
+    // Register routes
+    app.get("/cache/{key}", async_wrap(get_cached_value));
+    app.post("/cache/{key}", async_wrap(set_cached_value));
+
     println!("Server running at http://127.0.0.1:3000");
     let _ = app.listen("127.0.0.1:3000").await;
-    
+
     Ok(())
 }
 ```
@@ -465,20 +484,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```rust
 #[handler]
-async fn get_cached_value(param: Param, client: redis::Client) -> Result<String, String> {
+async fn get_cached_value(param: Param, state: &mut State) -> Result<String, String> {
     let key = param.get("key").unwrap_or("");
     if key.is_empty() {
         return Err("Key cannot be empty".to_string());
     }
-    
-    let mut conn = client.get_async_connection()
+
+    let mut conn = state.client.get_async_connection()
         .await
         .map_err(|e| format!("Redis connection error: {}", e))?;
-    
+
     let value: Option<String> = conn.get(key)
         .await
         .map_err(|e| format!("Redis error: {}", e))?;
-    
+
     match value {
         Some(val) => Ok(val),
         None => Err(format!("No value found for key: {}", key)),
@@ -486,22 +505,22 @@ async fn get_cached_value(param: Param, client: redis::Client) -> Result<String,
 }
 
 #[handler]
-async fn set_cached_value(param: Param, body: Body, client: redis::Client) -> Result<String, String> {
+async fn set_cached_value(param: Param, body: Body, state: &mut State) -> Result<String, String> {
     let key = param.get("key").unwrap_or("");
     if key.is_empty() {
         return Err("Key cannot be empty".to_string());
     }
-    
+
     let value = body.text().await.map_err(|e| format!("Failed to read body: {}", e))?;
-    
-    let mut conn = client.get_async_connection()
+
+    let mut conn = state.client.get_async_connection()
         .await
         .map_err(|e| format!("Redis connection error: {}", e))?;
-    
+
     let _: () = conn.set(key, value)
         .await
         .map_err(|e| format!("Redis error: {}", e))?;
-    
+
     Ok(format!("Value for key '{}' set successfully", key))
 }
 ```
@@ -549,18 +568,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect("postgres://username:password@localhost/database")
-        .await?
-    
+        .await?;
+
     // Run migrations
     sqlx::migrate!().run(&pool).await?
-    
+
     // Or load migrations from a directory
     let migrator = Migrator::new(Path::new("./migrations")).await?
     migrator.run(&pool).await?
-    
+
     // Rest of your application setup
     // ...
-    
+
     Ok(())
 }
 ```
@@ -580,70 +599,82 @@ let pool = PgPoolOptions::new()
 
 ### Environment Variables
 
-Store database connection strings in environment variables:
+As shown in the example above, it's a best practice to store database connection strings in environment variables. The `dotenv` crate makes this easy:
 
 ```rust
-use dotenv::dotenv;
-use std::env;
+// Load environment variables from .env file
+dotenv::dotenv().ok();
+let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-dotenv().ok(); // Load .env file if present
+// Connect to the database using the URL from environment variables
+let conn = PgConnection::connect(&database_url).await.unwrap();
+```
 
-let database_url = env::var("DATABASE_URL")
-    .expect("DATABASE_URL must be set");
+Create a `.env` file in your project root with your database connection string:
 
-let pool = PgPoolOptions::new()
-    .max_connections(5)
-    .connect(&database_url)
-    .await?
+```toml
+DATABASE_URL=postgres://username:password@localhost/database
 ```
 
 ### Error Handling
 
-Implement proper error handling for database operations:
+Ngyn makes error handling straightforward. You can use Rust's `Result` type to handle database errors in your handlers:
+
+```rust
+// Simple error handling with String error messages
+#[handler]
+async fn get_user(param: HandleParam, state: &mut State) -> Result<String, String> {
+    match sqlx::query!("SELECT name FROM users WHERE id = $1", param.id)
+        .fetch_optional(&mut state.conn)
+        .await
+    {
+        Ok(Some(record)) => Ok(record.name.unwrap_or_default()),
+        Ok(None) => Err(format!("User with ID {} not found", param.id)),
+        Err(e) => Err(format!("Database error: {}", e)),
+    }
+}
+
+// For JSON responses
+#[handler]
+async fn get_user_json(param: HandleParam, state: &mut State) -> Result<JsonResult, String> {
+    match sqlx::query_as!(User, "SELECT id, name, email FROM users WHERE id = $1", param.id)
+        .fetch_optional(&mut state.conn)
+        .await
+    {
+        Ok(Some(user)) => Ok(Ok(json!(user))),
+        Ok(None) => Err(format!("User with ID {} not found", param.id)),
+        Err(e) => Err(format!("Database error: {}", e)),
+    }
+}
+```
+
+For more complex applications, you can define custom error types:
 
 ```rust
 #[derive(Debug)]
-enum DbError {
-    ConnectionError(String),
-    QueryError(String),
-    NotFound,
+enum AppError {
+    NotFound(String),
+    DatabaseError(String),
+    ValidationError(String),
 }
 
-impl std::fmt::Display for DbError {
+impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DbError::ConnectionError(msg) => write!(f, "Database connection error: {}", msg),
-            DbError::QueryError(msg) => write!(f, "Database query error: {}", msg),
-            DbError::NotFound => write!(f, "Resource not found"),
+            AppError::NotFound(msg) => write!(f, "Not found: {}", msg),
+            AppError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
+            AppError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
         }
     }
 }
 
-impl From<sqlx::Error> for DbError {
+// Convert SQLx errors to your application errors
+impl From<sqlx::Error> for AppError {
     fn from(error: sqlx::Error) -> Self {
         match error {
-            sqlx::Error::RowNotFound => DbError::NotFound,
-            _ => DbError::QueryError(error.to_string()),
+            sqlx::Error::RowNotFound => AppError::NotFound("Resource not found".to_string()),
+            _ => AppError::DatabaseError(error.to_string()),
         }
-    }
-}
-
-// Use in handlers
-#[handler]
-async fn get_user(param: Param, db: Pool<Postgres>) -> Result<JsonResult, DbError> {
-    let user_id = param.get("id")
-        .unwrap_or("0")
-        .parse::<i32>()
-        .map_err(|_| DbError::QueryError("Invalid user ID".to_string()))?;
-    
-    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_optional(&db)
-        .await?;
-    
-    match user {
-        Some(user) => Ok(Ok(json!(user))),
-        None => Err(DbError::NotFound),
     }
 }
 ```
@@ -653,16 +684,22 @@ async fn get_user(param: Param, db: Pool<Postgres>) -> Result<JsonResult, DbErro
 Use transactions for operations that need to be atomic:
 
 ```rust
+// Define your application state to hold the database connection pool
+#[derive(AppState)]
+struct State {
+    pool: Pool<Postgres>,
+}
+
 #[handler]
-async fn transfer_funds(body: Body, db: Pool<Postgres>) -> Result<JsonResult, String> {
+async fn transfer_funds(body: Body, state: &mut State) -> Result<JsonResult, String> {
     let transfer = match body.json::<TransferRequest>().await {
         Ok(req) => req,
         Err(e) => return Err(format!("Invalid request body: {}", e)),
     };
-    
-    let mut tx = db.begin().await
+
+    let mut tx = state.pool.begin().await
         .map_err(|e| format!("Failed to start transaction: {}", e))?;
-    
+
     // Deduct from source account
     let rows_affected = sqlx::query(
         "UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1"
@@ -673,13 +710,13 @@ async fn transfer_funds(body: Body, db: Pool<Postgres>) -> Result<JsonResult, St
     .await
     .map_err(|e| format!("Database error: {}", e))?
     .rows_affected();
-    
+
     if rows_affected == 0 {
         tx.rollback().await
             .map_err(|e| format!("Failed to rollback transaction: {}", e))?;
         return Err("Insufficient funds or account not found".to_string());
     }
-    
+
     // Add to destination account
     sqlx::query(
         "UPDATE accounts SET balance = balance + $1 WHERE id = $2"
@@ -689,11 +726,11 @@ async fn transfer_funds(body: Body, db: Pool<Postgres>) -> Result<JsonResult, St
     .execute(&mut *tx)
     .await
     .map_err(|e| format!("Database error: {}", e))?;
-    
+
     // Commit the transaction
     tx.commit().await
         .map_err(|e| format!("Failed to commit transaction: {}", e))?;
-    
+
     Ok(Ok(json!({
         "message": "Transfer completed successfully"
     })))
