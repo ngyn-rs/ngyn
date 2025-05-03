@@ -125,7 +125,7 @@ pub(crate) trait Middleware: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
 }
 
-impl<'b, T: NgynMiddleware + Send + 'b> Middleware for T {
+impl<T: NgynMiddleware + Send> Middleware for T {
     fn run<'a>(
         &'a self,
         cx: &'a mut NgynContext<'_>,

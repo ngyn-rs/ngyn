@@ -73,7 +73,7 @@ pub struct Param<'a> {
     data: Vec<(&'a str, &'a str)>,
 }
 
-impl<'a> Param<'a> {
+impl Param<'_> {
     /// Retrieves the value associated with the specified `id` from the parameter data.
     ///
     /// ### Arguments
@@ -145,7 +145,7 @@ pub struct Query<'q> {
     uri: &'q http::uri::Uri,
 }
 
-impl<'q> Query<'q> {
+impl Query<'_> {
     /// Retrieves the value associated with the specified `id` from the query parameters.
     ///
     /// ### Arguments
@@ -287,9 +287,9 @@ impl<'b> Body<'b> {
     ///    data: r#"------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="example.txt"\r\nContent-Type: text/plain\r\n\r\nHello World\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"#.to_string().into_bytes(),
     /// };
     ///
-    /// let stream = body.form_data();
+    /// let stream = body.to_multipart();
     /// ```
-    pub fn form_data(self) -> Result<Multipart<'b>, multer::Error> {
+    pub fn to_multipart(self) -> Result<Multipart<'b>, multer::Error> {
         if let Some(content_type) = self.content_type {
             let boundary = multer::parse_boundary(
                 content_type
@@ -331,5 +331,112 @@ impl<'a: 'b, 'b> Transformer<'a> for Body<'b> {
         let data = cx.request().body();
         let content_type = cx.request().headers().get(CONTENT_TYPE);
         Body { data, content_type }
+    }
+}
+
+/// Represents a form data struct for handling multipart form data.
+pub struct FormData {
+    fields: std::collections::HashMap<String, String>,
+}
+
+impl FormData {
+    /// Creates a new FormData instance from a multipart form.
+    ///
+    /// ### Arguments
+    ///
+    /// * `multipart` - The multipart form data.
+    ///
+    /// ### Returns
+    ///
+    /// * `FormData` - A new FormData instance.
+    pub async fn from_multipart(mut multipart: Multipart<'_>) -> Result<Self, multer::Error> {
+        let mut fields = std::collections::HashMap::new();
+
+        // Process all fields in the multipart form
+        while let Some(field) = multipart.next_field().await? {
+            let name = field.name().unwrap_or("");
+            let name = name.to_string();
+            if let Ok(value) = field.text().await {
+                fields.insert(name, value);
+            }
+        }
+
+        Ok(FormData { fields })
+    }
+
+    /// Creates a new empty FormData instance.
+    pub fn new() -> Self {
+        FormData {
+            fields: std::collections::HashMap::new(),
+        }
+    }
+
+    /// Retrieves the value associated with the specified field name from the form data.
+    ///
+    /// ### Arguments
+    ///
+    /// * `name` - The field name to search for.
+    ///
+    /// ### Returns
+    ///
+    /// * `Option<F>` - The parsed value associated with the field name, if found and parseable.
+    ///
+    /// ### Examples
+    ///
+    /// ```rust ignore
+    /// let form_data = FormData::new();
+    ///
+    /// let name: Option<String> = form_data.get("name");
+    /// let age: Option<u32> = form_data.get("age");
+    /// ```
+    pub fn get<F: FromStr>(&self, name: &str) -> Option<F> {
+        self.fields
+            .get(name)
+            .and_then(|value| value.parse::<F>().ok())
+    }
+
+    /// Sets a field value in the form data.
+    ///
+    /// ### Arguments
+    ///
+    /// * `name` - The field name.
+    /// * `value` - The field value.
+    pub fn set<T: ToString>(&mut self, name: &str, value: T) {
+        self.fields.insert(name.to_string(), value.to_string());
+    }
+
+    /// Checks if the form data contains a field with the specified name.
+    ///
+    /// ### Arguments
+    ///
+    /// * `name` - The field name to check for.
+    ///
+    /// ### Returns
+    ///
+    /// * `bool` - True if the field exists, false otherwise.
+    pub fn has(&self, name: &str) -> bool {
+        self.fields.contains_key(name)
+    }
+
+    /// Returns all field names in the form data.
+    ///
+    /// ### Returns
+    ///
+    /// * `Vec<String>` - A vector of all field names.
+    pub fn field_names(&self) -> Vec<String> {
+        self.fields.keys().cloned().collect()
+    }
+
+    /// Helper method for the derive macro to set a field value by name.
+    ///
+    /// This is used by the FormData derive macro to set field values.
+    pub fn get_field_mut(&mut self, name: &str) -> Option<&mut String> {
+        self.fields.get_mut(name)
+    }
+}
+
+impl Default for FormData {
+    fn default() -> Self {
+        Self::new()
     }
 }
