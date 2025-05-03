@@ -110,8 +110,18 @@ pub trait RouteInstance {
     /// * `path` - The path of the route.
     /// * `method` - The HTTP method of the route.
     /// * `handler` - The handler function for the route.
-    fn add_route(&mut self, path: &str, method: Option<Method>, handler: RouteHandler) {
-        let method = method
+    fn add_route(&mut self, path: &str, http_method: Option<Method>, handler: RouteHandler) {
+        if let Some(http_method) = &http_method {
+            if http_method == Method::GET {
+                self.router_mut()
+                    .insert(
+                        String::from("HEAD") + path,
+                        RouteHandler::Sync(Box::new(|_| Box::new(Bytes::default()))),
+                    )
+                    .unwrap_or_default();
+            }
+        }
+        let method = http_method
             .map(|method| method.to_string())
             .unwrap_or_else(|| "{METHOD}".to_string());
 
