@@ -135,12 +135,6 @@ pub trait RouteInstance {
             method + self.mount() + path
         };
 
-        self.router_mut()
-            .insert(
-                String::from("OPTIONS") + path,
-                RouteHandler::Sync(Box::new(|_| Box::new(Bytes::default()))),
-            )
-            .unwrap();
         self.router_mut().insert(route, handler).unwrap();
     }
 }
