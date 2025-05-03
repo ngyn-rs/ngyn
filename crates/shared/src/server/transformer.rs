@@ -349,7 +349,7 @@ impl FormData {
     /// ### Returns
     ///
     /// * `FormData` - A new FormData instance.
-    pub async fn from_multipart<'f>(mut multipart: Multipart<'f>) -> Result<Self, multer::Error> {
+    pub async fn from_multipart(mut multipart: Multipart<'_>) -> Result<Self, multer::Error> {
         let mut fields = std::collections::HashMap::new();
 
         // Process all fields in the multipart form
