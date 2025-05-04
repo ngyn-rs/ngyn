@@ -6,6 +6,7 @@ use hyper_util::rt::TokioIo;
 use hyper_util::server::graceful::GracefulShutdown;
 use ngyn_shared::core::engine::{NgynHttpPlatform, PlatformData};
 use ngyn_shared::server::NgynResponse;
+use std::io::Error;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -78,6 +79,9 @@ impl HyperApplication {
         // when this signal completes, start shutdown
         let mut signal = std::pin::pin!(shutdown_signal());
 
+        // Channel for error propagation from spawned tasks
+        let (error_sender, mut error_receiver) = tokio::sync::mpsc::channel::<std::io::Error>(100);
+
         loop {
             let data = data.clone();
             tokio::select! {
@@ -85,15 +89,23 @@ impl HyperApplication {
                     let io = TokioIo::new(stream);
                     let conn = http1.serve_connection(io, service_fn(move |req| hyper_service(data.clone(), req)));
                     let handle = graceful.watch(conn);
+                    let error_sender = error_sender.clone();
 
                     tokio::task::spawn(async move {
                         if let Err(e) = handle.await {
-                            eprintln!("server connection error: {}", e);
+                            let io_error = std::io::Error::new(
+                                std::io::ErrorKind::Other,
+                                format!("internal server error: {}", e)
+                            );
+                            let _ = error_sender.send(io_error).await;
                         }
                     });
                 }
+                Some(err) = error_receiver.recv() => {
+                    // Return the first error we receive
+                    return Err(err);
+                }
                 _ = &mut signal => {
-                    eprintln!("graceful shutdown signal received");
                     // stop the accept loop
                     break;
                 }
@@ -101,14 +113,19 @@ impl HyperApplication {
             }
         }
 
+        // Handle graceful shutdown with timeout
         tokio::select! {
             _ = graceful.shutdown() => {
-                eprintln!("all connections gracefully closed");
+                Ok(())
+            },
+            Some(err) = error_receiver.recv() => {
+                // Propagate any connection errors that occurred during shutdown
+                Err(err)
             },
             _ = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
-                eprintln!("timed out wait for all connections to close");
+                Err(Error::new(std::io::ErrorKind::TimedOut, "graceful shutdown timed out"))
             }
-        }
+        }?;
 
         Ok(())
     }
