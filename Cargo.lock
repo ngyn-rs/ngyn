@@ -2356,6 +2356,8 @@ version = "0.5.4"
 dependencies = [
  "http 1.2.0",
  "ngyn-hyper 0.2.3",
+ "ngyn-vercel 0.2.2",
+ "ngyn-websocket",
  "ngyn_macros 0.5.3",
  "ngyn_shared 0.5.3",
 ]
