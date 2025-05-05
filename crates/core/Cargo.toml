@@ -21,6 +21,15 @@ path = "src/lib.rs"
 
 [dependencies]
 http = { workspace = true }
-ngyn_macros = { version = "0.5.3", path = "../macros" }
+ngyn_macros = { version = "0.5.3", path = "../macros", optional = true }
 ngyn_shared = { version = "0.5.3", path = "../shared" }
-ngyn-hyper = { version = "0.2.3", path = "../hyper" }
+ngyn-hyper = { version = "0.2.3", path = "../hyper", optional = true }
+ngyn-websocket = { version = "0.1.2", path = "../ws", optional = true }
+ngyn-vercel = { version = "0.2.2", path = "../vercel", optional = true }
+
+[features]
+default = ["hyper"]
+hyper = ["ngyn-hyper", "ngyn_macros"]
+macros = ["ngyn_macros"]
+websocket = ["ngyn-websocket"]
+vercel = ["ngyn-vercel", "ngyn_macros"]
