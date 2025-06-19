@@ -184,10 +184,10 @@ impl HyperApplication {
 }
 
 async fn is_valid_http_version(stream: &mut tokio::net::TcpStream) -> bool {
-    let mut buf = [0; 8];
+    let mut buf = [0; 32];
     if stream.peek(&mut buf).await.is_ok() {
         if let Ok(start) = std::str::from_utf8(&buf) {
-            return start.starts_with("HTTP/1.1") || start.starts_with("HTTP/2.0");
+            return start.contains("HTTP/1.1") || start.contains("HTTP/2.0");
         }
     }
     let response = b"HTTP Version not supported\r\n";
