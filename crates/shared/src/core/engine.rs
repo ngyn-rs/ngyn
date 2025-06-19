@@ -1,7 +1,13 @@
+//! Core engine implementation for the Ngyn web framework.
+//!
+//! This module provides the core routing and request handling functionality.
+//! It implements the main routing logic, middleware processing, and error handling.
+
+use std::{mem::ManuallyDrop, sync::Arc};
+
 use bytes::Bytes;
 use http::Request;
 use matchit::{Match, Router};
-use std::{mem::ManuallyDrop, sync::Arc};
 
 use super::{
     error::NgynError,
@@ -12,8 +18,13 @@ use crate::{
     Middleware, NgynMiddleware,
 };
 
+/// A router that can be used to group routes under a common path prefix.
+///
+/// This allows for organizing routes into logical groups and applying
+/// shared middleware or path prefixes to multiple routes at once.
 #[derive(Default)]
 pub struct GroupRouter {
+    /// The underlying platform data containing routes and middleware.
     data: PlatformData,
 }
 
@@ -26,56 +37,80 @@ impl NgynPlatform for GroupRouter {
 /// Type alias for error handler function
 pub type ErrorHandler = Arc<dyn Fn(NgynError) + Send + Sync>;
 
+/// Core platform data structure containing routing and middleware configuration.
+///
+/// This structure maintains the state of the web application, including:
+/// - Registered routes and their handlers
+/// - Global middleware stack
+/// - Application state
+/// - Error handling configuration
 #[derive(Default)]
 pub struct PlatformData {
+    /// Base path prefix for all routes in this platform
     base_path: &'static str,
+    /// Router containing all registered routes and their handlers
     router: Router<RouteHandler>,
+    /// Global middleware stack that runs before route handlers.
     middlewares: Vec<Box<dyn crate::Middleware>>,
+    /// Optional application state shared across all handlers
     state: Option<Arc<Box<dyn AppState>>>,
+    /// Optional custom error handler
     error_handler: Option<ErrorHandler>,
 }
 
 /// Represents platform data.
 impl PlatformData {
-    /// Process and responds to a request asynchronously.
+    /// Processes and responds to an HTTP request asynchronously.
     ///
-    /// ### Arguments
+    /// This method handles the complete request lifecycle:
+    /// 1. Extracts path and method from the request
+    /// 2. Matches the route and extracts parameters
+    /// 3. Executes global middleware stack
+    /// 4. Runs the matched route handler
+    /// 5. Handles any errors that occur during processing
     ///
-    /// * `req` - The request to respond to.
+    /// # Arguments
     ///
-    /// ### Returns
+    /// * `req` - The incoming HTTP request to process
     ///
-    /// The response to the request.
+    /// # Returns
+    ///
+    /// Returns a `NgynResponse` containing the response to send back to the client
+    #[must_use]
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
         let request_path = req.uri().path().to_string();
         let path = req.method().to_string() + &request_path;
         let mut cx = NgynContext::from_request(req);
 
+        // Initialize context with application state if available
         if let Some(state) = &self.state {
             cx.state = Some(ManuallyDrop::new(state.into()));
         }
 
-        let route_info = self.router.at(&path);
-        let route_handler = match route_info {
+        // Attempt to match the route and handle potential errors
+        let route_handler = match self.router.at(&path) {
             Ok(Match { params, value, .. }) => {
                 cx.params = Some(params);
                 Some(value)
             }
-            Err(_) => {
+            Err(e) => {
                 if let Some(handler) = &self.error_handler {
-                    handler(NgynError::Route(format!("No route found for {}", path)));
+                    handler(NgynError::Route(format!(
+                        "No route found for {}: {}",
+                        path, e
+                    )));
                 }
                 *cx.response_mut().status_mut() = http::StatusCode::NOT_FOUND;
                 None
             }
         };
 
-        // trigger global middlewares
+        // Execute middleware stack
         for middleware in &self.middlewares {
             middleware.run(&mut cx).await;
         }
 
-        // run the route handler
+        // Execute route handler if found
         if let Some(route_handler) = route_handler {
             let response = match route_handler {
                 RouteHandler::Sync(handler) => {
@@ -100,6 +135,7 @@ impl PlatformData {
             };
 
             *cx.response_mut().body_mut() = response.to_bytes().into();
+
             // if the request method is HEAD, we should not return a body
             if cx.request().method() == Method::HEAD {
                 *cx.response_mut().body_mut() = Bytes::default().into();
@@ -109,22 +145,42 @@ impl PlatformData {
         cx.response
     }
 
-    /// Adds a middleware to the platform data.
+    /// Adds a middleware to the global middleware stack.
     ///
-    /// ### Arguments
+    /// Middleware are executed in the order they are added, before any route handlers.
     ///
-    /// * `middleware` - The middleware to add.
+    /// # Arguments
+    ///
+    /// * `middleware` - The middleware implementation to add to the stack
     pub(self) fn add_middleware(&mut self, middleware: Box<dyn Middleware>) {
         self.middlewares.push(middleware);
     }
 
-    /// The error handler
+    /// Returns a reference to the current error handler, if one is set.
+    ///
+    /// # Returns
+    ///
+    /// Returns an `Option` containing a reference to the error handler function.
     pub fn error_handler(&self) -> &Option<ErrorHandler> {
         &self.error_handler
     }
 }
 
+/// Core trait that must be implemented by all Ngyn platform types.
+///
+/// This trait provides access to the underlying platform data and implements
+/// common functionality like error handling that all platforms share.
+///
+/// # Safety
+///
+/// Implementations must ensure thread-safety when modifying platform data,
+/// as it may be accessed from multiple threads simultaneously.
 pub trait NgynPlatform: Default {
+    /// Gets mutable access to the platform's underlying data.
+    ///
+    /// # Returns
+    ///
+    /// Returns a mutable reference to the platform's [`PlatformData`].
     fn data_mut(&mut self) -> &mut PlatformData;
 
     /// Set a custom error handler for the platform to handle I/O errors that occur during request processing.
@@ -158,42 +214,85 @@ pub trait NgynPlatform: Default {
     }
 }
 
-pub trait RouteInstance {
+/// Trait for types that can have routes registered on them.
+///
+/// This trait provides the core routing functionality used by both the main application
+/// and route groups. It allows for registering handlers for different HTTP methods and paths.
+pub trait RouteInstance: NgynPlatform {
+    /// Gets mutable access to the underlying router.
+    ///
+    /// # Returns
+    ///
+    /// Returns a mutable reference to the [`Router`] containing route handlers.
     fn router_mut(&mut self) -> &mut Router<RouteHandler>;
 
-    /// Mounts the route on a path, defaults to "/"
+    /// Returns the base path where this route instance is mounted.
+    ///
+    /// # Returns
+    ///
+    /// Returns the mount path as a string slice, defaults to "/".
     fn mount(&mut self) -> &str {
         "/"
     }
 
-    /// Adds a route to the platform data.
+    /// Registers a new route handler for the given path and HTTP method.
     ///
-    /// ### Arguments
+    /// This method handles several routing concerns:
+    /// - Automatically adds HEAD handlers for GET routes
+    /// - Handles both absolute and relative paths
+    /// - Supports method-agnostic routes with {METHOD} placeholder
     ///
-    /// * `path` - The path of the route.
-    /// * `method` - The HTTP method of the route.
-    /// * `handler` - The handler function for the route.
+    /// # Arguments
+    ///
+    /// * `path` - The URL path pattern to match
+    /// * `http_method` - Optional HTTP method to handle, or None for method-agnostic routes
+    /// * `handler` - The handler function to execute when the route matches
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ngyn::Method;
+    ///
+    /// app.add_route("/users", Some(Method::GET), handler);
+    /// app.add_route("/api/{param}", None, handler); // Matches any method
+    /// ```
     fn add_route(&mut self, path: &str, http_method: Option<Method>, handler: RouteHandler) {
+        // For GET routes, automatically add a HEAD handler that returns empty response
         if http_method == Some(Method::GET) {
-            self.router_mut()
-                .insert(
-                    String::from("HEAD") + path,
-                    RouteHandler::Sync(Box::new(|_| Box::new(Bytes::default()))),
-                )
-                .unwrap_or_default();
+            let head_path = format!("HEAD{}", path);
+            let head_handler = RouteHandler::Sync(Box::new(|_| Box::new(Bytes::default())));
+            if let Err(e) = self.router_mut().insert(head_path.clone(), head_handler) {
+                if let Some(handler) = &self.data_mut().error_handler {
+                    handler(NgynError::Route(format!(
+                        "Failed to add HEAD route '{}': {}",
+                        head_path, e
+                    )));
+                }
+                return;
+            }
         }
 
-        let method = http_method
+        // Construct the full route path
+        let method_str = http_method
             .map(|method| method.to_string())
             .unwrap_or_else(|| "{METHOD}".to_string());
 
-        let route = if path.starts_with('/') {
-            method + path
+        let route_path = if path.starts_with('/') {
+            format!("{}{}", method_str, path)
         } else {
-            method + self.mount() + path
+            format!("{}{}{}", method_str, self.mount(), path)
         };
 
-        self.router_mut().insert(route, handler).unwrap();
+        // Register the route handler
+        // Add the route to router with error handling
+        if let Err(e) = self.router_mut().insert(route_path.clone(), handler) {
+            if let Some(handler) = &self.data_mut().error_handler {
+                handler(NgynError::Route(format!(
+                    "Failed to add route '{}': {}",
+                    route_path, e
+                )));
+            }
+        }
     }
 }
 
@@ -201,55 +300,102 @@ pub trait NgynHttpPlatform: Default {
     fn data_mut(&mut self) -> &mut PlatformData;
 }
 
+/// A trait for HTTP-specific routing functionality in the Ngyn framework.
+///
+/// This trait extends `NgynPlatform` to provide HTTP-specific routing methods
+/// for handling different HTTP methods (GET, POST, PUT, etc.).
 pub trait NgynHttpEngine: NgynPlatform {
-    /// Adds a route to the application.
+    /// Registers a route handler for a specific HTTP method.
     ///
-    /// ### Arguments
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `method` - The HTTP method to handle
+    /// * `handler` - The handler function to execute
     ///
-    /// * `path` - The path of the route.
-    /// * `method` - The HTTP method of the route.
-    /// * `handler` - The handler function for the route.
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     ///
-    /// ### Examples
+    /// # Example
+    /// ```rust
+    /// use ngyn::http::Method;
     ///
-    /// ```rust ignore
-    /// # use crate::{Method, NgynEngine};
-    ///
-    /// struct MyEngine;
-    ///
-    /// let mut engine = MyEngine::default();
-    /// engine.route('/', Method::GET, Box::new(|_, _| {}));
+    /// app.route("/api/users", Method::GET, |_req| async {
+    ///     Ok(Response::new().with_body("Users list"))
+    /// });
     /// ```
     fn route(&mut self, path: &str, method: Method, handler: impl Into<RouteHandler>) {
         self.add_route(path, Some(method), handler.into());
     }
 
     /// Adds a new route to the `NgynApplication` with the `Method::Get`.
+    /// Registers a GET route handler.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn get(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::GET, handler.into())
     }
 
-    /// Adds a new route to the `NgynApplication` with the `Method::Post`.
+    /// Registers a POST route handler.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn post(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::POST, handler.into())
     }
 
-    /// Adds a new route to the `NgynApplication` with the `Method::Put`.
+    /// Registers a PUT route handler.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn put(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::PUT, handler.into())
     }
 
-    /// Adds a new route to the `NgynApplication` with the `Method::Delete`.
+    /// Registers a DELETE route handler.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn delete(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::DELETE, handler.into())
     }
 
-    /// Adds a new route to the `NgynApplication` with the `Method::Patch`.
+    /// Registers a PATCH route handler.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn patch(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::PATCH, handler.into())
     }
 
-    /// Adds a new route to the `NgynApplication` with the `Method::Head`.
+    /// Registers a HEAD route handler.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn head(&mut self, path: &str, handler: impl Into<RouteHandler>) {
         self.route(path, Method::HEAD, handler.into())
     }
@@ -278,37 +424,100 @@ pub trait NgynHttpEngine: NgynPlatform {
     }
 }
 
-pub trait NgynEngine: NgynPlatform {
+/// The main engine trait that combines HTTP routing capabilities with default initialization.
+///
+/// This trait extends `NgynHttpEngine` and requires `Default` implementation to provide
+/// a complete web application engine.
+pub trait NgynEngine: NgynPlatform + Default {
+    /// Registers a route handler for any HTTP method.
+    ///
+    /// # Arguments
+    /// * `path` - The URL path pattern to match
+    /// * `handler` - The handler function to execute
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
     fn any(&mut self, path: &str, handler: impl Into<RouteHandler>) {
-        self.add_route(path, None, handler.into());
+        self.add_route(path, None, handler.into())
     }
 
-    /// Groups related routes
+    /// Groups related routes under a common base path.
+    ///
+    /// # Arguments
+    /// * `base_path` - The common prefix for all routes in the group
+    /// * `registry` - A closure that defines the routes in this group
+    ///
+    /// # Returns
+    /// Returns a `RouteResult<()>` indicating success or failure
+    ///
+    /// # Example
+    /// ```rust
+    /// app.group("/api/v1", |router| {
+    ///     router.get("/users", users_handler);
+    ///     router.post("/users", create_user_handler);
+    /// });
+    /// ```
     fn group(&mut self, base_path: &'static str, registry: impl Fn(&mut GroupRouter)) {
+        // Validate base path format
+        if !base_path.starts_with('/') {
+            if let Some(handler) = &self.data_mut().error_handler {
+                handler(NgynError::Route(
+                    "Group base path must start with '/'".to_string(),
+                ));
+            }
+            return;
+        }
+
+        // Create and configure group router
         let mut group = GroupRouter {
             data: PlatformData {
                 base_path,
                 ..Default::default()
             },
         };
+
+        // Register routes in the group
         registry(&mut group);
-        self.data_mut().router.merge(group.data.router).unwrap();
+
+        // Merge group router with main router
+        if let Err(e) = self.data_mut().router.merge(group.data.router) {
+            if let Some(handler) = &self.data_mut().error_handler {
+                handler(NgynError::Route(format!(
+                    "Failed to merge route group '{}': {}",
+                    base_path, e
+                )));
+            }
+        }
     }
 
     /// Adds a middleware to the application.
     ///
-    /// ### Arguments
+    /// Middleware functions are executed in the order they are added, for every request
+    /// that matches the route they are attached to.
     ///
-    /// * `middleware` - The middleware to add.
+    /// # Arguments
+    /// * `middleware` - The middleware implementation to add
+    ///
+    /// # Example
+    /// ```rust
+    /// app.use_middleware(LoggingMiddleware::new());
+    /// ```
     fn use_middleware(&mut self, middleware: impl NgynMiddleware + 'static) {
-        self.data_mut().add_middleware(Box::new(middleware));
+        self.data_mut().add_middleware(Box::new(middleware))
     }
 
-    /// Sets the state of the application to any value that implements [`AppState`].
+    /// Sets the application state that will be available to all route handlers.
     ///
-    /// ### Arguments
+    /// The state can be any type that implements `AppState` and will be shared
+    /// across all routes using Arc.
     ///
-    /// * `state` - The state to set.
+    /// # Arguments
+    /// * `state` - The state implementation to set
+    ///
+    /// # Example
+    /// ```rust
+    /// app.set_state(AppConfig { debug: true });
+    /// ```
     fn set_state(&mut self, state: impl AppState + 'static) {
         self.data_mut().state = Some(Arc::new(Box::new(state)));
     }
