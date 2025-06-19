@@ -11,7 +11,7 @@ use ngyn_shared::{
     core::{NgynHttpPlatform, PlatformData},
     server::NgynResponse,
 };
-use tokio::{io::AsyncWriteExt, net::TcpListener, sync::mpsc};
+use tokio::{net::TcpListener, sync::mpsc};
 
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(10);
 const ERROR_CHANNEL_SIZE: usize = 100;
@@ -184,15 +184,19 @@ impl HyperApplication {
 }
 
 async fn is_valid_http_version(stream: &mut tokio::net::TcpStream) -> bool {
-    let mut buf = [0; 32];
-    if stream.peek(&mut buf).await.is_ok() {
-        if let Ok(start) = std::str::from_utf8(&buf) {
-            return start.contains("HTTP/1.1"); // || start.contains("HTTP/2.0"); TODO: support http2
+    // Most HTTP servers limit request line to 8KB, but we'll use 1KB as a reasonable compromise
+    let mut buffer = [0u8; 1024];
+    match stream.peek(&mut buffer).await {
+        Ok(n) if n >= 8 => {
+            if let Ok(Some(request_line)) = std::str::from_utf8(&buffer[..n])
+                .map(|data| data.find("\r\n").map(|line_end| &data[..line_end]))
+            {
+                return request_line.ends_with("HTTP/1.1") || request_line.ends_with("HTTP/1.0");
+            }
+            false
         }
+        _ => false, // If we can't peek or get enough data, assume invalid
     }
-    let response = b"HTTP Version not supported\r\n";
-    let _ = stream.write_all(response).await;
-    false
 }
 
 fn handle_error(data: &PlatformData, err: impl Error + Sync + Send + 'static) {
