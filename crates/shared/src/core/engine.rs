@@ -3,7 +3,10 @@ use http::Request;
 use matchit::{Match, Router};
 use std::{mem::ManuallyDrop, sync::Arc};
 
-use super::handler::{handler, RouteHandler};
+use super::{
+    error::NgynError,
+    handler::{handler, RouteHandler},
+};
 use crate::{
     server::{context::AppState, Method, NgynContext, NgynResponse, ToBytes},
     Middleware, NgynMiddleware,
@@ -20,12 +23,16 @@ impl NgynPlatform for GroupRouter {
     }
 }
 
+/// Type alias for error handler function
+pub type ErrorHandler = Arc<dyn Fn(NgynError) + Send + Sync>;
+
 #[derive(Default)]
 pub struct PlatformData {
     base_path: &'static str,
     router: Router<RouteHandler>,
     middlewares: Vec<Box<dyn crate::Middleware>>,
     state: Option<Arc<Box<dyn AppState>>>,
+    error_handler: Option<ErrorHandler>,
 }
 
 /// Represents platform data.
@@ -40,23 +47,28 @@ impl PlatformData {
     ///
     /// The response to the request.
     pub async fn respond(&self, req: Request<Vec<u8>>) -> NgynResponse {
-        let path = req.method().to_string() + req.uri().path();
+        let request_path = req.uri().path().to_string();
+        let path = req.method().to_string() + &request_path;
         let mut cx = NgynContext::from_request(req);
 
         if let Some(state) = &self.state {
             cx.state = Some(ManuallyDrop::new(state.into()));
         }
 
-        let mut route_handler = None;
         let route_info = self.router.at(&path);
-
-        if let Ok(Match { params, value, .. }) = route_info {
-            cx.params = Some(params);
-            route_handler = Some(value);
-        } else {
-            // if no route is found, we should return a 404 response
-            *cx.response_mut().status_mut() = http::StatusCode::NOT_FOUND;
-        }
+        let route_handler = match route_info {
+            Ok(Match { params, value, .. }) => {
+                cx.params = Some(params);
+                Some(value)
+            }
+            Err(_) => {
+                if let Some(handler) = &self.error_handler {
+                    handler(NgynError::Route(format!("No route found for {}", path)));
+                }
+                *cx.response_mut().status_mut() = http::StatusCode::NOT_FOUND;
+                None
+            }
+        };
 
         // trigger global middlewares
         for middleware in &self.middlewares {
@@ -65,14 +77,30 @@ impl PlatformData {
 
         // run the route handler
         if let Some(route_handler) = route_handler {
-            *cx.response_mut().body_mut() = match route_handler {
-                RouteHandler::Sync(handler) => handler(&mut cx),
+            let response = match route_handler {
+                RouteHandler::Sync(handler) => {
+                    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        handler(&mut cx)
+                    })) {
+                        Ok(result) => result,
+                        Err(_) => {
+                            if let Some(handler) = &self.error_handler {
+                                handler(NgynError::Handler(format!(
+                                    "Handler at /{} panicked while executing",
+                                    request_path
+                                )));
+                            }
+                            *cx.response_mut().status_mut() =
+                                http::StatusCode::INTERNAL_SERVER_ERROR;
+                            Box::new(())
+                        }
+                    }
+                }
                 RouteHandler::Async(async_handler) => async_handler(&mut cx).await,
-            }
-            .to_bytes()
-            .into();
+            };
+
+            *cx.response_mut().body_mut() = response.to_bytes().into();
             // if the request method is HEAD, we should not return a body
-            // even if the route handler has set a body
             if cx.request().method() == Method::HEAD {
                 *cx.response_mut().body_mut() = Bytes::default().into();
             }
@@ -89,10 +117,45 @@ impl PlatformData {
     pub(self) fn add_middleware(&mut self, middleware: Box<dyn Middleware>) {
         self.middlewares.push(middleware);
     }
+
+    /// The error handler
+    pub fn error_handler(&self) -> &Option<ErrorHandler> {
+        &self.error_handler
+    }
 }
 
 pub trait NgynPlatform: Default {
     fn data_mut(&mut self) -> &mut PlatformData;
+
+    /// Set a custom error handler for the platform to handle I/O errors that occur during request processing.
+    ///
+    /// This method allows you to define custom error handling logic that will be called whenever
+    /// an I/O error occurs in the platform. The handler receives the error and can perform custom
+    /// error logging, reporting, or recovery actions.
+    ///
+    /// ### Arguments
+    ///
+    /// * `handler` - A function that takes a `std::io::Error` and handles it. The handler must be
+    ///   `Send + Sync + 'static` to ensure it can be safely shared across threads.
+    ///
+    /// ### Examples
+    ///
+    /// ```
+    /// use ngyn_hyper::HyperApplication;
+    ///
+    /// let mut app = HyperApplication::default();
+    ///
+    /// // Add a custom error handler that logs the error
+    /// app.on_error(|err| {
+    ///     eprintln!("Server error occurred: {}", err);
+    /// });
+    /// ```
+    fn on_error<F>(&mut self, handler: F)
+    where
+        F: Fn(NgynError) + Send + Sync + 'static,
+    {
+        self.data_mut().error_handler = Some(Arc::new(handler));
+    }
 }
 
 pub trait RouteInstance {

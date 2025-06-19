@@ -1,17 +1,26 @@
-use http_body_util::BodyExt;
-use hyper::body::Incoming;
-use hyper::server::conn::http1;
-use hyper::{service::service_fn, Request};
-use hyper_util::rt::TokioIo;
-use hyper_util::server::graceful::GracefulShutdown;
-use ngyn_shared::core::engine::{NgynHttpPlatform, PlatformData};
-use ngyn_shared::server::NgynResponse;
-use std::io::Error;
-use std::sync::Arc;
-use tokio::net::TcpListener;
+//! Hyper integration for Ngyn web framework.
+//!
+//! This module provides a Hyper-based HTTP server implementation for Ngyn applications.
 
-#[derive(Default)]
-/// Configure an [`HyperApplication`]
+use std::{error::Error, sync::Arc, time::Duration};
+
+use http_body_util::BodyExt;
+use hyper::{body::Incoming, server::conn::http1, service::service_fn, Request};
+use hyper_util::{rt::TokioIo, server::graceful::GracefulShutdown};
+use ngyn_shared::{
+    core::{NgynHttpPlatform, PlatformData},
+    server::NgynResponse,
+};
+use tokio::{io::AsyncWriteExt, net::TcpListener, sync::mpsc};
+
+const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(10);
+const ERROR_CHANNEL_SIZE: usize = 100;
+
+/// Configuration options for the [`HyperApplication`].
+///
+/// This struct provides various HTTP/1.1 specific configuration options
+/// for customizing the behavior of the Hyper server.
+#[derive(Default, Debug, Clone)]
 pub struct HyperConfig {
     h1_half_close: bool,
     h1_keep_alive: bool,
@@ -22,7 +31,10 @@ pub struct HyperConfig {
     pipeline_flush: bool,
 }
 
-/// Represents a Hyper-based application.
+/// A Hyper-based HTTP server implementation for Ngyn applications.
+///
+/// This struct implements the [`NgynHttpPlatform`] trait and provides
+/// a complete HTTP server implementation using Hyper.
 #[derive(Default)]
 pub struct HyperApplication {
     data: PlatformData,
@@ -36,28 +48,75 @@ impl NgynHttpPlatform for HyperApplication {
 }
 
 impl HyperApplication {
+    /// Creates a new `HyperApplication` with the specified configuration.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ngyn_hyper::{HyperApplication, HyperConfig};
+    ///
+    /// let config = HyperConfig::default();
+    /// let app = HyperApplication::with_config(config);
+    /// ```
+    #[must_use]
     pub fn with_config(config: HyperConfig) -> Self {
         Self {
             data: PlatformData::default(),
             config,
         }
     }
+
     /// Listens for incoming connections and serves the application.
     ///
     /// ### Arguments
     ///
-    /// * `address` - The address to listen on.
+    /// * `address` - The address to listen on. This can be any type that implements
+    ///   the `tokio::net::ToSocketAddrs` trait, such as `&str`, `SocketAddr`, or `(String, u16)`.
     ///
-    /// ### Returns
+    /// ### Examples
     ///
-    /// A `Result` indicating success or failure.
-    pub async fn listen<A: tokio::net::ToSocketAddrs>(
-        self,
-        address: A,
-    ) -> Result<(), std::io::Error> {
-        let server = TcpListener::bind(address).await?;
-        let data = Arc::new(self.data);
+    /// ```no_run
+    /// use ngyn_hyper::HyperApplication;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let app = HyperApplication::default();
+    ///     
+    ///     // Listen on localhost:3000
+    ///     app.listen("127.0.0.1:3000").await;
+    /// }
+    /// ```
+    ///
+    /// You can also use a socket address:
+    ///
+    /// ```no_run
+    /// use std::net::SocketAddr;
+    /// use ngyn_hyper::HyperApplication;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let addr: SocketAddr = "[::1]:8080".parse().unwrap();
+    ///     let app = HyperApplication::default();
+    ///     
+    ///     app.listen(addr).await;
+    /// }
+    /// ```
+    pub async fn listen<A: tokio::net::ToSocketAddrs>(self, address: A) {
+        let http1 = self.build_http1_config();
+        let server = match TcpListener::bind(address).await {
+            Ok(server) => server,
+            Err(err) => {
+                handle_error(&self.data, err);
+                return;
+            }
+        };
+        let graceful = GracefulShutdown::new();
+        let signal = std::pin::pin!(shutdown_signal());
 
+        self.run_server(server, http1, graceful, signal).await
+    }
+
+    fn build_http1_config(&self) -> http1::Builder {
         let mut http1 = http1::Builder::new();
 
         http1
@@ -75,87 +134,152 @@ impl HyperApplication {
             http1.max_headers(max_headers);
         }
 
-        let graceful = GracefulShutdown::new();
-        // when this signal completes, start shutdown
-        let mut signal = std::pin::pin!(shutdown_signal());
+        http1
+    }
 
-        // Channel for error propagation from spawned tasks
-        let (error_sender, mut error_receiver) = tokio::sync::mpsc::channel::<std::io::Error>(100);
+    async fn run_server(
+        self,
+        server: TcpListener,
+        http1: http1::Builder,
+        graceful: GracefulShutdown,
+        mut signal: std::pin::Pin<&mut impl std::future::Future<Output = ()>>,
+    ) {
+        let data = Arc::new(self.data);
+        let (error_sender, mut error_receiver) = mpsc::channel::<hyper::Error>(ERROR_CHANNEL_SIZE);
 
         loop {
             let data = data.clone();
             tokio::select! {
-                Ok((stream, _)) = server.accept() => {
+                Ok((mut stream, _)) = server.accept() => {
+                    if !is_valid_http_version(&mut stream).await {
+                        continue;
+                    }
+
                     let io = TokioIo::new(stream);
-                    let conn = http1.serve_connection(io, service_fn(move |req| hyper_service(data.clone(), req)));
+                    let conn = http1.serve_connection(
+                        io,
+                        service_fn(move |req| hyper_service(data.clone(), req)),
+                    );
                     let handle = graceful.watch(conn);
                     let error_sender = error_sender.clone();
 
                     tokio::task::spawn(async move {
                         if let Err(e) = handle.await {
-                            let io_error = std::io::Error::new(
-                                std::io::ErrorKind::Other,
-                                format!("internal server error: {}", e)
-                            );
-                            let _ = error_sender.send(io_error).await;
+                            let _ = error_sender.try_send(e);
                         }
                     });
                 }
                 Some(err) = error_receiver.recv() => {
-                    // Return the first error we receive
-                    return Err(err);
+                    handle_error(&data, err);
                 }
-                _ = &mut signal => {
-                    // stop the accept loop
-                    break;
-                }
-                else => continue, // continue waiting for the next signal or connection
+                _ = &mut signal => break,
+                else => continue,
             }
         }
 
-        // Handle graceful shutdown with timeout
-        tokio::select! {
-            _ = graceful.shutdown() => {
-                Ok(())
-            },
-            Some(err) = error_receiver.recv() => {
-                // Propagate any connection errors that occurred during shutdown
-                Err(err)
-            },
-            _ = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
-                Err(Error::new(std::io::ErrorKind::TimedOut, "graceful shutdown timed out"))
-            }
-        }?;
-
-        Ok(())
+        if let Err(err) = handle_shutdown(graceful, error_receiver).await {
+            handle_error(&data, err);
+        }
     }
 }
 
+async fn is_valid_http_version(stream: &mut tokio::net::TcpStream) -> bool {
+    let mut buf = [0; 8];
+    if stream.peek(&mut buf).await.is_ok() {
+        if let Ok(start) = std::str::from_utf8(&buf) {
+            return start.starts_with("HTTP/1.1") || start.starts_with("HTTP/2.0");
+        }
+    }
+    let response = b"HTTP Version not supported\r\n";
+    let _ = stream.write_all(response).await;
+    false
+}
+
+fn handle_error(data: &PlatformData, err: impl Error + Sync + Send + 'static) {
+    if let Some(handler) = data.error_handler() {
+        handler(ngyn_shared::core::NgynError::Other(Box::new(err)));
+    } else {
+        eprintln!("Server error occurred: {}", err);
+    }
+}
+
+async fn handle_shutdown(
+    graceful: GracefulShutdown,
+    mut error_receiver: mpsc::Receiver<hyper::Error>,
+) -> Result<(), std::io::Error> {
+    tokio::select! {
+        _ = graceful.shutdown() => Ok(()),
+        Some(err) = error_receiver.recv() => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                err
+            )),
+        _ = tokio::time::sleep(SHUTDOWN_TIMEOUT) => {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::TimedOut,
+                "graceful shutdown timed out",
+            ))
+        }
+    }
+}
+
+type HyperResult<T> = Result<T, hyper::Error>;
+
+/// Handles incoming HTTP requests and converts them into Ngyn responses.
+///
+/// This function serves as the core request handler, processing incoming
+/// HTTP requests and producing appropriate responses using the application's
+/// request handling logic.
+///
+/// This function performs the following steps:
+/// 1. Splits the incoming request into parts and body
+/// 2. Collects the entire body into a buffer
+/// 3. Reconstructs the request with the collected body
+/// 4. Processes the request through the Ngyn platform
+///
+/// # Note
+///
+/// The current body handling approach buffers the entire request body in memory.
+/// This is not ideal for large requests and should be improved in future versions
+/// to use streaming where possible.
 async fn hyper_service(
     data: Arc<PlatformData>,
     req: Request<Incoming>,
-) -> Result<NgynResponse, hyper::Error> {
-    let (parts, mut body) = req.into_parts();
-    let body = {
-        let mut buf = Vec::new();
-        // TODO: change this approach. It's not efficient.
-        while let Some(frame) = body.frame().await {
-            if let Ok(bytes) = frame?.into_data() {
-                buf.extend_from_slice(&bytes);
-            } else {
-                break;
-            }
-        }
-        buf
-    };
+) -> HyperResult<NgynResponse> {
+    let (parts, body) = req.into_parts();
+    let body = collect_body(body).await?;
     let req = Request::from_parts(parts, body);
-    let res = data.respond(req).await;
 
-    Ok::<_, hyper::Error>(res)
+    Ok(data.respond(req).await)
 }
 
+/// Collects the entire body of an incoming request into a vector.
+///
+/// # Note
+///
+/// This is a temporary solution. Future implementations should consider:
+/// - Streaming support for large bodies
+/// - Memory limits for request bodies
+/// - Proper error handling for malformed bodies
+async fn collect_body(mut body: Incoming) -> HyperResult<Vec<u8>> {
+    let mut buf = Vec::new();
+
+    while let Some(frame) = body.frame().await {
+        if let Ok(bytes) = frame?.into_data() {
+            buf.extend_from_slice(&bytes);
+        } else {
+            break;
+        }
+    }
+    Ok(buf)
+}
+
+/// Waits for a shutdown signal (Ctrl+C) to be received.
+///
+/// # Panics
+///
+/// Panics if the signal handler cannot be installed.
 async fn shutdown_signal() {
     tokio::signal::ctrl_c()
         .await
-        .expect("failed to listen for signal");
+        .expect("failed to install Ctrl+C handler")
 }
